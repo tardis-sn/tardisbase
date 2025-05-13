@@ -45,13 +45,13 @@ jobs:
           lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
       
       - uses: actions/checkout@v4
-        if: github.event_name != 'pull_request_target'
+        if: github.event_name != 'pull_request'
 
       - name: Checkout pull/${{ github.event.number }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
 
       - name: Install package
         run: pip install -e .
@@ -70,7 +70,7 @@ jobs:
               echo "DEST_DIR=branch/$BRANCH" >> $GITHUB_ENV
             fi
 
-          elif [[ $EVENT == pull_request_target ]]; then
+          elif [[ $EVENT == pull_request ]]; then
             echo "DEST_DIR=pull/$PR" >> $GITHUB_ENV
 
           else
@@ -117,7 +117,7 @@ jobs:
         with:
           issue-number: ${{ github.event.number }}
           body-includes: Hi, human.
-        if: always() && github.event_name == 'pull_request_target'
+        if: always() && github.event_name == 'pull_request'
 
       - name: Post comment (success)
         uses: peter-evans/create-or-update-comment@v1
@@ -136,7 +136,7 @@ jobs:
             [**Click here**](${{ env.URL }}) to see your results.
         env:
           URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pull/${{ github.event.number }}/index.html
-        if: success() && github.event_name == 'pull_request_target'
+        if: success() && github.event_name == 'pull_request'
 
       - name: Post comment (failure)
         uses: peter-evans/create-or-update-comment@v1
@@ -155,5 +155,5 @@ jobs:
             [**Click here**](${{ env.URL }}) to see the build log.
         env:
           URL: https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}?check_suite_focus=true
-        if: failure() && github.event_name == 'pull_request_target'
+        if: failure() && github.event_name == 'pull_request'
         
