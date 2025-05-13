@@ -40,3 +40,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: tardis-sn/tardis-actions/setup-env@dev
+        with:
+          os-label: "linux-64"
+          lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
