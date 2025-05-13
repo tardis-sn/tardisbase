@@ -1,0 +1,42 @@
+#  For more information about TARDIS pipelines, please refer to:
+#
+#    https://tardis-sn.github.io/tardis/contributing/development/continuous_integration.html
+
+name: docs
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled # requires the `build-docs` label
+      - ready_for_review
+
+  workflow_dispatch: # manual trigger
+
+env:
+  CACHE_NUMBER: 0 # increase to reset cache manually
+  DEPLOY_BRANCH: gh-pages # deployed docs branch
+  HDF5_USE_FILE_LOCKING: "FALSE" # disable file locking
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: tardis-sn/tardis-actions/setup-env@v1.1
