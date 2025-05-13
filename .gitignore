@@ -1,0 +1,91 @@
+# Compiled files
+*.py[cod]
+*.a
+*.o
+*.so
+__pycache__
+
+
+# Ignore .c files by default to avoid including generated code. If you want to
+# add a non-generated .c extension, use `git add -f filename.c`.
+*.c
+
+# Other generated files
+*/version.py
+*/cython_version.py
+htmlcov
+.coverage
+coverage.xml
+MANIFEST
+.ipynb_checkpoints
+
+# Sphinx
+docs/api
+docs/_build
+docs/tutorials.rst
+docs/io/configuration/components/models/converters/density_parse.csv
+docs/io/configuration/components/models/converters/abund_parse.csv
+docs/io/output/plasma_graph_default.tex
+docs/io/output/plasma_graph_scaled.tex
+docs/io/output/plasma_graph_no_eq.tex
+docs/io/output/plasma_graph_with_args.tex
+
+# Eclipse editor project files
+.project
+.pydevproject
+.settings
+
+# Pycharm editor project files
+.idea
+
+# Floobits project files
+.floo
+.flooignore
+
+# Visual Studio Code project files
+.vscode
+
+# Packages/installer info
+*.egg
+*.egg-info
+dist
+build
+eggs
+.eggs
+parts
+bin
+var
+sdist
+develop-eggs
+.installed.cfg
+distribute-*.tar.gz
+
+# Other
+.cache
+.tox
+.*.sw[op]
+*~
+.project
+.pydevproject
+.settings
+pip-wheel-metadata/
+
+# Mac OSX
+.DS_Store
+
+# Visual Studio Code
+*.code-workspace
+
+# Random files
+.hypothesis/unicode_data/11.0.0/charmap.json.gz
+
+# Data files
+benchmarks/data/*.h5
+
+# ASV
+.asv/
+pkgs/
+release_hashes.txt
+
+# Ruff stuff
+.ruff_cache/
