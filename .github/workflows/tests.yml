@@ -1,0 +1,68 @@
+
+name: tests
+
+on:
+  push:
+    branches:
+      - master
+
+  pull_request:
+    branches:
+      - master
+
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - labeled # requires the `build-docs` label
+      - ready_for_review
+
+  workflow_dispatch: # manual trigger
+
+env:
+  CACHE_NUMBER: 0 # increase to reset cache manually
+  DEPLOY_BRANCH: gh-pages # deployed docs branch
+  HDF5_USE_FILE_LOCKING: "FALSE" # disable file locking
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    shell: bash -l {0}
+
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [osx-arm64, linux-64]
+        continuum: ['not', '']
+        include:
+          - label: osx-arm64
+            os: macos-latest
+            prefix: /Users/runner/miniconda3/envs/tardis
+
+          - label: linux-64
+            os: ubuntu-latest
+            prefix: /usr/share/miniconda3/envs/tardis
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: tardis-sn/tardis-actions/setup-env@dev
+        with:
+          os-label: ${{ matrix.label }}
+          lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
+      
+      - name: Install package editable
+        run: |
+          pip install -e .
+
+      - name: Run tests
+        run: |
+          pytest tardisbase
+
