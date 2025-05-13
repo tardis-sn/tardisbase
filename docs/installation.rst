@@ -1,7 +1,7 @@
 Installation
 -----------
 
-.. warning::
+.. note::
     - tardisbase is only supported on macOS and GNU/Linux.
     - TARDIS dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
       package management system, therefore installation requires `Anaconda <https://docs.anaconda.com/anaconda/install/index.html>`_ 
