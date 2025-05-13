@@ -39,4 +39,4 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: tardis-sn/tardis-actions/.github/actions/setup-env@v1.1
+      - uses: tardis-sn/tardis-actions/setup-env@dev
