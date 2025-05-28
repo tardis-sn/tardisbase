@@ -54,7 +54,7 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         # if: github.event_name == 'pull_request_target'
-        if: github.event_name != 'pull_request'
+        if: github.event_name == 'pull_request'
 
       - name: Install package
         run: pip install -e .
