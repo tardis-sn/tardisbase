@@ -9,7 +9,8 @@ on:
     branches:
       - master
 
-  pull_request_target:
+  # pull_request_target:
+  pull_request:
     branches:
       - master
 
@@ -44,13 +45,16 @@ jobs:
           os-label: "linux-64"
       
       - uses: actions/checkout@v4
-        if: github.event_name != 'pull_request_target'
+        # if: github.event_name != 'pull_request_target'
+        if: github.event_name != 'pull_request'
+        
 
       - name: Checkout pull/${{ github.event.number }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request_target'
+        # if: github.event_name == 'pull_request_target'
+        if: github.event_name != 'pull_request'
 
       - name: Install package
         run: pip install -e .
@@ -69,7 +73,8 @@ jobs:
               echo "DEST_DIR=branch/$BRANCH" >> $GITHUB_ENV
             fi
 
-          elif [[ $EVENT == pull_request_target ]]; then
+          # elif [[ $EVENT == pull_request_target ]]; then
+          elif [[ $EVENT == pull_request ]]; then
             echo "DEST_DIR=pull/$PR" >> $GITHUB_ENV
 
           else
