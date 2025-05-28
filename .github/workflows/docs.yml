@@ -118,6 +118,5 @@ jobs:
       - uses: tardis-sn/tardis-actions/setup-docs-comments@docs-actions
         with:
           bot-token: ${{ secrets.BOT_TOKEN }}
-          repository-name: tardis-base
-          repository-owner: tardis-sn
-
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.number }}
