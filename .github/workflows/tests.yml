@@ -26,7 +26,7 @@ defaults:
 
 jobs:
   test-cache:
-    uses: tardis-sn/tardis-actions/reusable-workflows/lfs-cache.yml@lfs-cache
+    uses: tardis-sn/tardis-actions/.github/workflows/lfs-cache.yml@lfs-cache
     with:
       atom-data-sparse: false
       regression-data-repo: tardis-sn/stardis-regression-data
