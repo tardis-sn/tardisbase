@@ -9,7 +9,8 @@ on:
     branches:
       - master
 
-  pull_request_target:
+  # pull_request_target:
+  pull_request:
     branches:
       - master
 
@@ -42,16 +43,18 @@ jobs:
       - uses: tardis-sn/tardis-actions/setup-env@dev
         with:
           os-label: "linux-64"
-          lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
       
       - uses: actions/checkout@v4
-        if: github.event_name != 'pull_request_target'
+        # if: github.event_name != 'pull_request_target'
+        if: github.event_name != 'pull_request'
+        
 
       - name: Checkout pull/${{ github.event.number }}
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.sha }}
-        if: github.event_name == 'pull_request_target'
+        # if: github.event_name == 'pull_request_target'
+        if: github.event_name == 'pull_request'
 
       - name: Install package
         run: pip install -e .
@@ -70,7 +73,8 @@ jobs:
               echo "DEST_DIR=branch/$BRANCH" >> $GITHUB_ENV
             fi
 
-          elif [[ $EVENT == pull_request_target ]]; then
+          # elif [[ $EVENT == pull_request_target ]]; then
+          elif [[ $EVENT == pull_request ]]; then
             echo "DEST_DIR=pull/$PR" >> $GITHUB_ENV
 
           else
@@ -110,50 +114,9 @@ jobs:
           force_orphan: ${{ env.CLEAN_BRANCH }}
           user_name: "TARDIS Bot"
           user_email: "tardis.sn.bot@gmail.com"
-
-      - name: Find comment
-        uses: peter-evans/find-comment@v1
-        id: fc
+      
+      - uses: tardis-sn/tardis-actions/setup-docs-comments@docs-actions
         with:
+          bot-token: ${{ secrets.BOT_TOKEN }}
+          repository: ${{ github.repository }}
           issue-number: ${{ github.event.number }}
-          body-includes: Hi, human.
-        if: always() && github.event_name == 'pull_request_target'
-
-      - name: Post comment (success)
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          token: ${{ secrets.BOT_TOKEN }}
-          issue-number: ${{ github.event.number }}
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          edit-mode: replace
-          body: |
-            *\*beep\* \*bop\**
-
-            Hi, human.
-
-            The **`${{ github.workflow }}`** workflow has **succeeded** :heavy_check_mark:
-
-            [**Click here**](${{ env.URL }}) to see your results.
-        env:
-          URL: https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/pull/${{ github.event.number }}/index.html
-        if: success() && github.event_name == 'pull_request_target'
-
-      - name: Post comment (failure)
-        uses: peter-evans/create-or-update-comment@v1
-        with:
-          token: ${{ secrets.BOT_TOKEN }}
-          issue-number: ${{ github.event.number }}
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          edit-mode: replace
-          body: |
-            *\*beep\* \*bop\**
-
-            Hi, human.
-
-            The **`${{ github.workflow }}`** workflow has **failed** :x:
-
-            [**Click here**](${{ env.URL }}) to see the build log.
-        env:
-          URL: https://github.com/${{ github.repository_owner }}/${{ github.event.repository.name }}/actions/runs/${{ github.run_id }}?check_suite_focus=true
-        if: failure() && github.event_name == 'pull_request_target'
-        

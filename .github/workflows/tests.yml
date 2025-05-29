@@ -25,6 +25,14 @@ defaults:
     shell: bash -l {0}
 
 jobs:
+  test-cache:
+    uses: tardis-sn/tardis-actions/.github/workflows/lfs-cache.yml@lfs-cache
+    with:
+      atom-data-sparse: false
+      regression-data-repo: tardis-sn/stardis-regression-data
+      # allow_lfs_pull: ${{ github.ref == 'refs/heads/master' || contains(github.event.pull_request.labels.*.name, 'git-lfs-pull') }}
+      allow_lfs_pull: true
+
   build:
     runs-on: ${{ matrix.os }}
     strategy:
