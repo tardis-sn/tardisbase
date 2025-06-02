@@ -43,10 +43,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: tardis-sn/tardis-actions/setup-env@dev
+      - uses: tardis-sn/tardis-actions/setup-env@main
         with:
           os-label: ${{ matrix.label }}
-          lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
+          lock-file-url-prefix: "https://raw.githubusercontent.com/tardis-sn/tardis-base/master"
       
       - name: Install package editable
         run: |
