@@ -6,8 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from tardis.io.util import HDFWriterMixin
-
+from tardisbase.testing.regression_data.hdfwriter import HDFWriterMixin
 
 class RegressionData:
     def __init__(self, request) -> None:
