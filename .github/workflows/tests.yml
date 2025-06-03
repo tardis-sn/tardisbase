@@ -25,7 +25,14 @@ defaults:
     shell: bash -l {0}
 
 jobs:
-  build:
+  test-cache:
+    uses: tardis-sn/tardis-actions/.github/workflows/lfs-cache.yml@main
+    with:
+      atom-data-sparse: false
+      regression-data-repo: tardis-sn/tardis-regression-data
+      allow_lfs_pull: ${{ github.ref == 'refs/heads/master' || contains(github.event.pull_request.labels.*.name, 'git-lfs-pull') }}
+
+  test-tardisbase:
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
@@ -55,4 +62,51 @@ jobs:
       - name: Run tests
         run: |
           pytest tardisbase
+
+  test-tardis:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        label: [osx-arm64, linux-64]
+        include:
+          - label: osx-arm64
+            os: macos-latest
+            prefix: /Users/runner/miniconda3/envs/tardis
+
+          - label: linux-64
+            os: ubuntu-latest
+            prefix: /usr/share/miniconda3/envs/tardis
+    
+    steps:
+      - name: Checkout tardisbase
+        uses: actions/checkout@v4
+      
+      - name: Checkout tardis
+        uses: actions/checkout@v4
+        with:
+          repository: tardis-sn/tardis
+          path: tardis
+
+      - uses: tardis-sn/tardis-actions/setup-env@dev
+        with:
+          os-label: ${{ matrix.label }}
+          lock-file-url-prefix: "https://raw.githubusercontent.com/atharva-2001/tardisbase/base-files"
+
+      - name: Setup LFS
+        uses: tardis-sn/tardis-actions/setup-lfs@main
+
+      - name: Install package editable tardisbase
+        run: |
+          pip install -e .
+      
+      - name: Install package editable tardis
+        run: |
+          pip install -e .
+        working-directory: tardis
+
+      - name: Run tests
+        run: |
+          pytest tardis
+        working-directory: tardis
 
