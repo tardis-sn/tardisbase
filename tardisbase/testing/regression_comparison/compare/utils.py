@@ -11,6 +11,7 @@ logger = logging.getLogger(__name__)
 CONFIG = {
     'compare_path': '.',  # Default to current directory
     'temp_dir_prefix': 'ref_compare_',
+    'regression_data_repo': '../tardis-regression-data'
 }
 
 # Constants
@@ -31,10 +32,16 @@ def color_print(text: str, color: str) -> None:
 def get_relative_path(path: Path | str, base: Path | str) -> str:
     return str(Path(path).relative_to(base))
 
-def get_last_two_commits() -> tuple[str | None, str | None]:
+def get_last_two_commits(repo_path: str | Path | None = None) -> tuple[str | None, str | None]:
+    if repo_path is None:
+        repo_path = CONFIG['regression_data_repo']
     try:
+        if not Path(repo_path).exists():
+            logger.error(f"Regression data repository not found at {repo_path}")
+            return None, None
+        
         result = subprocess.run(
-            ['git', 'log', '--format=%H', '-n', '2'],
+            ['git', '-C', str(repo_path), 'log', '--format=%H', '-n', '2'],
             capture_output=True,
             text=True,
             check=True
