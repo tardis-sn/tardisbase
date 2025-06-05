@@ -4,7 +4,7 @@ import numpy as np
 import pandas as pd
 import logging
 
-from .core import color_print, get_relative_path, FileManager, FLOAT_UNCERTAINTY
+from tardisbase.testing.regression_comparison.compare.utils import color_print, get_relative_path, FileManager, FLOAT_UNCERTAINTY
 
 logger = logging.getLogger(__name__)
 

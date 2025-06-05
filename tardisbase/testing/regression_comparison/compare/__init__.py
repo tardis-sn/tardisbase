@@ -1,4 +1,4 @@
-from .core import (
+from tardisbase.testing.regression_comparison.compare.utils import (
     CONFIG,
     COLORS,
     FLOAT_UNCERTAINTY,
@@ -8,9 +8,9 @@ from .core import (
     FileManager,
     FileSetup
 )
-from .analyzers import DiffAnalyzer, HDFComparator
-from .visualization import SpectrumSolverComparator, generate_comparison_graph
-from .compare import ReferenceComparer
+from tardisbase.testing.regression_comparison.compare.analyzers import DiffAnalyzer, HDFComparator
+from tardisbase.testing.regression_comparison.compare.visualization import SpectrumSolverComparator, generate_comparison_graph
+from tardisbase.testing.regression_comparison.compare.compare import ReferenceComparer
 
 __all__ = [
     'CONFIG',
