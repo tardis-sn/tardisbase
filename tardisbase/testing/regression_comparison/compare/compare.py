@@ -2,9 +2,9 @@ import os
 from pathlib import Path
 from filecmp import dircmp
 
-from .core import FileManager, FileSetup, get_relative_path
-from .analyzers import DiffAnalyzer, HDFComparator
-from .visualization import SpectrumSolverComparator, generate_comparison_graph
+from tardisbase.testing.regression_comparison.compare.utils import FileManager, FileSetup, get_relative_path
+from tardisbase.testing.regression_comparison.compare.analyzers import DiffAnalyzer, HDFComparator
+from tardisbase.testing.regression_comparison.compare.visualization import SpectrumSolverComparator, generate_comparison_graph
 
 class ReferenceComparer:
 
