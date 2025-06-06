@@ -149,3 +149,20 @@ class HDFComparator:
             
             diff = pd.DataFrame([diff.mean(), diff.max()], index=['mean', 'max'])
             display(diff.style.format('{:.2g}'.format).background_gradient(cmap='Reds'))
+            
+    def _print_summary(self, name: str, k1: set, k2: set, different_keys: int,
+                      added_keys: set, deleted_keys: set, identical_name_different_data: list,
+                      identical_items: list) -> None:
+        """Print comparison summary."""
+        print("\n" + "=" * 50)
+        print(f"Summary for {name}:")
+        print(f"Total number of keys- in ref1: {len(k1)}, in ref2: {len(k2)}")
+        print(f"Number of keys with different names in ref1 and ref2: {different_keys}")
+        if added_keys:
+            print(f"Keys added in ref2(k2-k1): {sorted(added_keys)}")
+        if deleted_keys:
+            print(f"Keys deleted from ref1(k1-k2): {sorted(deleted_keys)}")
+        print(f"Number of keys with same name but different data in ref1 and ref2: {len(identical_name_different_data)}")
+        print(f"Number of totally same keys: {len(identical_items)}")
+        print("=" * 50)
+        print() 
