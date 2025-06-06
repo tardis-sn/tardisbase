@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 CONFIG = {
     'compare_path': '.',  # Default to current directory
     'temp_dir_prefix': 'ref_compare_',
-    'regression_data_repo': '/home/riddhi/workspace/tardis-main/tardis-regression-data'
+    'regression_data_repo': '/path/to/regression_data'
 }
 
 # Constants
