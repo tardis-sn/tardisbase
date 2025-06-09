@@ -100,10 +100,38 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
           # for example:
           $ pip install -e ".[tardisbase]" --upgrade --force-reinstall # forces reinstall of tardisbase dependencies group
       
-      Please refer to the package documentation for more details.
+      See the package documentation for a complete list of optional dependencies for that package.
 
-To update the environment:
+
+Environment update
+==================
+
+To update the environment, download the latest lockfile and run ``conda update``.
 
 .. code-block:: bash
 
-    conda update --name tardis --file conda-{platform}.lock
+    $ wget -q https://github.com/tardis-sn/tardisbase/master/conda-{platform}-64.lock
+    $ conda update --name tardis --file conda-{platform}.lock
+
+.. note::
+
+  If you have installed the package in development mode, you should *ideally* update your environment whenever you pull latest package code because the new code added might be using updated (or new) dependencies. If you don't do that and your installation seems broken, you can check if your environment requires update by comparing it against the latest environment file:
+
+  .. code-block:: bash
+
+      $ conda compare --name tardis env.yml
+   
+  We also recommend updating optional dependencies whenever you pull latest code.
+
+
+**Recommended approach:**
+
+We highly recommend deleting your existing environment and creating a new one using the latest lockfile whenever you need to update your environment.
+
+Use the following ``conda`` command to remove your current ``tardis`` environment:
+
+.. code-block:: bash
+
+    $ conda remove --name tardis --all
+
+
