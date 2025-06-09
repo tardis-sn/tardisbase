@@ -75,17 +75,28 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
 
         $ pip install git+https://github.com/tardis-sn/{package}.git@master
         
-      .. warning::
-        Running specific modules or tests for some packages might require additional optional dependencies. 
-        These optional dependencies can be installed by running:
-        
-        .. code-block:: bash
-        
-          $ pip install -e ".[optional_dependencies]"
+    .. note::
+      Running specific modules or tests for some packages might require additional optional dependencies. 
+      The tardisbase package can also be installed as an optional dependency.
+      These optional dependencies can be installed by running:
+      
+      .. code-block:: bash
+      
+        $ pip install -e ".[optional_dependencies]"
+        # for example:
+        # pip install -e ".[tardisbase]" # installs the package with tardisbase optional dependency group
+        # for multiple optional dependencies
+        # $ pip install -e ".[dependency1,dependency2,dependency3]"
+
+      To update optional dependencies, use:
+
+      .. code-block:: bash
+      
+          $ pip install -e ".[optional_dependency]" --upgrade --force-reinstall
           # for example:
-          $ pip install -e ".[viz]" # installs qgridnext and lineid_plot in tardis for visualization widgets.
-        
-        Please refer to the package documentation for more details.
+          $ pip install -e ".[tardisbase]" --upgrade --force-reinstall # forces reinstall of tardisbase dependencies group
+      
+      Please refer to the package documentation for more details.
 
 .. note::
    This environment works for all TARDIS ecosystem packages. No additional environments are required.
