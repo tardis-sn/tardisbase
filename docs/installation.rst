@@ -33,22 +33,30 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
 
        conda activate tardis
 
-4. a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_, configure
+4. To install TARDIS ecosystem packages, first execute these commands:
+
+   .. note::
+      Replace {package} with the name of the TARDIS package you wish to install.
+
+   .. code-block:: bash
+
+      $ git clone git@github.com:tardis-sn/{package}.git
+      $ cd {package}
+      $ git remote add upstream git@github.com:tardis-sn/{package}.git
+      $ git fetch upstream
+      $ git checkout upstream/master
+    
+   The installation process differs for developers and non-developers:
+
+   a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ of the package to be installed, configure
       GitHub to `work with SSH keys <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_,
       set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_,
       and install the package in development mode.
 
       .. code-block:: bash
 
-        $ git clone git@github.com:<username>/{package}.git
-        $ cd {package}
-        $ git remote add upstream git@github.com:tardis-sn/{package}.git
-        $ git fetch upstream
-        $ git checkout upstream/master
         $ pip install -e .
 
-      Replace ``{package}`` with tardis, stardis, carsus, or tardisbase.
-        
    b. Non-developers can install from specific releases using pip:
 
       .. code-block:: bash
