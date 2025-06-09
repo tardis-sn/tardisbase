@@ -32,6 +32,10 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
    .. code-block:: bash
 
        conda activate tardis
+   
+   .. note::
+   This environment works for all TARDIS ecosystem packages. No additional environments are required.
+
 
 4. To install TARDIS ecosystem packages, first execute these commands:
 
@@ -97,9 +101,6 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
           $ pip install -e ".[tardisbase]" --upgrade --force-reinstall # forces reinstall of tardisbase dependencies group
       
       Please refer to the package documentation for more details.
-
-.. note::
-   This environment works for all TARDIS ecosystem packages. No additional environments are required.
 
 To update the environment:
 
