@@ -2,15 +2,16 @@ Installation
 -----------
 
 .. note::
-    - tardisbase is only supported on macOS and GNU/Linux.
-    - TARDIS dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
+    - tardisbase and TARDIS ecosystem packages are only supported on macOS and GNU/Linux. Windows users can run TARDIS ecosystem packages 
+      from our official Docker image (*coming soon*), `WSL <https://docs.microsoft.com/en-us/windows/wsl/>`_ 
+      or a Virtual Machine.
+    - TARDIS ecosystem package dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
       package management system, therefore installation requires `Anaconda <https://docs.anaconda.com/anaconda/install/index.html>`_ 
       or `Miniconda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
       to be installed on your system.
 
-Conda lockfiles are platform-specific dependency files that produce repeatable environments.
-These files are generated on every new release. We strongly recommend installing TARDIS ecosystem
-packages using this method by following the steps described below.
+Conda lockfiles are platform-specific dependency files that produce reproducible environments. 
+We strongly recommend installing TARDIS ecosystem packages using this method by following the steps below.
 
 1. Download the lockfile for your platform:
 
@@ -32,7 +33,7 @@ packages using this method by following the steps described below.
 
        conda activate tardis
 
-4. a. Developers should `fork the repository <https://github.com/tardis-sn/{package}/fork>`_, configure
+4. a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_, configure
       GitHub to `work with SSH keys <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_,
       set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_,
       and install the package in development mode.
@@ -65,6 +66,18 @@ packages using this method by following the steps described below.
       .. code-block:: bash
 
         $ pip install git+https://github.com/tardis-sn/{package}.git@master
+        
+      .. warning::
+        Running specific modules or tests for some packages might require additional optional dependencies. 
+        These optional dependencies can be installed by running:
+        
+        .. code-block:: bash
+        
+          $ pip install -e ".[optional_dependencies]"
+          # for example:
+          $ pip install -e ".[viz]" # installs qgridnext and lineid_plot in tardis for visualization widgets.
+        
+        Please refer to the package documentation for more details.
 
 .. note::
    This environment works for all TARDIS ecosystem packages. No additional environments are required.
