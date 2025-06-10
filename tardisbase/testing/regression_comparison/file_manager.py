@@ -3,7 +3,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 import os
-from __init__ import CONFIG
+from tardisbase.testing.regression_comparison import CONFIG
 
 class FileManager:
     def __init__(self, repo_path=None):

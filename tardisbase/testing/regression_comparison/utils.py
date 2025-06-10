@@ -1,5 +1,9 @@
 import subprocess
 from pathlib import Path
+import logging
+from tardisbase.testing.regression_comparison import CONFIG
+
+logger = logging.getLogger(__name__)
 
 def color_print(text, color):
     colors = {
@@ -14,16 +18,28 @@ def color_print(text, color):
 def get_relative_path(path, base):
     return str(Path(path).relative_to(base))
 
-def get_last_two_commits():
+def get_last_two_commits(repo_path=None):
+    if repo_path is None:
+        repo_path = CONFIG['regression_data_repo']
+    
     try:
-        result = subprocess.run(['git', 'log', '--format=%H', '-n', '2'], 
-                              capture_output=True, 
-                              text=True, 
-                              check=True)
+        if not Path(repo_path).exists():
+            logger.error(f"Regression data repository not found at {repo_path}")
+            return None, None
+
+        result = subprocess.run(
+            ['git', '-C', str(repo_path), 'log', '--format=%H', '-n', '2'],
+            capture_output=True,
+            text=True,
+            check=True
+        )
+        
         commits = result.stdout.strip().split('\n')
         if len(commits) >= 2:
             return commits[1], commits[0]
+        
         return None, None
+        
     except (subprocess.SubprocessError, subprocess.CalledProcessError):
-        print("Error: Unable to get git commits.")
+        logger.error("Unable to get git commits.")
         return None, None
