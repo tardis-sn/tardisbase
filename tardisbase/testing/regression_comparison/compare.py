@@ -5,7 +5,7 @@ import numpy as np
 import plotly.graph_objects as go
 import random
 import plotly.colors as pc
-from tardisbase.testing.regression_comparison.utils import get_relative_path
+from tardisbase.testing.regression_comparison.util import get_relative_path
 from tardisbase.testing.regression_comparison.file_manager import FileManager, FileSetup
 from tardisbase.testing.regression_comparison.analyzers import DiffAnalyzer, HDFComparator
 from tardisbase.testing.regression_comparison.visualization import SpectrumSolverComparator

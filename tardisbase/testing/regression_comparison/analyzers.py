@@ -1,5 +1,5 @@
 from pathlib import Path
-from tardisbase.testing.regression_comparison.utils import color_print
+from tardisbase.testing.regression_comparison.util import color_print
 import numpy as np
 import pandas as pd
 import logging
