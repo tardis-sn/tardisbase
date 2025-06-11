@@ -9,14 +9,6 @@ Subpackages
 
    tardisbase.testing
 
-Submodules
-----------
-
-.. toctree::
-   :maxdepth: 4
-
-   tardisbase.example_mod
-
 Module contents
 ---------------
 
