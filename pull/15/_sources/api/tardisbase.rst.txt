@@ -1,0 +1,26 @@
+tardisbase package
+==================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tardisbase.testing
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tardisbase.example_mod
+
+Module contents
+---------------
+
+.. automodule:: tardisbase
+   :members:
+   :show-inheritance:
+   :undoc-members:

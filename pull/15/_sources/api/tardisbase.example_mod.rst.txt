@@ -1,0 +1,7 @@
+tardisbase.example\_mod module
+==============================
+
+.. automodule:: tardisbase.example_mod
+   :members:
+   :show-inheritance:
+   :undoc-members:
