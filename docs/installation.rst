@@ -11,7 +11,10 @@ Installation
       to be installed on your system.
 
 Conda lockfiles are platform-specific dependency files that produce reproducible environments. 
-We strongly recommend installing TARDIS ecosystem packages using this method by following the steps below.
+We strongly recommend installing `tardisbase` using this method by following the steps below.
+
+.. note::
+    You need not install the environment if you have installed it already beforehand when installing a different TARDIS ecosystem package.
 
 1. Download the lockfile for your platform:
 
@@ -37,25 +40,22 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
    This environment works for all TARDIS ecosystem packages. No additional environments are required.
 
 
-4. To install TARDIS ecosystem packages, first execute these commands:
-
-   .. note::
-      Replace {package} with the name of the TARDIS package you wish to install.
+4. To install `tardisbase` first execute these commands:
 
    .. code-block:: bash
 
-      $ git clone git@github.com:tardis-sn/{package}.git
-      $ cd {package}
-      $ git remote add upstream git@github.com:tardis-sn/{package}.git
+      $ git clone git@github.com:tardis-sn/tardisbase.git
+      $ cd tardisbase
+      $ git remote add upstream git@github.com:tardis-sn/tardisbase.git
       $ git fetch upstream
       $ git checkout upstream/master
     
    The installation process differs for developers and non-developers:
 
-   a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ of the package to be installed, configure
+   a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ , configure
       GitHub to `work with SSH keys <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_,
-      set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_,
-      and install the package in development mode.
+      set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_ and `origin` (pointing to your fork),
+      and install `tardisbase` in development mode.
 
       .. code-block:: bash
 
@@ -65,43 +65,19 @@ We strongly recommend installing TARDIS ecosystem packages using this method by 
 
       .. code-block:: bash
 
-        $ pip install git+https://github.com/tardis-sn/{package}.git@{tag}
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@{tag}
 
       For example, to install the latest release:
 
       .. code-block:: bash
       
-        $ pip install git+https://github.com/tardis-sn/{package}.git@release-latest
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@release-latest
 
       or to install the most recent, unreleased changes from upstream:
 
       .. code-block:: bash
 
-        $ pip install git+https://github.com/tardis-sn/{package}.git@master
-        
-    .. note::
-      Running specific modules or tests for some packages might require additional optional dependencies. 
-      The tardisbase package can also be installed as an optional dependency.
-      These optional dependencies can be installed by running:
-      
-      .. code-block:: bash
-      
-        $ pip install -e ".[optional_dependencies]"
-        # for example:
-        # pip install -e ".[tardisbase]" # installs the package with tardisbase optional dependency group
-        # for multiple optional dependencies
-        # $ pip install -e ".[dependency1,dependency2,dependency3]"
-
-      To update optional dependencies, use:
-
-      .. code-block:: bash
-      
-          $ pip install -e ".[optional_dependency]" --upgrade --force-reinstall
-          # for example:
-          $ pip install -e ".[tardisbase]" --upgrade --force-reinstall # forces reinstall of tardisbase dependencies group
-      
-      See the package documentation for a complete list of optional dependencies for that package.
-
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@master
 
 Environment update
 ==================
@@ -115,7 +91,7 @@ To update the environment, download the latest lockfile and run ``conda update``
 
 .. note::
 
-  If you have installed the package in development mode, you should *ideally* update your environment whenever you pull latest package code because the new code added might be using updated (or new) dependencies. If you don't do that and your installation seems broken, you can check if your environment requires update by comparing it against the latest environment file:
+  If you have installed `tardisbase` in development mode, you should *ideally* update your environment whenever you pull latest code because the new code added might be using updated (or new) dependencies. If you don't do that and your installation seems broken, you can check if your environment requires update by comparing it against the latest environment file:
 
   .. code-block:: bash
 
