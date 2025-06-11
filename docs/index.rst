@@ -13,6 +13,7 @@ tardisbase is the foundational package for the TARDIS ecosystem, providing share
    :caption: Contents:
 
    installation
+   api
 
 Indices and tables
 ==================

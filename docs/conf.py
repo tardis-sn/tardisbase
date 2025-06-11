@@ -37,7 +37,7 @@ extensions = [
 ]
 
 # Add any paths that contain templates here, relative to this directory.
-# templates_path = ["_templates"]
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -80,3 +80,12 @@ html_theme = "alabaster"
 autoclass_content = "both"
 
 # -- Other options ----------------------------------------------------------
+
+# -- Options for autodoc extension ---------------------------------------
+autodoc_default_options = {
+    'members': True,
+    'member-order': 'bysource',
+    'special-members': '__init__',
+    'undoc-members': True,
+    'exclude-members': '__weakref__'
+}
