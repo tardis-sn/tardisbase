@@ -34,6 +34,7 @@ extensions = [
     "sphinx.ext.mathjax",
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
+    "sphinxcontrib.apidoc",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -81,11 +82,13 @@ autoclass_content = "both"
 
 # -- Other options ----------------------------------------------------------
 
-# -- Options for autodoc extension ---------------------------------------
-autodoc_default_options = {
-    'members': True,
-    'member-order': 'bysource',
-    'special-members': '__init__',
-    'undoc-members': True,
-    'exclude-members': '__weakref__'
-}
+# -- Options for apidoc extension ---------------------------------------
+apidoc_module_dir = "../tardisbase"
+apidoc_output_dir = "api"
+apidoc_excluded_paths = [
+    "*tests*",
+    "*setup_package*",
+    "*conftest*",
+    "*version*",
+]
+apidoc_separate_modules = True
