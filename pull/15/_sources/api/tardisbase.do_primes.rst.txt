@@ -1,0 +1,6 @@
+do_primes
+=========
+
+.. currentmodule:: tardisbase
+
+.. autofunction:: do_primes
