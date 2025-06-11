@@ -9,7 +9,7 @@ from tardisbase.testing.regression_comparison.utils import get_relative_path
 from tardisbase.testing.regression_comparison.file_manager import FileManager, FileSetup
 from tardisbase.testing.regression_comparison.analyzers import DiffAnalyzer, HDFComparator
 from tardisbase.testing.regression_comparison.visualization import SpectrumSolverComparator
-from __init__ import CONFIG
+from tardisbase.testing.regression_comparison import CONFIG
 import logging
 
 logger = logging.getLogger(__name__)
