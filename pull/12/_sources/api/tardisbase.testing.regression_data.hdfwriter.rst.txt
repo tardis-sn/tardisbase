@@ -1,0 +1,7 @@
+tardisbase.testing.regression\_data.hdfwriter module
+====================================================
+
+.. automodule:: tardisbase.testing.regression_data.hdfwriter
+   :members:
+   :show-inheritance:
+   :undoc-members:
