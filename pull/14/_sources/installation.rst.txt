@@ -2,9 +2,7 @@ Installation
 -----------
 
 .. note::
-    - tardisbase and TARDIS ecosystem packages are only supported on macOS and GNU/Linux. Windows users can run TARDIS ecosystem packages 
-      from our official Docker image (*coming soon*), `WSL <https://docs.microsoft.com/en-us/windows/wsl/>`_ 
-      or a Virtual Machine.
+    - tardisbase and TARDIS ecosystem packages are only supported on macOS and GNU/Linux. Windows users can run TARDIS ecosystem packages using `WSL <https://docs.microsoft.com/en-us/windows/wsl/>`_  or on a Virtual Machine.
     - TARDIS ecosystem package dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
       package management system, therefore installation requires `Anaconda <https://docs.anaconda.com/anaconda/install/index.html>`_ 
       or `Miniconda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
