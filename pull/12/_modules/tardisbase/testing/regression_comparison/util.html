@@ -6,12 +6,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tardisbase.testing.regression_comparison.util &#8212; tardisbase 0.1.dev1+ga285f4a.d20250612 documentation</title>
+    <title>tardisbase.testing.regression_comparison.util &#8212; tardisbase 0.1.dev1+gcc3f606.d20250612 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=8e0e63b4"></script>
+    <script src="../../../../_static/documentation_options.js?v=e9c90516"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -51,6 +51,31 @@
 <div class="viewcode-block" id="color_print">
 <a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.color_print">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">color_print</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">color</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Print text to the console with ANSI color formatting.</span>
+<span class="sd">    </span>
+<span class="sd">    This function provides colored console output using ANSI escape codes,</span>
+<span class="sd">    making it easier to distinguish different types of messages in terminal output.</span>
+<span class="sd">    The text is automatically reset to default color after printing.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    text : str</span>
+<span class="sd">        The text string to be printed with color formatting.</span>
+<span class="sd">    color : str</span>
+<span class="sd">        The color name for the text. Supported colors are:</span>
+<span class="sd">        &#39;red&#39;, &#39;green&#39;, &#39;yellow&#39;, &#39;blue&#39;. If an unsupported color</span>
+<span class="sd">        is provided, the text will be printed without color formatting.</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function uses ANSI escape codes for coloring:</span>
+<span class="sd">    - Red: \\033[91m</span>
+<span class="sd">    - Green: \\033[92m  </span>
+<span class="sd">    - Yellow: \\033[93m</span>
+<span class="sd">    - Blue: \\033[94m</span>
+<span class="sd">    - Reset: \\033[0m</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">colors</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;red&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[91m&#39;</span><span class="p">,</span>
         <span class="s1">&#39;green&#39;</span><span class="p">:</span> <span class="s1">&#39;</span><span class="se">\033</span><span class="s1">[92m&#39;</span><span class="p">,</span>
@@ -64,12 +89,90 @@
 <div class="viewcode-block" id="get_relative_path">
 <a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.get_relative_path">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_relative_path</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">base</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Calculate the relative path from a base directory to a target path.</span>
+<span class="sd">    </span>
+<span class="sd">    This function computes the relative path representation of a target path</span>
+<span class="sd">    with respect to a base directory, returning the result as a string.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str or Path</span>
+<span class="sd">        The target path for which to calculate the relative path.</span>
+<span class="sd">        Can be either an absolute or relative path.</span>
+<span class="sd">    base : str or Path</span>
+<span class="sd">        The base directory from which to calculate the relative path.</span>
+<span class="sd">        Should typically be an absolute path for consistent results.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    str</span>
+<span class="sd">        The relative path from base to path as a string.</span>
+<span class="sd">        </span>
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    ValueError</span>
+<span class="sd">        If the path is not relative to the base directory (i.e., they don&#39;t</span>
+<span class="sd">        share a common root or the path is outside the base directory tree).</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function uses pathlib.Path.relative_to() internally, which requires</span>
+<span class="sd">    that the target path be within the base directory hierarchy. If the paths</span>
+<span class="sd">    are on different drives (Windows) or don&#39;t share a common ancestor,</span>
+<span class="sd">    a ValueError will be raised.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">base</span><span class="p">))</span></div>
 
 
 <div class="viewcode-block" id="get_last_two_commits">
 <a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.get_last_two_commits">[docs]</a>
 <span class="k">def</span><span class="w"> </span><span class="nf">get_last_two_commits</span><span class="p">(</span><span class="n">repo_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Retrieve the last two commit hashes from a git repository.</span>
+<span class="sd">    </span>
+<span class="sd">    This function queries a git repository to get the two most recent commit</span>
+<span class="sd">    hashes, which is useful for regression testing between consecutive commits</span>
+<span class="sd">    or comparing the current state with the previous commit.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    repo_path : str or Path, optional</span>
+<span class="sd">        Path to the git repository to query, by default None.</span>
+<span class="sd">        If None, uses the path specified in CONFIG[&#39;regression_data_repo&#39;].</span>
+<span class="sd">        The path should point to a valid git repository root or any directory</span>
+<span class="sd">        within a git repository.</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple of (str, str) or (None, None)</span>
+<span class="sd">        A tuple containing (older_commit, newer_commit) where:</span>
+<span class="sd">        - older_commit : The second-to-last commit hash (parent commit)</span>
+<span class="sd">        - newer_commit : The most recent commit hash (HEAD)</span>
+<span class="sd">        </span>
+<span class="sd">        Returns (None, None) if:</span>
+<span class="sd">        - The repository doesn&#39;t exist at the specified path</span>
+<span class="sd">        - Git command execution fails</span>
+<span class="sd">        - The repository has fewer than 2 commits</span>
+<span class="sd">        - Any subprocess or git-related error occurs</span>
+<span class="sd">        </span>
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    The function uses &#39;git log --format=%H -n 2&#39; to retrieve commit hashes.</span>
+<span class="sd">    This command returns the full SHA-1 hashes of the commits in reverse</span>
+<span class="sd">    chronological order (newest first).</span>
+<span class="sd">    </span>
+<span class="sd">    Error handling includes:</span>
+<span class="sd">    - Repository existence checking</span>
+<span class="sd">    - Subprocess error catching</span>
+<span class="sd">    - Git command failure handling</span>
+<span class="sd">    - Logging of errors for debugging purposes</span>
+<span class="sd">    </span>
+<span class="sd">    The function is designed to fail, returning (None, None)</span>
+<span class="sd">    instead of raising exceptions, making it suitable for use in automated</span>
+<span class="sd">    testing workflows where missing repositories or git errors should not</span>
+<span class="sd">    halt execution.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">repo_path</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">repo_path</span> <span class="o">=</span> <span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;regression_data_repo&#39;</span><span class="p">]</span>
     
