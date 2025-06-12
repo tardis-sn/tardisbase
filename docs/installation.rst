@@ -2,15 +2,17 @@ Installation
 -----------
 
 .. note::
-    - tardisbase is only supported on macOS and GNU/Linux.
-    - TARDIS dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
+    - tardisbase and TARDIS ecosystem packages are only supported on macOS and GNU/Linux. Windows users can run TARDIS ecosystem packages using `WSL <https://docs.microsoft.com/en-us/windows/wsl/>`_  or on a Virtual Machine.
+    - TARDIS ecosystem package dependencies are distributed only through the `conda <https://docs.conda.io/en/latest/>`_ 
       package management system, therefore installation requires `Anaconda <https://docs.anaconda.com/anaconda/install/index.html>`_ 
       or `Miniconda <https://conda.io/projects/conda/en/latest/user-guide/install/index.html>`_
       to be installed on your system.
 
-Conda lockfiles are platform-specific dependency files that produce repeatable environments.
-These files are generated on every new release. We strongly recommend installing TARDIS ecosystem
-packages using this method by following the steps described below.
+Conda lockfiles are platform-specific dependency files that produce reproducible environments. 
+We strongly recommend installing `tardisbase` using this method by following the steps below.
+
+.. note::
+    You need not install the environment if you have installed it already beforehand when installing a different TARDIS ecosystem package.
 
 1. Download the lockfile for your platform:
 
@@ -31,46 +33,79 @@ packages using this method by following the steps described below.
    .. code-block:: bash
 
        conda activate tardis
+   
+   .. note::
+   This environment works for all TARDIS ecosystem packages. No additional environments are required.
 
-4. a. Developers should `fork the repository <https://github.com/tardis-sn/{package}/fork>`_, configure
+
+4. To install `tardisbase` first execute these commands:
+
+   .. code-block:: bash
+
+      $ git clone git@github.com:tardis-sn/tardisbase.git
+      $ cd tardisbase
+      $ git remote add upstream git@github.com:tardis-sn/tardisbase.git
+      $ git fetch upstream
+      $ git checkout upstream/master
+    
+   The installation process differs for developers and non-developers:
+
+   a. Developers should `fork the repository <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo>`_ , configure
       GitHub to `work with SSH keys <https://docs.github.com/en/authentication/connecting-to-github-with-ssh>`_,
-      set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_,
-      and install the package in development mode.
+      set up the `upstream remote <https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork>`_ and `origin` (pointing to your fork),
+      and install `tardisbase` in development mode.
 
       .. code-block:: bash
 
-        $ git clone git@github.com:<username>/{package}.git
-        $ cd {package}
-        $ git remote add upstream git@github.com:tardis-sn/{package}.git
-        $ git fetch upstream
-        $ git checkout upstream/master
         $ pip install -e .
 
-      Replace ``{package}`` with tardis, stardis, carsus, or tardisbase.
-        
    b. Non-developers can install from specific releases using pip:
 
       .. code-block:: bash
 
-        $ pip install git+https://github.com/tardis-sn/{package}.git@{tag}
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@{tag}
 
       For example, to install the latest release:
 
       .. code-block:: bash
       
-        $ pip install git+https://github.com/tardis-sn/{package}.git@release-latest
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@release-latest
 
       or to install the most recent, unreleased changes from upstream:
 
       .. code-block:: bash
 
-        $ pip install git+https://github.com/tardis-sn/{package}.git@master
+        $ pip install git+https://github.com/tardis-sn/tardisbase.git@master
 
-.. note::
-   This environment works for all TARDIS ecosystem packages. No additional environments are required.
+Environment update
+==================
 
-To update the environment:
+To update the environment, download the latest lockfile and run ``conda update``.
 
 .. code-block:: bash
 
-    conda update --name tardis --file conda-{platform}.lock
+    $ wget -q https://github.com/tardis-sn/tardisbase/master/conda-{platform}-64.lock
+    $ conda update --name tardis --file conda-{platform}.lock
+
+.. note::
+
+  If you have installed `tardisbase` in development mode, you should *ideally* update your environment whenever you pull latest code because the new code added might be using updated (or new) dependencies. If you don't do that and your installation seems broken, you can check if your environment requires update by comparing it against the latest environment file:
+
+  .. code-block:: bash
+
+      $ conda compare --name tardis env.yml
+   
+  We also recommend updating optional dependencies whenever you pull latest code.
+
+
+**Recommended approach:**
+
+We highly recommend deleting your existing environment and creating a new one using the latest lockfile whenever you need to update your environment.
+
+Use the following ``conda`` command to remove your current ``tardis`` environment:
+
+.. code-block:: bash
+
+    $ conda remove --name tardis --all
+
+
