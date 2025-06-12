@@ -15,6 +15,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ReferenceComparer:
+    """
+    A class for comparing reference data between two regression data commits.
+    
+    This class provides functionality to compare HDF5 files, generate visualizations,
+    and analyze differences between two regression data repo commits. It supports directory
+    comparison, HDF5 file analysis, and plot generation.
+    
+    Parameters
+    ----------
+    ref1_hash : str, optional
+        Git commit hash for the first reference dataset, by default None.
+        At least one of ref1_hash or ref2_hash must be provided.
+    ref2_hash : str, optional
+        Git commit hash for the second reference dataset, by default None.
+        At least one of ref1_hash or ref2_hash must be provided.
+    print_path : bool, optional
+        Whether to print file paths in comparison output, by default False.
+    repo_path : str or Path, optional
+        Path to the repository containing reference data, by default None.
+        If None, uses the path specified in CONFIG['compare_path'].
+        
+    Raises
+    ------
+    AssertionError
+        If both ref1_hash and ref2_hash are None.
+    """
     def __init__(self, ref1_hash=None, ref2_hash=None, print_path=False, repo_path=None):
         assert not ((ref1_hash is None) and (ref2_hash is None)), "One hash can not be None"
         self.ref1_hash = ref1_hash
@@ -28,6 +54,23 @@ class ReferenceComparer:
         self.hdf_comparator = None
 
     def setup(self):
+        """
+        Set up all necessary components for reference comparison.
+        
+        This method initializes the file manager, sets up reference files,
+        creates analyzer and comparator instances, and establishes directory
+        comparison objects. Must be called before performing any comparisons.
+        
+        Notes
+        -----
+        After calling this method, the following attributes will be available:
+        - ref1_path : Path to the first reference directory
+        - ref2_path : Path to the second reference directory
+        - dcmp : Directory comparison object
+        - file_setup : Configured FileSetup instance
+        - diff_analyzer : Configured DiffAnalyzer instance
+        - hdf_comparator : Configured HDFComparator instance
+        """
         self.file_manager.setup()
         self.file_setup = FileSetup(self.file_manager, self.ref1_hash, self.ref2_hash)
         self.diff_analyzer = DiffAnalyzer(self.file_manager)
@@ -38,9 +81,28 @@ class ReferenceComparer:
         self.dcmp = dircmp(self.ref1_path, self.ref2_path)
 
     def teardown(self):
+        """
+        Clean up temporary files and directories created during comparison.
+        
+        This method should be called after completing all operations
+        to ensure proper cleanup of resources.
+        """
         self.file_manager.teardown()
 
     def compare(self, print_diff=False):
+        """
+        Perform comparison between reference datasets.
+        
+        This method executes the main comparison workflow, including optional
+        directory difference printing and HDF5 file comparison. It updates
+        the internal test_table_dict with comparison results.
+        
+        Parameters
+        ----------
+        print_diff : bool, optional
+            Whether to print detailed directory differences, by default False.
+            If True, displays a tree-like view of file differences.
+        """
         if print_diff:
             self.diff_analyzer.print_diff_files(self.dcmp)
         self.compare_hdf_files()
@@ -53,6 +115,14 @@ class ReferenceComparer:
             results["deleted_keys"] = list(ref1_keys - ref2_keys)
 
     def compare_hdf_files(self):
+        """
+        Discover and compare all HDF5 files in the reference directories.
+        
+        This method recursively walks through the first reference directory,
+        identifies HDF5 files (.h5, .hdf5), and compares them with corresponding
+        files in the second reference directory. Only files that exist in both
+        directories are compared.
+        """
         for root, _, files in os.walk(self.ref1_path):
             for file in files:
                 file_path = Path(file)
@@ -63,6 +133,29 @@ class ReferenceComparer:
                         self.summarise_changes_hdf(file, root, ref2_file_path.parent)
 
     def summarise_changes_hdf(self, name, path1, path2):
+        """
+        Analyze and store changes for a specific HDF5 file pair.
+        
+        This method performs detailed comparison of an HDF5 file between two
+        reference directories and stores the results in the internal test_table_dict.
+        
+        Parameters
+        ----------
+        name : str
+            Name of the HDF5 file to compare.
+        path1 : str or Path
+            Path to the directory containing the first reference file.
+        path2 : str or Path
+            Path to the directory containing the second reference file.
+            
+        Notes
+        -----
+        The results are stored in test_table_dict[name] and include:
+        - Relative path information
+        - All comparison results from HDFComparator
+        - Lists of keys from both reference files
+        - Summary statistics about differences
+        """
         self.test_table_dict[name] = {
             "path": get_relative_path(path1, self.file_manager.temp_dir / "ref1")
         }
@@ -74,6 +167,21 @@ class ReferenceComparer:
         self.test_table_dict[name]["ref2_keys"] = results.get("ref2_keys", [])
 
     def display_hdf_comparison_results(self):
+        """
+        Print a formatted summary of all HDF5 comparison results.
+        
+        This method provides a comprehensive overview of comparison results
+        for all HDF5 files that were analyzed, displaying key-value pairs
+        for each file's comparison statistics.
+        
+        Notes
+        -----
+        The output includes information such as:
+        - Number of different keys
+        - Identical keys count
+        - Keys with same name but different data
+        - File paths and reference key lists
+        """
         for name, results in self.test_table_dict.items():
             print(f"Results for {name}:")
             for key, value in results.items():
@@ -81,9 +189,57 @@ class ReferenceComparer:
             print()
 
     def get_temp_dir(self):
+        """
+        Get the temporary directory path used for file operations.
+        
+        Returns
+        -------
+        Path
+            The temporary directory path managed by the file manager.
+        """
         return self.file_manager.temp_dir
 
     def generate_graph(self, option):
+        """
+        Generate interactive visualizations of comparison results.
+        
+        This method creates Plotly bar charts to visualize differences between
+        reference datasets, supporting two types of comparisons: keys with same
+        names but different data, and structural key differences.
+        
+        Parameters
+        ----------
+        option : str
+            Type of comparison to visualize. Must be one of:
+            - "different keys same name" : Shows keys with identical names but different data
+            - "different keys" : Shows structural differences (added/deleted keys)
+            
+        Returns
+        -------
+        plotly.graph_objects.Figure or None
+            Interactive Plotly figure showing the comparison results.
+            Returns None if no data matches the specified option.
+            
+        Raises
+        ------
+        ValueError
+            If option is not one of the supported values.
+            
+        Notes
+        -----
+        For "different keys same name" option:
+        - Bar colors represent relative difference magnitude using blue color scale
+        - Hover information includes maximum relative differences and percentages
+        - Handles NaN and infinite values gracefully
+        
+        For "different keys" option:
+        - Green bars represent added keys
+        - Red bars represent deleted keys
+        - Random color variations within each category for distinction
+        
+        If the environment variable SAVE_COMP_IMG is set to '1', the plot will
+        be saved as a high-resolution PNG file in a comparison_plots directory.
+        """
         print("Generating graph with updated hovertemplate")
         if option not in ["different keys same name", "different keys"]:
             raise ValueError("Invalid option. Choose 'different keys same name' or 'different keys'.")
@@ -230,6 +386,29 @@ class ReferenceComparer:
         return fig
 
     def compare_testspectrumsolver_hdf(self, custom_ref1_path=None, custom_ref2_path=None):
+        """
+        Perform comparison for TestSpectrumSolver HDF5 files.
+        
+        Parameters
+        ----------
+        custom_ref1_path : str or Path, optional
+            Custom path to the first TestSpectrumSolver.h5 file, by default None.
+            If None, uses the standard path within ref1_path directory.
+        custom_ref2_path : str or Path, optional
+            Custom path to the second TestSpectrumSolver.h5 file, by default None.
+            If None, uses the standard path within ref2_path directory.
+            
+        Notes
+        -----
+        The method automatically creates visualization output directories when
+        the SAVE_COMP_IMG environment variable is set to '1'. The comparison
+        generates specialized plots tailored for spectrum solver data analysis.
+        
+        Standard file paths (when custom paths are not provided):
+        - ref1: tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5
+        - ref2: tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5
+        
+        """
         ref1_path = custom_ref1_path or Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
         ref2_path = custom_ref2_path or Path(self.ref2_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
         
