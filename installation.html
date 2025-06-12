@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Installation &#8212; tardisbase 0.1.dev1+g3ad468d.d20250612 documentation</title>
+    <title>Installation &#8212; tardisbase 0.1.dev1+gd50995a.d20250612 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-    <script src="_static/documentation_options.js?v=f3c7e91f"></script>
+    <script src="_static/documentation_options.js?v=124fcf80"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -48,16 +48,19 @@
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <ul class="simple">
-<li><p>tardisbase is only supported on macOS and GNU/Linux.</p></li>
-<li><p>TARDIS dependencies are distributed only through the <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>
+<li><p>tardisbase and TARDIS ecosystem packages are only supported on macOS and GNU/Linux. Windows users can run TARDIS ecosystem packages using <a class="reference external" href="https://docs.microsoft.com/en-us/windows/wsl/">WSL</a>  or on a Virtual Machine.</p></li>
+<li><p>TARDIS ecosystem package dependencies are distributed only through the <a class="reference external" href="https://docs.conda.io/en/latest/">conda</a>
 package management system, therefore installation requires <a class="reference external" href="https://docs.anaconda.com/anaconda/install/index.html">Anaconda</a>
 or <a class="reference external" href="https://conda.io/projects/conda/en/latest/user-guide/install/index.html">Miniconda</a>
 to be installed on your system.</p></li>
 </ul>
 </div>
-<p>Conda lockfiles are platform-specific dependency files that produce repeatable environments.
-These files are generated on every new release. We strongly recommend installing TARDIS ecosystem
-packages using this method by following the steps described below.</p>
+<p>Conda lockfiles are platform-specific dependency files that produce reproducible environments.
+We strongly recommend installing <a class="reference internal" href="api/tardisbase.html#module-tardisbase" title="tardisbase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tardisbase</span></code></a> using this method by following the steps below.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>You need not install the environment if you have installed it already beforehand when installing a different TARDIS ecosystem package.</p>
+</div>
 <ol class="arabic">
 <li><p>Download the lockfile for your platform:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget<span class="w"> </span>-q<span class="w"> </span>https://github.com/tardis-sn/tardisbase/master/conda-<span class="o">{</span>platform<span class="o">}</span>-64.lock
@@ -74,46 +77,64 @@ packages using this method by following the steps described below.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>activate<span class="w"> </span>tardis
 </pre></div>
 </div>
+<p>This environment works for all TARDIS ecosystem packages. No additional environments are required.</p>
 </li>
-<li><ol class="loweralpha">
-<li><p>Developers should <a class="reference external" href="https://github.com/tardis-sn/{package}/fork">fork the repository</a>, configure
-GitHub to <a class="reference external" href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh">work with SSH keys</a>,
-set up the <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork">upstream remote</a>,
-and install the package in development mode.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:&lt;username&gt;/<span class="o">{</span>package<span class="o">}</span>.git
-$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span><span class="o">{</span>package<span class="o">}</span>
-$<span class="w"> </span>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>git@github.com:tardis-sn/<span class="o">{</span>package<span class="o">}</span>.git
+<li><p>To install <a class="reference internal" href="api/tardisbase.html#module-tardisbase" title="tardisbase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tardisbase</span></code></a> first execute these commands:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:tardis-sn/tardisbase.git
+$<span class="w"> </span><span class="nb">cd</span><span class="w"> </span>tardisbase
+$<span class="w"> </span>git<span class="w"> </span>remote<span class="w"> </span>add<span class="w"> </span>upstream<span class="w"> </span>git@github.com:tardis-sn/tardisbase.git
 $<span class="w"> </span>git<span class="w"> </span>fetch<span class="w"> </span>upstream
 $<span class="w"> </span>git<span class="w"> </span>checkout<span class="w"> </span>upstream/master
-$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
 </pre></div>
 </div>
-<p>Replace <code class="docutils literal notranslate"><span class="pre">{package}</span></code> with tardis, stardis, carsus, or tardisbase.</p>
+<p>The installation process differs for developers and non-developers:</p>
+<ol class="loweralpha">
+<li><p>Developers should <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo">fork the repository</a> , configure
+GitHub to <a class="reference external" href="https://docs.github.com/en/authentication/connecting-to-github-with-ssh">work with SSH keys</a>,
+set up the <a class="reference external" href="https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/configuring-a-remote-for-a-fork">upstream remote</a> and <code class="xref py py-obj docutils literal notranslate"><span class="pre">origin</span></code> (pointing to your fork),
+and install <a class="reference internal" href="api/tardisbase.html#module-tardisbase" title="tardisbase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tardisbase</span></code></a> in development mode.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
 </li>
 <li><p>Non-developers can install from specific releases using pip:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/<span class="o">{</span>package<span class="o">}</span>.git@<span class="o">{</span>tag<span class="o">}</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/tardisbase.git@<span class="o">{</span>tag<span class="o">}</span>
 </pre></div>
 </div>
 <p>For example, to install the latest release:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/<span class="o">{</span>package<span class="o">}</span>.git@release-latest
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/tardisbase.git@release-latest
 </pre></div>
 </div>
 <p>or to install the most recent, unreleased changes from upstream:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/<span class="o">{</span>package<span class="o">}</span>.git@master
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>git+https://github.com/tardis-sn/tardisbase.git@master
 </pre></div>
 </div>
 </li>
 </ol>
 </li>
 </ol>
+<section id="environment-update">
+<h2>Environment update<a class="headerlink" href="#environment-update" title="Link to this heading">¶</a></h2>
+<p>To update the environment, download the latest lockfile and run <code class="docutils literal notranslate"><span class="pre">conda</span> <span class="pre">update</span></code>.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>wget<span class="w"> </span>-q<span class="w"> </span>https://github.com/tardis-sn/tardisbase/master/conda-<span class="o">{</span>platform<span class="o">}</span>-64.lock
+$<span class="w"> </span>conda<span class="w"> </span>update<span class="w"> </span>--name<span class="w"> </span>tardis<span class="w"> </span>--file<span class="w"> </span>conda-<span class="o">{</span>platform<span class="o">}</span>.lock
+</pre></div>
+</div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>This environment works for all TARDIS ecosystem packages. No additional environments are required.</p>
-</div>
-<p>To update the environment:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>update<span class="w"> </span>--name<span class="w"> </span>tardis<span class="w"> </span>--file<span class="w"> </span>conda-<span class="o">{</span>platform<span class="o">}</span>.lock
+<p>If you have installed <a class="reference internal" href="api/tardisbase.html#module-tardisbase" title="tardisbase"><code class="xref py py-obj docutils literal notranslate"><span class="pre">tardisbase</span></code></a> in development mode, you should <em>ideally</em> update your environment whenever you pull latest code because the new code added might be using updated (or new) dependencies. If you don’t do that and your installation seems broken, you can check if your environment requires update by comparing it against the latest environment file:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>compare<span class="w"> </span>--name<span class="w"> </span>tardis<span class="w"> </span>env.yml
 </pre></div>
 </div>
+<p>We also recommend updating optional dependencies whenever you pull latest code.</p>
+</div>
+<p><strong>Recommended approach:</strong></p>
+<p>We highly recommend deleting your existing environment and creating a new one using the latest lockfile whenever you need to update your environment.</p>
+<p>Use the following <code class="docutils literal notranslate"><span class="pre">conda</span></code> command to remove your current <code class="docutils literal notranslate"><span class="pre">tardis</span></code> environment:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>$<span class="w"> </span>conda<span class="w"> </span>remove<span class="w"> </span>--name<span class="w"> </span>tardis<span class="w"> </span>--all
+</pre></div>
+</div>
+</section>
 </section>
 
 
@@ -144,7 +165,10 @@ $<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </sp
 <script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#environment-update">Environment update</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API</a></li>
 </ul>
 
