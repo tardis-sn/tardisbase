@@ -47,11 +47,11 @@ class DiffAnalyzer:
         Notes
         -----
         Uses the following symbols:\n
-        - '−' (red) for items only in the left directory \n
-        - '+' (green) for items only in the right directory \n 
-        - '✱' (yellow) for files that differ between directories \n
-        - '├' (blue) for common subdirectories \n
-        - '│ ' for tree indentation in subdirectories \n
+        - '−' (red) for items only in the left directory\n
+        - '+' (green) for items only in the right directory\n 
+        - '✱' (yellow) for files that differ between directories\n
+        - '├' (blue) for common subdirectories\n
+        - '│ ' for tree indentation in subdirectories\n
         """
         for item in sorted(dcmp.left_only):
             path = Path(dcmp.left) / item
