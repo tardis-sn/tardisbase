@@ -16,7 +16,7 @@ class FileManager:
     Parameters
     ----------
     repo_path : str or Path, optional
-        Path to the repository containing reference data, by default None.
+        Path to the repository containing regression data, by default None.
         If None, uses the path specified in CONFIG['compare_path'].
     """
     def __init__(self, repo_path=None):

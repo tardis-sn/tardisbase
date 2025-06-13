@@ -176,11 +176,11 @@ class ReferenceComparer:
         
         Notes
         -----
-        The output includes information such as:
-        - Number of different keys
-        - Identical keys count
-        - Keys with same name but different data
-        - File paths and reference key lists
+        The output includes information such as:\n
+        - Number of different keys\n
+        - Identical keys count\n
+        - Keys with same name but different data\n
+        - File paths and reference key lists\n
         """
         for name, results in self.test_table_dict.items():
             print(f"Results for {name}:")
@@ -405,8 +405,8 @@ class ReferenceComparer:
         generates specialized plots tailored for spectrum solver data analysis.
         
         Standard file paths (when custom paths are not provided):\n
-        - ref1: `tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5`\n
-        - ref2: `tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5`\n
+        - ref1: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
+        - ref2: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
         
         """
         ref1_path = custom_ref1_path or Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
