@@ -404,9 +404,9 @@ class ReferenceComparer:
         the SAVE_COMP_IMG environment variable is set to '1'. The comparison
         generates specialized plots tailored for spectrum solver data analysis.
         
-        Standard file paths (when custom paths are not provided):
-        - ref1: tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5
-        - ref2: tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5
+        Standard file paths (when custom paths are not provided):\n
+        - ref1: `tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5`\n
+        - ref2: `tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5`\n
         
         """
         ref1_path = custom_ref1_path or Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
