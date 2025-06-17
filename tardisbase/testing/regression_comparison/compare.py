@@ -16,39 +16,65 @@ logger = logging.getLogger(__name__)
 
 class ReferenceComparer:
     """
-    A class for comparing reference data between two regression data commits.
+    A class for comparing reference data between two regression data commits or direct paths.
     
     This class provides functionality to compare HDF5 files, generate visualizations,
-    and analyze differences between two regression data repo commits. It supports directory
-    comparison, HDF5 file analysis, and plot generation.
+    and analyze differences between two regression data repo commits or direct directory paths.
+    It supports directory comparison, HDF5 file analysis, and plot generation.
     
     Parameters
     ----------
     ref1_hash : str, optional
         Git commit hash for the first reference dataset, by default None.
-        At least one of ref1_hash or ref2_hash must be provided.
+        Cannot be used together with refpath1.
     ref2_hash : str, optional
         Git commit hash for the second reference dataset, by default None.
-        At least one of ref1_hash or ref2_hash must be provided.
+        Cannot be used together with refpath2.
+    refpath1 : str or Path, optional
+        Direct path to the first reference directory, by default None.
+        Cannot be used together with ref1_hash.
+    refpath2 : str or Path, optional
+        Direct path to the second reference directory, by default None.
+        Cannot be used together with ref2_hash.
     print_path : bool, optional
         Whether to print file paths in comparison output, by default False.
     repo_path : str or Path, optional
         Path to the repository containing reference data, by default None.
         If None, uses the path specified in CONFIG['compare_path'].
+        Only used when using git hashes.
         
     Raises
     ------
     AssertionError
-        If both ref1_hash and ref2_hash are None.
+        If neither git hashes nor direct paths are provided, or if both are provided.
     """
-    def __init__(self, ref1_hash=None, ref2_hash=None, print_path=False, repo_path=None):
-        assert not ((ref1_hash is None) and (ref2_hash is None)), "One hash can not be None"
+    def __init__(self, ref1_hash=None, ref2_hash=None, refpath1=None, refpath2=None, 
+                 print_path=False, repo_path=None):
+        
+        # Validation: Either use git hashes OR direct paths, not both
+        using_git = (ref1_hash is not None) or (ref2_hash is not None)
+        using_paths = (refpath1 is not None) or (refpath2 is not None)
+        
+        assert not (using_git and using_paths), "Cannot use both git hashes and direct paths"
+        assert using_git or using_paths, "Must provide either git hashes or direct paths"
+        
+        if using_git:
+            assert not ((ref1_hash is None) and (ref2_hash is None)), "At least one git hash must be provided"
+        
+        if using_paths:
+            assert not ((refpath1 is None) and (refpath2 is None)), "At least one direct path must be provided"
+        
         self.ref1_hash = ref1_hash
         self.ref2_hash = ref2_hash
+        self.refpath1 = Path(refpath1) if refpath1 else None
+        self.refpath2 = Path(refpath2) if refpath2 else None
         self.print_path = print_path
         self.repo_path = Path(repo_path) if repo_path else Path(CONFIG['compare_path'])
         self.test_table_dict = {}
-        self.file_manager = FileManager(repo_path)
+        
+        # Initialize components
+        self.using_git = using_git
+        self.file_manager = FileManager(repo_path) if using_git else None
         self.file_setup = None
         self.diff_analyzer = None
         self.hdf_comparator = None
@@ -57,7 +83,7 @@ class ReferenceComparer:
         """
         Set up all necessary components for reference comparison.
         
-        This method initializes the file manager, sets up reference files,
+        This method initializes the file manager (if using git), sets up reference files,
         creates analyzer and comparator instances, and establishes directory
         comparison objects. Must be called before performing any comparisons.
         
@@ -71,27 +97,48 @@ class ReferenceComparer:
         - diff_analyzer : Configured DiffAnalyzer instance
         - hdf_comparator : Configured HDFComparator instance
         """
-        self.file_manager.setup()
-        self.file_setup = FileSetup(self.file_manager, self.ref1_hash, self.ref2_hash)
-        self.diff_analyzer = DiffAnalyzer(self.file_manager)
+        if self.using_git:
+            # Git-based setup
+            self.file_manager.setup()
+            self.file_setup = FileSetup(self.file_manager, self.ref1_hash, self.ref2_hash)
+            self.diff_analyzer = DiffAnalyzer(self.file_manager)
+            self.hdf_comparator = HDFComparator(print_path=self.print_path)
+            self.file_setup.setup()
+            self.ref1_path = self.file_manager.get_temp_path("ref1")
+            self.ref2_path = self.file_manager.get_temp_path("ref2")
+        else:
+            # Direct path setup
+            self.ref1_path = str(self.refpath1) if self.refpath1 else None
+            self.ref2_path = str(self.refpath2) if self.refpath2 else None
+            
+            # Validate that paths exist
+            if self.ref1_path and not Path(self.ref1_path).exists():
+                raise FileNotFoundError(f"Reference path 1 does not exist: {self.ref1_path}")
+            if self.ref2_path and not Path(self.ref2_path).exists():
+                raise FileNotFoundError(f"Reference path 2 does not exist: {self.ref2_path}")
+        
+        # Initialize common components
         self.hdf_comparator = HDFComparator(print_path=self.print_path)
-        self.file_setup.setup()
-        self.ref1_path = self.file_manager.get_temp_path("ref1")
-        self.ref2_path = self.file_manager.get_temp_path("ref2")
-        self.dcmp = dircmp(self.ref1_path, self.ref2_path)
+        
+        # Set up directory comparison if both paths are available
+        if self.ref1_path and self.ref2_path:
+            self.dcmp = dircmp(self.ref1_path, self.ref2_path)
+        else:
+            self.dcmp = None
 
     def teardown(self):
         """
         Clean up temporary files and directories created during comparison.
         
         This method should be called after completing all operations
-        to ensure proper cleanup of resources.
+        to ensure proper cleanup of resources. Only needed when using git hashes.
         """
-        self.file_manager.teardown()
+        if self.using_git and self.file_manager:
+            self.file_manager.teardown()
 
     def compare(self, print_diff=False):
         """
-        Perform comparison between reference datasets.
+        Perform comparison between regression datasets.
         
         This method executes the main comparison workflow, including optional
         directory difference printing and HDF5 file comparison. It updates
@@ -102,9 +149,13 @@ class ReferenceComparer:
         print_diff : bool, optional
             Whether to print detailed directory differences, by default False.
             If True, displays a tree-like view of file differences.
+            Only available when using git hashes and both references are available.
         """
-        if print_diff:
+        if print_diff and self.diff_analyzer and self.dcmp:
             self.diff_analyzer.print_diff_files(self.dcmp)
+        elif print_diff and not self.using_git:
+            print("Warning: print_diff is only available when using git hashes")
+            
         self.compare_hdf_files()
         
         # Update test_table_dict with added and deleted keys
@@ -118,19 +169,37 @@ class ReferenceComparer:
         """
         Discover and compare all HDF5 files in the reference directories.
         
-        This method recursively walks through the first reference directory,
-        identifies HDF5 files (.h5, .hdf5), and compares them with corresponding
-        files in the second reference directory. Only files that exist in both
-        directories are compared.
+        This method recursively walks through the reference directories,
+        identifies HDF5 files (.h5, .hdf5), and compares them. When both
+        paths are available, it compares files that exist in both directories.
+        When only one path is available, it lists all HDF5 files in that directory.
         """
-        for root, _, files in os.walk(self.ref1_path):
-            for file in files:
-                file_path = Path(file)
-                if file_path.suffix in ('.h5', '.hdf5'):
-                    rel_path = Path(root).relative_to(self.ref1_path)
-                    ref2_file_path = self.ref2_path / rel_path / file
-                    if ref2_file_path.exists():
-                        self.summarise_changes_hdf(file, root, ref2_file_path.parent)
+        if self.ref1_path and self.ref2_path:
+            # Compare files in both directories
+            for root, _, files in os.walk(self.ref1_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in ('.h5', '.hdf5'):
+                        rel_path = Path(root).relative_to(self.ref1_path)
+                        ref2_file_path = Path(self.ref2_path) / rel_path / file
+                        if ref2_file_path.exists():
+                            self.summarise_changes_hdf(file, root, ref2_file_path.parent)
+        elif self.ref1_path:
+            # Only ref1 available - just catalog the files
+            print("Only ref1_path provided. Cataloging HDF5 files:")
+            for root, _, files in os.walk(self.ref1_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in ('.h5', '.hdf5'):
+                        print(f"Found HDF5 file: {Path(root) / file}")
+        elif self.ref2_path:
+            # Only ref2 available - just catalog the files
+            print("Only ref2_path provided. Cataloging HDF5 files:")
+            for root, _, files in os.walk(self.ref2_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in ('.h5', '.hdf5'):
+                        print(f"Found HDF5 file: {Path(root) / file}")
 
     def summarise_changes_hdf(self, name, path1, path2):
         """
@@ -151,14 +220,20 @@ class ReferenceComparer:
         Notes
         -----
         The results are stored in test_table_dict[name] and include:
-        - Relative path information
+        - Relative path information (when using git)
         - All comparison results from HDFComparator
         - Lists of keys from both reference files
         - Summary statistics about differences
         """
-        self.test_table_dict[name] = {
-            "path": get_relative_path(path1, self.file_manager.temp_dir / "ref1")
-        }
+        if self.using_git:
+            self.test_table_dict[name] = {
+                "path": get_relative_path(path1, self.file_manager.temp_dir / "ref1")
+            }
+        else:
+            self.test_table_dict[name] = {
+                "path": str(Path(path1).relative_to(self.ref1_path) if self.ref1_path else path1)
+            }
+            
         results = self.hdf_comparator.summarise_changes_hdf(name, path1, path2)
         self.test_table_dict[name].update(results)
         
@@ -194,10 +269,11 @@ class ReferenceComparer:
         
         Returns
         -------
-        Path
-            The temporary directory path managed by the file manager.
+        Path or None
+            The temporary directory path managed by the file manager when using git,
+            or None when using direct paths.
         """
-        return self.file_manager.temp_dir
+        return self.file_manager.temp_dir if self.using_git else None
 
     def generate_graph(self, option):
         """
@@ -369,12 +445,17 @@ class ReferenceComparer:
             )
 
         if fig and os.environ.get('SAVE_COMP_IMG') == '1':
-            # Create shortened commit hashes
-            short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
-            short_ref2 = self.ref2_hash[:6] if self.ref2_hash else "current"
+            if self.using_git:
+                # Create shortened commit hashes
+                short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
+                short_ref2 = self.ref2_hash[:6] if self.ref2_hash else "current"
+                plot_dir = Path(f"comparison_plots_{short_ref2}_new_{short_ref1}_old")
+            else:
+                # Use directory names for direct paths
+                ref1_name = Path(self.ref1_path).name if self.ref1_path else "ref1"
+                ref2_name = Path(self.ref2_path).name if self.ref2_path else "ref2"
+                plot_dir = Path(f"comparison_plots_{ref2_name}_vs_{ref1_name}")
             
-            # Create directory for comparison plots
-            plot_dir = Path(f"comparison_plots_{short_ref2}_new_{short_ref1}_old")
             plot_dir.mkdir(exist_ok=True)
             
             # Save high-res image in the new directory
@@ -393,10 +474,12 @@ class ReferenceComparer:
         ----------
         custom_ref1_path : str or Path, optional
             Custom path to the first TestSpectrumSolver.h5 file, by default None.
-            If None, uses the standard path within ref1_path directory.
+            If None, uses the standard path within ref1_path directory (git mode) or
+            the direct ref1_path (direct path mode).
         custom_ref2_path : str or Path, optional
             Custom path to the second TestSpectrumSolver.h5 file, by default None.
-            If None, uses the standard path within ref2_path directory.
+            If None, uses the standard path within ref2_path directory (git mode) or
+            the direct ref2_path (direct path mode).
             
         Notes
         -----
@@ -405,19 +488,35 @@ class ReferenceComparer:
         generates specialized plots tailored for spectrum solver data analysis.
         
         Standard file paths (when custom paths are not provided):\n
-        - ref1: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
-        - ref2: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
+        - git mode: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
+        - direct path mode: uses ref1_path and ref2_path directly\n
         
         """
-        ref1_path = custom_ref1_path or Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
-        ref2_path = custom_ref2_path or Path(self.ref2_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+        if custom_ref1_path:
+            ref1_path = custom_ref1_path
+        elif self.using_git:
+            ref1_path = Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+        else:
+            ref1_path = self.ref1_path
+            
+        if custom_ref2_path:
+            ref2_path = custom_ref2_path
+        elif self.using_git:
+            ref2_path = Path(self.ref2_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+        else:
+            ref2_path = self.ref2_path
         
         # Create plot directory first
         plot_dir = None
         if os.environ.get('SAVE_COMP_IMG') == '1':
-            short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
-            short_ref2 = self.ref2_hash[:6] if self.ref2_hash else "current"
-            plot_dir = Path(f"comparison_plots_{short_ref2}_new_{short_ref1}_old")
+            if self.using_git:
+                short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
+                short_ref2 = self.ref2_hash[:6] if self.ref2_hash else "current"
+                plot_dir = Path(f"comparison_plots_{short_ref2}_new_{short_ref1}_old")
+            else:
+                ref1_name = Path(self.ref1_path).name if self.ref1_path else "ref1"
+                ref2_name = Path(self.ref2_path).name if self.ref2_path else "ref2"
+                plot_dir = Path(f"spectrum_plots_{ref2_name}_vs_{ref1_name}")
             plot_dir.mkdir(exist_ok=True)
         
         # Pass plot_dir to SpectrumSolverComparator
