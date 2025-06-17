@@ -6,12 +6,12 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>tardisbase.testing.regression_comparison.compare &#8212; tardisbase 0.1.dev1+gc9279d3.d20250613 documentation</title>
+    <title>tardisbase.testing.regression_comparison.compare &#8212; tardisbase 0.1.dev1+geadf4fe.d20250617 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=97792cc5"></script>
+    <script src="../../../../_static/documentation_options.js?v=2ce8ce03"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
@@ -61,39 +61,65 @@
 <a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer">[docs]</a>
 <span class="k">class</span><span class="w"> </span><span class="nc">ReferenceComparer</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">    A class for comparing reference data between two regression data commits.</span>
+<span class="sd">    A class for comparing reference data between two regression data commits or direct paths.</span>
 <span class="sd">    </span>
 <span class="sd">    This class provides functionality to compare HDF5 files, generate visualizations,</span>
-<span class="sd">    and analyze differences between two regression data repo commits. It supports directory</span>
-<span class="sd">    comparison, HDF5 file analysis, and plot generation.</span>
+<span class="sd">    and analyze differences between two regression data repo commits or direct directory paths.</span>
+<span class="sd">    It supports directory comparison, HDF5 file analysis, and plot generation.</span>
 <span class="sd">    </span>
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    ref1_hash : str, optional</span>
 <span class="sd">        Git commit hash for the first reference dataset, by default None.</span>
-<span class="sd">        At least one of ref1_hash or ref2_hash must be provided.</span>
+<span class="sd">        Cannot be used together with refpath1.</span>
 <span class="sd">    ref2_hash : str, optional</span>
 <span class="sd">        Git commit hash for the second reference dataset, by default None.</span>
-<span class="sd">        At least one of ref1_hash or ref2_hash must be provided.</span>
+<span class="sd">        Cannot be used together with refpath2.</span>
+<span class="sd">    refpath1 : str or Path, optional</span>
+<span class="sd">        Direct path to the first reference directory, by default None.</span>
+<span class="sd">        Cannot be used together with ref1_hash.</span>
+<span class="sd">    refpath2 : str or Path, optional</span>
+<span class="sd">        Direct path to the second reference directory, by default None.</span>
+<span class="sd">        Cannot be used together with ref2_hash.</span>
 <span class="sd">    print_path : bool, optional</span>
 <span class="sd">        Whether to print file paths in comparison output, by default False.</span>
 <span class="sd">    repo_path : str or Path, optional</span>
 <span class="sd">        Path to the repository containing reference data, by default None.</span>
 <span class="sd">        If None, uses the path specified in CONFIG[&#39;compare_path&#39;].</span>
+<span class="sd">        Only used when using git hashes.</span>
 <span class="sd">        </span>
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
 <span class="sd">    AssertionError</span>
-<span class="sd">        If both ref1_hash and ref2_hash are None.</span>
+<span class="sd">        If neither git hashes nor direct paths are provided, or if both are provided.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref1_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref2_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">print_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">repo_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="k">assert</span> <span class="ow">not</span> <span class="p">((</span><span class="n">ref1_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref2_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)),</span> <span class="s2">&quot;One hash can not be None&quot;</span>
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ref1_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ref2_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refpath1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">refpath2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> 
+                 <span class="n">print_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">repo_path</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        
+        <span class="c1"># Validation: Either use git hashes OR direct paths, not both</span>
+        <span class="n">using_git</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref1_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ref2_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">using_paths</span> <span class="o">=</span> <span class="p">(</span><span class="n">refpath1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">refpath2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        
+        <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span><span class="n">using_git</span> <span class="ow">and</span> <span class="n">using_paths</span><span class="p">),</span> <span class="s2">&quot;Cannot use both git hashes and direct paths&quot;</span>
+        <span class="k">assert</span> <span class="n">using_git</span> <span class="ow">or</span> <span class="n">using_paths</span><span class="p">,</span> <span class="s2">&quot;Must provide either git hashes or direct paths&quot;</span>
+        
+        <span class="k">if</span> <span class="n">using_git</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="p">((</span><span class="n">ref1_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref2_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)),</span> <span class="s2">&quot;At least one git hash must be provided&quot;</span>
+        
+        <span class="k">if</span> <span class="n">using_paths</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="p">((</span><span class="n">refpath1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">refpath2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)),</span> <span class="s2">&quot;At least one direct path must be provided&quot;</span>
+        
         <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="o">=</span> <span class="n">ref1_hash</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="o">=</span> <span class="n">ref2_hash</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">refpath1</span><span class="p">)</span> <span class="k">if</span> <span class="n">refpath1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">refpath2</span><span class="p">)</span> <span class="k">if</span> <span class="n">refpath2</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">print_path</span> <span class="o">=</span> <span class="n">print_path</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">repo_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">repo_path</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s1">&#39;compare_path&#39;</span><span class="p">])</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span> <span class="o">=</span> <span class="p">{}</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span> <span class="o">=</span> <span class="n">FileManager</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span>
+        
+        <span class="c1"># Initialize components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="o">=</span> <span class="n">using_git</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span> <span class="o">=</span> <span class="n">FileManager</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">using_git</span> <span class="k">else</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="kc">None</span>
@@ -104,7 +130,7 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Set up all necessary components for reference comparison.</span>
 <span class="sd">        </span>
-<span class="sd">        This method initializes the file manager, sets up reference files,</span>
+<span class="sd">        This method initializes the file manager (if using git), sets up reference files,</span>
 <span class="sd">        creates analyzer and comparator instances, and establishes directory</span>
 <span class="sd">        comparison objects. Must be called before performing any comparisons.</span>
 <span class="sd">        </span>
@@ -118,14 +144,34 @@
 <span class="sd">        - diff_analyzer : Configured DiffAnalyzer instance</span>
 <span class="sd">        - hdf_comparator : Configured HDFComparator instance</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span> <span class="o">=</span> <span class="n">FileSetup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="o">=</span> <span class="n">DiffAnalyzer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="c1"># Git-based setup</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span> <span class="o">=</span> <span class="n">FileSetup</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="o">=</span> <span class="n">DiffAnalyzer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="n">HDFComparator</span><span class="p">(</span><span class="n">print_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref2&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Direct path setup</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span> <span class="k">else</span> <span class="kc">None</span>
+            
+            <span class="c1"># Validate that paths exist</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference path 1 does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Reference path 2 does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+        <span class="c1"># Initialize common components</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="n">HDFComparator</span><span class="p">(</span><span class="n">print_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_path</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref2&quot;</span><span class="p">)</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span> <span class="o">=</span> <span class="n">dircmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span></div>
+        
+        <span class="c1"># Set up directory comparison if both paths are available</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span> <span class="o">=</span> <span class="n">dircmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span> <span class="o">=</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="ReferenceComparer.teardown">
@@ -135,16 +181,17 @@
 <span class="sd">        Clean up temporary files and directories created during comparison.</span>
 <span class="sd">        </span>
 <span class="sd">        This method should be called after completing all operations</span>
-<span class="sd">        to ensure proper cleanup of resources.</span>
+<span class="sd">        to ensure proper cleanup of resources. Only needed when using git hashes.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span></div>
 
 
 <div class="viewcode-block" id="ReferenceComparer.compare">
 <a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare">[docs]</a>
     <span class="k">def</span><span class="w"> </span><span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_diff</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
-<span class="sd">        Perform comparison between reference datasets.</span>
+<span class="sd">        Perform comparison between regression datasets.</span>
 <span class="sd">        </span>
 <span class="sd">        This method executes the main comparison workflow, including optional</span>
 <span class="sd">        directory difference printing and HDF5 file comparison. It updates</span>
@@ -155,9 +202,13 @@
 <span class="sd">        print_diff : bool, optional</span>
 <span class="sd">            Whether to print detailed directory differences, by default False.</span>
 <span class="sd">            If True, displays a tree-like view of file differences.</span>
+<span class="sd">            Only available when using git hashes and both references are available.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">if</span> <span class="n">print_diff</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">print_diff</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span><span class="o">.</span><span class="n">print_diff_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">print_diff</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: print_diff is only available when using git hashes&quot;</span><span class="p">)</span>
+            
         <span class="bp">self</span><span class="o">.</span><span class="n">compare_hdf_files</span><span class="p">()</span>
         
         <span class="c1"># Update test_table_dict with added and deleted keys</span>
@@ -174,19 +225,37 @@
 <span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">        Discover and compare all HDF5 files in the reference directories.</span>
 <span class="sd">        </span>
-<span class="sd">        This method recursively walks through the first reference directory,</span>
-<span class="sd">        identifies HDF5 files (.h5, .hdf5), and compares them with corresponding</span>
-<span class="sd">        files in the second reference directory. Only files that exist in both</span>
-<span class="sd">        directories are compared.</span>
+<span class="sd">        This method recursively walks through the reference directories,</span>
+<span class="sd">        identifies HDF5 files (.h5, .hdf5), and compares them. When both</span>
+<span class="sd">        paths are available, it compares files that exist in both directories.</span>
+<span class="sd">        When only one path is available, it lists all HDF5 files in that directory.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">):</span>
-            <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
-                <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
-                <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">):</span>
-                    <span class="n">rel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span>
-                    <span class="n">ref2_file_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">/</span> <span class="n">rel_path</span> <span class="o">/</span> <span class="n">file</span>
-                    <span class="k">if</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
-                        <span class="bp">self</span><span class="o">.</span><span class="n">summarise_changes_hdf</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span></div>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="c1"># Compare files in both directories</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">):</span>
+                        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span>
+                        <span class="n">ref2_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">rel_path</span> <span class="o">/</span> <span class="n">file</span>
+                        <span class="k">if</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">summarise_changes_hdf</span><span class="p">(</span><span class="n">file</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">parent</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">:</span>
+            <span class="c1"># Only ref1 available - just catalog the files</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only ref1_path provided. Cataloging HDF5 files:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found HDF5 file: </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="c1"># Only ref2 available - just catalog the files</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only ref2_path provided. Cataloging HDF5 files:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">&#39;.h5&#39;</span><span class="p">,</span> <span class="s1">&#39;.hdf5&#39;</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found HDF5 file: </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="ReferenceComparer.summarise_changes_hdf">
@@ -210,14 +279,20 @@
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
 <span class="sd">        The results are stored in test_table_dict[name] and include:</span>
-<span class="sd">        - Relative path information</span>
+<span class="sd">        - Relative path information (when using git)</span>
 <span class="sd">        - All comparison results from HDFComparator</span>
 <span class="sd">        - Lists of keys from both reference files</span>
 <span class="sd">        - Summary statistics about differences</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">get_relative_path</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">/</span> <span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
-        <span class="p">}</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">get_relative_path</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">/</span> <span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">Path</span><span class="p">(</span><span class="n">path1</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="n">path1</span><span class="p">)</span>
+            <span class="p">}</span>
+            
         <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span><span class="o">.</span><span class="n">summarise_changes_hdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
         
@@ -259,10 +334,11 @@
 <span class="sd">        </span>
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Path</span>
-<span class="sd">            The temporary directory path managed by the file manager.</span>
+<span class="sd">        Path or None</span>
+<span class="sd">            The temporary directory path managed by the file manager when using git,</span>
+<span class="sd">            or None when using direct paths.</span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span></div>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="k">else</span> <span class="kc">None</span></div>
 
 
 <div class="viewcode-block" id="ReferenceComparer.generate_graph">
@@ -437,12 +513,17 @@
             <span class="p">)</span>
 
         <span class="k">if</span> <span class="n">fig</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SAVE_COMP_IMG&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
-            <span class="c1"># Create shortened commit hashes</span>
-            <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
-            <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+                <span class="c1"># Create shortened commit hashes</span>
+                <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Use directory names for direct paths</span>
+                <span class="n">ref1_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="s2">&quot;ref1&quot;</span>
+                <span class="n">ref2_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="k">else</span> <span class="s2">&quot;ref2&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">ref2_name</span><span class="si">}</span><span class="s2">_vs_</span><span class="si">{</span><span class="n">ref1_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             
-            <span class="c1"># Create directory for comparison plots</span>
-            <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
             <span class="n">plot_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
             
             <span class="c1"># Save high-res image in the new directory</span>
@@ -464,10 +545,12 @@
 <span class="sd">        ----------</span>
 <span class="sd">        custom_ref1_path : str or Path, optional</span>
 <span class="sd">            Custom path to the first TestSpectrumSolver.h5 file, by default None.</span>
-<span class="sd">            If None, uses the standard path within ref1_path directory.</span>
+<span class="sd">            If None, uses the standard path within ref1_path directory (git mode) or</span>
+<span class="sd">            the direct ref1_path (direct path mode).</span>
 <span class="sd">        custom_ref2_path : str or Path, optional</span>
 <span class="sd">            Custom path to the second TestSpectrumSolver.h5 file, by default None.</span>
-<span class="sd">            If None, uses the standard path within ref2_path directory.</span>
+<span class="sd">            If None, uses the standard path within ref2_path directory (git mode) or</span>
+<span class="sd">            the direct ref2_path (direct path mode).</span>
 <span class="sd">            </span>
 <span class="sd">        Notes</span>
 <span class="sd">        -----</span>
@@ -476,19 +559,35 @@
 <span class="sd">        generates specialized plots tailored for spectrum solver data analysis.</span>
 <span class="sd">        </span>
 <span class="sd">        Standard file paths (when custom paths are not provided):\n</span>
-<span class="sd">        - ref1: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n</span>
-<span class="sd">        - ref2: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n</span>
+<span class="sd">        - git mode: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n</span>
+<span class="sd">        - direct path mode: uses ref1_path and ref2_path directly\n</span>
 <span class="sd">        </span>
 <span class="sd">        &quot;&quot;&quot;</span>
-        <span class="n">ref1_path</span> <span class="o">=</span> <span class="n">custom_ref1_path</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
-        <span class="n">ref2_path</span> <span class="o">=</span> <span class="n">custom_ref2_path</span> <span class="ow">or</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
+        <span class="k">if</span> <span class="n">custom_ref1_path</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="n">custom_ref1_path</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span>
+            
+        <span class="k">if</span> <span class="n">custom_ref2_path</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="n">custom_ref2_path</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span> <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span>
         
         <span class="c1"># Create plot directory first</span>
         <span class="n">plot_dir</span> <span class="o">=</span> <span class="kc">None</span>
         <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;SAVE_COMP_IMG&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="s1">&#39;1&#39;</span><span class="p">:</span>
-            <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
-            <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
-            <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+                <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ref1_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="s2">&quot;ref1&quot;</span>
+                <span class="n">ref2_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="k">else</span> <span class="s2">&quot;ref2&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;spectrum_plots_</span><span class="si">{</span><span class="n">ref2_name</span><span class="si">}</span><span class="s2">_vs_</span><span class="si">{</span><span class="n">ref1_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
             <span class="n">plot_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         
         <span class="c1"># Pass plot_dir to SpectrumSolverComparator</span>
