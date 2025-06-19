@@ -5,8 +5,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from _pytest.outcomes import OutcomeException
 
 from tardisbase.testing.regression_data.hdfwriter import HDFWriterMixin
+
 
 class RegressionData:
     def __init__(self, request) -> None:
@@ -82,7 +84,7 @@ class RegressionData:
                 self.fpath,
                 key=key,
             )
-            pytest.skip("Skipping test to generate reference data")
+            write_status()
         else:
             return pd.read_hdf(self.fpath, key=key)
 
@@ -105,7 +107,7 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             np.save(self.fpath, data)
-            pytest.skip("Skipping test to generate reference data")
+            write_status()
         else:
             return np.load(self.fpath)
 
@@ -128,9 +130,7 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with self.fpath.open("w") as fh:
                 fh.write(data)
-            pytest.skip(
-                f"Skipping test to generate regression_data {self.fpath} data"
-            )
+            write_status()
         else:
             with self.fpath.open("r") as fh:
                 return fh.read()
@@ -157,21 +157,24 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with pd.HDFStore(self.fpath, mode="w") as store:
                 tardis_module.to_hdf(store, overwrite=True)
-            pytest.skip(
-                f"Skipping test to generate regression data: {self.fpath}"
-            )
+            write_status()
         else:
             # since each test function has its own regression data instance
             # each test function will only have one HDFStore object
             self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
             return self.hdf_store_object
 
+
 @pytest.fixture(scope="function")
 def regression_data(request):
     regression_data_instance = RegressionData(request)
     yield regression_data_instance
-    if regression_data_instance.hdf_store_object is not None and regression_data_instance.hdf_store_object.is_open:
+    if (
+        regression_data_instance.hdf_store_object is not None
+        and regression_data_instance.hdf_store_object.is_open
+    ):
         regression_data_instance.hdf_store_object.close()
+
 
 class PlotDataHDF(HDFWriterMixin):
     """
@@ -191,3 +194,33 @@ class PlotDataHDF(HDFWriterMixin):
         for key, value in kwargs.items():
             setattr(self, key, value)
             self.hdf_properties.append(key)
+
+
+class TestWrite(OutcomeException):
+    pass
+
+
+def write_status():
+    raise TestWrite(msg="Writing regression data for test.")
+
+
+class PytestWritingPlugin:
+    def pytest_runtest_makereport(self, item, call):
+        if call.excinfo and isinstance(call.excinfo.value, TestWrite):
+            from _pytest.reports import TestReport
+
+            rep = TestReport(
+                nodeid=item.nodeid,
+                location=item.location,
+                keywords=item.keywords,
+                outcome="written",
+                longrepr=None,
+                when=call.when,
+                sections=[],
+            )
+            rep.written = True
+            return rep
+
+    def pytest_report_teststatus(self, report, config):
+        if hasattr(report, "written") and report.written:
+            return ("written", "W", "WRITTEN")
