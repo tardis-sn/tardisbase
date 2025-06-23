@@ -205,6 +205,34 @@ def write_status():
 
 class PytestWritingPlugin:
     def pytest_runtest_makereport(self, item, call):
+        """
+        Custom pytest hook to handle test report generation for regression data writing.
+
+        This hook intercepts test execution and creates a custom test report when
+        a TestWrite exception is encountered, marking the test as "written" rather
+        than failed.
+
+        Parameters
+        ----------
+        item : pytest.Item
+            The test item being executed.
+        call : pytest.CallInfo
+            Information about the test call, including any exception information.
+
+        Returns
+        -------
+        TestReport or None
+            Returns a custom TestReport with outcome "written" if a TestWrite
+            exception was raised, otherwise returns None to allow default
+            report generation.
+
+        Notes
+        -----
+        This hook is specifically designed for regression testing workflows where
+        tests may write reference data instead of comparing against it. When a
+        TestWrite exception is raised, it indicates successful data writing rather
+        than a test failure.
+        """
         if call.excinfo and isinstance(call.excinfo.value, TestWrite):
             from _pytest.reports import TestReport
 
@@ -221,5 +249,38 @@ class PytestWritingPlugin:
             return rep
 
     def pytest_report_teststatus(self, report, config):
+        """
+        Custom pytest hook to report test status for regression data writing.
+
+        This hook is called by pytest to determine the test outcome status and provides
+        custom reporting for tests that have written regression data.
+
+        Parameters
+        ----------
+        report : pytest.TestReport
+            The test report object containing information about the test execution,
+            including any custom attributes set during the test run.
+        config : pytest.Config
+            The pytest configuration object containing command-line options and
+            configuration settings.
+
+        Returns
+        -------
+        tuple of (str, str, str) or None
+            If the test report has a 'written' attribute that is True, returns a tuple
+            containing:
+            - outcome: "regression data written" (test outcome description)
+            - letter: "W" (single letter representation)
+            - word: "WRITTEN" (word representation for verbose output)
+
+            Returns None if the condition is not met, allowing other hooks or default
+            behavior to determine the test status.
+
+        Notes
+        -----
+        This hook is typically used in conjunction with pytest plugins that handle
+        regression testing data, allowing tests to be marked as having successfully
+        written reference data rather than just passing or failing.
+        """
         if hasattr(report, "written") and report.written:
             return ("regression data written", "W", "WRITTEN")
