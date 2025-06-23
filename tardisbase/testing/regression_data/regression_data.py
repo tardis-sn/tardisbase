@@ -223,4 +223,4 @@ class PytestWritingPlugin:
 
     def pytest_report_teststatus(self, report, config):
         if hasattr(report, "written") and report.written:
-            return ("written", "W", "WRITTEN")
+            return ("regression data written", "W", "WRITTEN")
