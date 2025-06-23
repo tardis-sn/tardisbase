@@ -105,7 +105,6 @@ class RegressionData:
         self.fname = f"{self.fname_prefix}.npy"
         if self.enable_generate_reference:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
-            self.fpath.parent.mkdir(parents=True, exist_ok=True)
             np.save(self.fpath, data)
             write_status()
         else:
