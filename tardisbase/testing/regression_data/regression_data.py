@@ -5,8 +5,10 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+from _pytest.outcomes import OutcomeException
 
 from tardisbase.testing.regression_data.hdfwriter import HDFWriterMixin
+
 
 class RegressionData:
     def __init__(self, request) -> None:
@@ -82,7 +84,7 @@ class RegressionData:
                 self.fpath,
                 key=key,
             )
-            pytest.skip("Skipping test to generate reference data")
+            write_status()
         else:
             return pd.read_hdf(self.fpath, key=key)
 
@@ -103,9 +105,8 @@ class RegressionData:
         self.fname = f"{self.fname_prefix}.npy"
         if self.enable_generate_reference:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
-            self.fpath.parent.mkdir(parents=True, exist_ok=True)
             np.save(self.fpath, data)
-            pytest.skip("Skipping test to generate reference data")
+            write_status()
         else:
             return np.load(self.fpath)
 
@@ -128,9 +129,7 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with self.fpath.open("w") as fh:
                 fh.write(data)
-            pytest.skip(
-                f"Skipping test to generate regression_data {self.fpath} data"
-            )
+            write_status()
         else:
             with self.fpath.open("r") as fh:
                 return fh.read()
@@ -157,21 +156,24 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with pd.HDFStore(self.fpath, mode="w") as store:
                 tardis_module.to_hdf(store, overwrite=True)
-            pytest.skip(
-                f"Skipping test to generate regression data: {self.fpath}"
-            )
+            write_status()
         else:
             # since each test function has its own regression data instance
             # each test function will only have one HDFStore object
             self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
             return self.hdf_store_object
 
+
 @pytest.fixture(scope="function")
 def regression_data(request):
     regression_data_instance = RegressionData(request)
     yield regression_data_instance
-    if regression_data_instance.hdf_store_object is not None and regression_data_instance.hdf_store_object.is_open:
+    if (
+        regression_data_instance.hdf_store_object is not None
+        and regression_data_instance.hdf_store_object.is_open
+    ):
         regression_data_instance.hdf_store_object.close()
+
 
 class PlotDataHDF(HDFWriterMixin):
     """
@@ -191,3 +193,94 @@ class PlotDataHDF(HDFWriterMixin):
         for key, value in kwargs.items():
             setattr(self, key, value)
             self.hdf_properties.append(key)
+
+
+class TestWrite(OutcomeException):
+    pass
+
+
+def write_status():
+    raise TestWrite(msg="Writing regression data for test.")
+
+
+class PytestWritingPlugin:
+    def pytest_runtest_makereport(self, item, call):
+        """
+        Custom pytest hook to handle test report generation for regression data writing.
+
+        This hook intercepts test execution and creates a custom test report when
+        a TestWrite exception is encountered, marking the test as "written" rather
+        than failed.
+
+        Parameters
+        ----------
+        item : pytest.Item
+            The test item being executed.
+        call : pytest.CallInfo
+            Information about the test call, including any exception information.
+
+        Returns
+        -------
+        TestReport or None
+            Returns a custom TestReport with outcome "written" if a TestWrite
+            exception was raised, otherwise returns None to allow default
+            report generation.
+
+        Notes
+        -----
+        This hook is specifically designed for regression testing workflows where
+        tests may write reference data instead of comparing against it. When a
+        TestWrite exception is raised, it indicates successful data writing rather
+        than a test failure.
+        """
+        if call.excinfo and isinstance(call.excinfo.value, TestWrite):
+            from _pytest.reports import TestReport
+
+            rep = TestReport(
+                nodeid=item.nodeid,
+                location=item.location,
+                keywords=item.keywords,
+                outcome="written",
+                longrepr=None,
+                when=call.when,
+                sections=[],
+            )
+            rep.written = True
+            return rep
+
+    def pytest_report_teststatus(self, report, config):
+        """
+        Custom pytest hook to report test status for regression data writing.
+
+        This hook is called by pytest to determine the test outcome status and provides
+        custom reporting for tests that have written regression data.
+
+        Parameters
+        ----------
+        report : pytest.TestReport
+            The test report object containing information about the test execution,
+            including any custom attributes set during the test run.
+        config : pytest.Config
+            The pytest configuration object containing command-line options and
+            configuration settings.
+
+        Returns
+        -------
+        tuple of (str, str, str) or None
+            If the test report has a 'written' attribute that is True, returns a tuple
+            containing:
+            - outcome: "regression data written" (test outcome description)
+            - letter: "W" (single letter representation)
+            - word: "WRITTEN" (word representation for verbose output)
+
+            Returns None if the condition is not met, allowing other hooks or default
+            behavior to determine the test status.
+
+        Notes
+        -----
+        This hook is typically used in conjunction with pytest plugins that handle
+        regression testing data, allowing tests to be marked as having successfully
+        written reference data rather than just passing or failing.
+        """
+        if hasattr(report, "written") and report.written:
+            return ("regression data written", "W", "WRITTEN")
