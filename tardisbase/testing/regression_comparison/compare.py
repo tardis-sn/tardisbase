@@ -7,21 +7,27 @@ import random
 import plotly.colors as pc
 from tardisbase.testing.regression_comparison.util import get_relative_path
 from tardisbase.testing.regression_comparison.file_manager import FileManager, FileSetup
-from tardisbase.testing.regression_comparison.analyzers import DiffAnalyzer, HDFComparator
-from tardisbase.testing.regression_comparison.visualization import SpectrumSolverComparator
+from tardisbase.testing.regression_comparison.analyzers import (
+    DiffAnalyzer,
+    HDFComparator,
+)
+from tardisbase.testing.regression_comparison.visualization import (
+    SpectrumSolverComparator,
+)
 from tardisbase.testing.regression_comparison import CONFIG
 import logging
 
 logger = logging.getLogger(__name__)
 
+
 class ReferenceComparer:
     """
     A class for comparing reference data between two regression data commits or direct paths.
-    
+
     This class provides functionality to compare HDF5 files, generate visualizations,
     and analyze differences between two regression data repo commits or direct directory paths.
     It supports directory comparison, HDF5 file analysis, and plot generation.
-    
+
     Parameters
     ----------
     ref1_hash : str, optional
@@ -42,36 +48,51 @@ class ReferenceComparer:
         Path to the repository containing reference data, by default None.
         If None, uses the path specified in CONFIG['compare_path'].
         Only used when using git hashes.
-        
+
     Raises
     ------
     AssertionError
         If neither git hashes nor direct paths are provided, or if both are provided.
     """
-    def __init__(self, ref1_hash=None, ref2_hash=None, refpath1=None, refpath2=None, 
-                 print_path=False, repo_path=None):
-        
+
+    def __init__(
+        self,
+        ref1_hash=None,
+        ref2_hash=None,
+        refpath1=None,
+        refpath2=None,
+        print_path=False,
+        repo_path=None,
+    ):
         # Validation: Either use git hashes OR direct paths, not both
         using_git = (ref1_hash is not None) or (ref2_hash is not None)
         using_paths = (refpath1 is not None) or (refpath2 is not None)
-        
-        assert not (using_git and using_paths), "Cannot use both git hashes and direct paths"
-        assert using_git or using_paths, "Must provide either git hashes or direct paths"
-        
+
+        assert not (
+            using_git and using_paths
+        ), "Cannot use both git hashes and direct paths"
+        assert (
+            using_git or using_paths
+        ), "Must provide either git hashes or direct paths"
+
         if using_git:
-            assert not ((ref1_hash is None) and (ref2_hash is None)), "At least one git hash must be provided"
-        
+            assert not (
+                (ref1_hash is None) and (ref2_hash is None)
+            ), "At least one git hash must be provided"
+
         if using_paths:
-            assert not ((refpath1 is None) and (refpath2 is None)), "At least one direct path must be provided"
-        
+            assert not (
+                (refpath1 is None) and (refpath2 is None)
+            ), "At least one direct path must be provided"
+
         self.ref1_hash = ref1_hash
         self.ref2_hash = ref2_hash
         self.refpath1 = Path(refpath1) if refpath1 else None
         self.refpath2 = Path(refpath2) if refpath2 else None
         self.print_path = print_path
-        self.repo_path = Path(repo_path) if repo_path else Path(CONFIG['compare_path'])
+        self.repo_path = Path(repo_path) if repo_path else Path(CONFIG["compare_path"])
         self.test_table_dict = {}
-        
+
         # Initialize components
         self.using_git = using_git
         self.file_manager = FileManager(repo_path) if using_git else None
@@ -82,11 +103,11 @@ class ReferenceComparer:
     def setup(self):
         """
         Set up all necessary components for reference comparison.
-        
+
         This method initializes the file manager (if using git), sets up reference files,
         creates analyzer and comparator instances, and establishes directory
         comparison objects. Must be called before performing any comparisons.
-        
+
         Notes
         -----
         After calling this method, the following attributes will be available:
@@ -100,7 +121,9 @@ class ReferenceComparer:
         if self.using_git:
             # Git-based setup
             self.file_manager.setup()
-            self.file_setup = FileSetup(self.file_manager, self.ref1_hash, self.ref2_hash)
+            self.file_setup = FileSetup(
+                self.file_manager, self.ref1_hash, self.ref2_hash
+            )
             self.diff_analyzer = DiffAnalyzer(self.file_manager)
             self.hdf_comparator = HDFComparator(print_path=self.print_path)
             self.file_setup.setup()
@@ -110,16 +133,20 @@ class ReferenceComparer:
             # Direct path setup
             self.ref1_path = str(self.refpath1) if self.refpath1 else None
             self.ref2_path = str(self.refpath2) if self.refpath2 else None
-            
+
             # Validate that paths exist
             if self.ref1_path and not Path(self.ref1_path).exists():
-                raise FileNotFoundError(f"Reference path 1 does not exist: {self.ref1_path}")
+                raise FileNotFoundError(
+                    f"Reference path 1 does not exist: {self.ref1_path}"
+                )
             if self.ref2_path and not Path(self.ref2_path).exists():
-                raise FileNotFoundError(f"Reference path 2 does not exist: {self.ref2_path}")
-        
+                raise FileNotFoundError(
+                    f"Reference path 2 does not exist: {self.ref2_path}"
+                )
+
         # Initialize common components
         self.hdf_comparator = HDFComparator(print_path=self.print_path)
-        
+
         # Set up directory comparison if both paths are available
         if self.ref1_path and self.ref2_path:
             self.dcmp = dircmp(self.ref1_path, self.ref2_path)
@@ -129,7 +156,7 @@ class ReferenceComparer:
     def teardown(self):
         """
         Clean up temporary files and directories created during comparison.
-        
+
         This method should be called after completing all operations
         to ensure proper cleanup of resources. Only needed when using git hashes.
         """
@@ -139,11 +166,11 @@ class ReferenceComparer:
     def compare(self, print_diff=False):
         """
         Perform comparison between regression datasets.
-        
+
         This method executes the main comparison workflow, including optional
         directory difference printing and HDF5 file comparison. It updates
         the internal test_table_dict with comparison results.
-        
+
         Parameters
         ----------
         print_diff : bool, optional
@@ -155,9 +182,9 @@ class ReferenceComparer:
             self.diff_analyzer.print_diff_files(self.dcmp)
         elif print_diff and not self.using_git:
             print("Warning: print_diff is only available when using git hashes")
-            
+
         self.compare_hdf_files()
-        
+
         # Update test_table_dict with added and deleted keys
         for name, results in self.test_table_dict.items():
             ref1_keys = set(results.get("ref1_keys", []))
@@ -168,7 +195,7 @@ class ReferenceComparer:
     def compare_hdf_files(self):
         """
         Discover and compare all HDF5 files in the reference directories.
-        
+
         This method recursively walks through the reference directories,
         identifies HDF5 files (.h5, .hdf5), and compares them. When both
         paths are available, it compares files that exist in both directories.
@@ -179,18 +206,20 @@ class ReferenceComparer:
             for root, _, files in os.walk(self.ref1_path):
                 for file in files:
                     file_path = Path(file)
-                    if file_path.suffix in ('.h5', '.hdf5'):
+                    if file_path.suffix in (".h5", ".hdf5"):
                         rel_path = Path(root).relative_to(self.ref1_path)
                         ref2_file_path = Path(self.ref2_path) / rel_path / file
                         if ref2_file_path.exists():
-                            self.summarise_changes_hdf(file, root, ref2_file_path.parent)
+                            self.summarise_changes_hdf(
+                                file, root, ref2_file_path.parent
+                            )
         elif self.ref1_path:
             # Only ref1 available - just catalog the files
             print("Only ref1_path provided. Cataloging HDF5 files:")
             for root, _, files in os.walk(self.ref1_path):
                 for file in files:
                     file_path = Path(file)
-                    if file_path.suffix in ('.h5', '.hdf5'):
+                    if file_path.suffix in (".h5", ".hdf5"):
                         print(f"Found HDF5 file: {Path(root) / file}")
         elif self.ref2_path:
             # Only ref2 available - just catalog the files
@@ -198,16 +227,16 @@ class ReferenceComparer:
             for root, _, files in os.walk(self.ref2_path):
                 for file in files:
                     file_path = Path(file)
-                    if file_path.suffix in ('.h5', '.hdf5'):
+                    if file_path.suffix in (".h5", ".hdf5"):
                         print(f"Found HDF5 file: {Path(root) / file}")
 
     def summarise_changes_hdf(self, name, path1, path2):
         """
         Analyze and store changes for a specific HDF5 file pair.
-        
+
         This method performs detailed comparison of an HDF5 file between two
         reference directories and stores the results in the internal test_table_dict.
-        
+
         Parameters
         ----------
         name : str
@@ -216,7 +245,7 @@ class ReferenceComparer:
             Path to the directory containing the first reference file.
         path2 : str or Path
             Path to the directory containing the second reference file.
-            
+
         Notes
         -----
         The results are stored in test_table_dict[name] and include:
@@ -231,12 +260,14 @@ class ReferenceComparer:
             }
         else:
             self.test_table_dict[name] = {
-                "path": str(Path(path1).relative_to(self.ref1_path) if self.ref1_path else path1)
+                "path": str(
+                    Path(path1).relative_to(self.ref1_path) if self.ref1_path else path1
+                )
             }
-            
+
         results = self.hdf_comparator.summarise_changes_hdf(name, path1, path2)
         self.test_table_dict[name].update(results)
-        
+
         # Store keys for both references
         self.test_table_dict[name]["ref1_keys"] = results.get("ref1_keys", [])
         self.test_table_dict[name]["ref2_keys"] = results.get("ref2_keys", [])
@@ -244,11 +275,11 @@ class ReferenceComparer:
     def display_hdf_comparison_results(self):
         """
         Print a formatted summary of all HDF5 comparison results.
-        
+
         This method provides a comprehensive overview of comparison results
         for all HDF5 files that were analyzed, displaying key-value pairs
         for each file's comparison statistics.
-        
+
         Notes
         -----
         The output includes information such as:\n
@@ -266,7 +297,7 @@ class ReferenceComparer:
     def get_temp_dir(self):
         """
         Get the temporary directory path used for file operations.
-        
+
         Returns
         -------
         Path or None
@@ -278,47 +309,49 @@ class ReferenceComparer:
     def generate_graph(self, option):
         """
         Generate interactive visualizations of comparison results.
-        
+
         This method creates Plotly bar charts to visualize differences between
         reference datasets, supporting two types of comparisons: keys with same
         names but different data, and structural key differences.
-        
+
         Parameters
         ----------
         option : str
             Type of comparison to visualize. Must be one of:
             - "different keys same name" : Shows keys with identical names but different data
             - "different keys" : Shows structural differences (added/deleted keys)
-            
+
         Returns
         -------
         plotly.graph_objects.Figure or None
             Interactive Plotly figure showing the comparison results.
             Returns None if no data matches the specified option.
-            
+
         Raises
         ------
         ValueError
             If option is not one of the supported values.
-            
+
         Notes
         -----
         For "different keys same name" option:
         - Bar colors represent relative difference magnitude using blue color scale
         - Hover information includes maximum relative differences and percentages
         - Handles NaN and infinite values gracefully
-        
+
         For "different keys" option:
         - Green bars represent added keys
         - Red bars represent deleted keys
         - Random color variations within each category for distinction
-        
+
         If the environment variable SAVE_COMP_IMG is set to '1', the plot will
         be saved as a high-resolution PNG file in a comparison_plots directory.
         """
         print("Generating graph with updated hovertemplate")
         if option not in ["different keys same name", "different keys"]:
-            raise ValueError("Invalid option. Choose 'different keys same name' or 'different keys'.")
+            raise ValueError(
+                "Invalid option. Choose 'different keys same name' or 'different keys'."
+            )
 
         data = []
         for name, results in self.test_table_dict.items():
@@ -353,7 +386,7 @@ class ReferenceComparer:
         fig = go.Figure()
 
         # Extract filenames from the full paths
-        filenames = [item[0].split('/')[-1] for item in data]
+        filenames = [item[0].split("/")[-1] for item in data]
 
         for item in data:
             name = item[0]
@@ -366,71 +399,91 @@ class ReferenceComparer:
                         max_diff = max(finite_diffs)
                         # Ensure we don't divide by zero and handle NaN/infinite values
                         normalized_diffs = [
-                            min(1.0, (diff / max_diff if np.isfinite(diff) and max_diff > 0 else 0.0))
+                            min(
+                                1.0,
+                                (
+                                    diff / max_diff
+                                    if np.isfinite(diff) and max_diff > 0
+                                    else 0.0
+                                ),
+                            )
                             for diff in rel_diffs
                         ]
-                        colors = [pc.sample_colorscale('Blues', diff)[0] for diff in normalized_diffs]
+                        colors = [
+                            pc.sample_colorscale("Blues", diff)[0]
+                            for diff in normalized_diffs
+                        ]
                     else:
-                        colors = ['rgb(220, 220, 255)'] * len(keys)
+                        colors = ["rgb(220, 220, 255)"] * len(keys)
                 else:
-                    colors = ['rgb(220, 220, 255)'] * len(keys)
+                    colors = ["rgb(220, 220, 255)"] * len(keys)
                     rel_diffs = [0] * len(keys)  # Set all differences to 0
 
-                fig.add_trace(go.Bar(
-                    y=[name] * len(keys),
-                    x=[1] * len(keys),
-                    orientation='h',
-                    name=name,
-                    text=keys,
-                    customdata=rel_diffs,
-                    marker_color=colors,
-                    hoverinfo='text',
-                    hovertext=[f"{name}<br>Key: {key}<br>Max relative difference: {diff:.2e}<br>(Versions differ by {diff:.1%})" 
-                               for key, diff in zip(keys, rel_diffs)]
-                ))
+                fig.add_trace(
+                    go.Bar(
+                        y=[name] * len(keys),
+                        x=[1] * len(keys),
+                        orientation="h",
+                        name=name,
+                        text=keys,
+                        customdata=rel_diffs,
+                        marker_color=colors,
+                        hoverinfo="text",
+                        hovertext=[
+                            f"{name}<br>Key: {key}<br>Max relative difference: {diff:.2e}<br>(Versions differ by {diff:.1%})"
+                            for key, diff in zip(keys, rel_diffs)
+                        ],
+                    )
+                )
             else:  # "different keys"
                 _, _, added, deleted = item
-                colors_added = [f'rgb(0, {random.randint(100, 255)}, 0)' for _ in added]
-                colors_deleted = [f'rgb({random.randint(100, 255)}, 0, 0)' for _ in deleted]
-                fig.add_trace(go.Bar(
-                    y=[name] * len(added),
-                    x=[1] * len(added),
-                    orientation='h',
-                    name=f"{name} (Added)",
-                    text=added,
-                    hovertemplate='%{y}<br>Added Key: %{text}<extra></extra>',
-                    marker_color=colors_added
-                ))
-                fig.add_trace(go.Bar(
-                    y=[name] * len(deleted),
-                    x=[1] * len(deleted),
-                    orientation='h',
-                    name=f"{name} (Deleted)",
-                    text=deleted,
-                    hovertemplate='%{y}<br>Deleted Key: %{text}<extra></extra>',
-                    marker_color=colors_deleted
-                ))
+                colors_added = [f"rgb(0, {random.randint(100, 255)}, 0)" for _ in added]
+                colors_deleted = [
+                    f"rgb({random.randint(100, 255)}, 0, 0)" for _ in deleted
+                ]
+                fig.add_trace(
+                    go.Bar(
+                        y=[name] * len(added),
+                        x=[1] * len(added),
+                        orientation="h",
+                        name=f"{name} (Added)",
+                        text=added,
+                        hovertemplate="%{y}<br>Added Key: %{text}<extra></extra>",
+                        marker_color=colors_added,
+                    )
+                )
+                fig.add_trace(
+                    go.Bar(
+                        y=[name] * len(deleted),
+                        x=[1] * len(deleted),
+                        orientation="h",
+                        name=f"{name} (Deleted)",
+                        text=deleted,
+                        hovertemplate="%{y}<br>Deleted Key: %{text}<extra></extra>",
+                        marker_color=colors_deleted,
+                    )
+                )
 
         fig.update_layout(
             title=f"{'Different Keys with Same Name' if option == 'different keys same name' else 'Different Keys'} Comparison",
-            barmode='stack',
+            barmode="stack",
             height=max(300, len(data) * 40),  # Adjust height based on number of files
             xaxis_title="Number of Keys",
             yaxis=dict(
-                title='',
-                tickmode='array',
+                title="",
+                tickmode="array",
                 tickvals=list(range(len(filenames))),
                 ticktext=filenames,
-                showgrid=False
+                showgrid=False,
             ),
             showlegend=False,
             bargap=0.1,
             bargroupgap=0.05,
-            margin=dict(l=200)  # Increase left margin to accommodate longer filenames
+            margin=dict(l=200),  # Increase left margin to accommodate longer filenames
         )
 
         # Remove the text on the right side of the bars
-        fig.update_traces(textposition='none')
+        fig.update_traces(textposition="none")
 
         # Add a color bar to show the scale
         if any(item[3] for item in data if option == "different keys same name"):
@@ -444,7 +497,7 @@ class ReferenceComparer:
                 )
             )
 
-        if fig and os.environ.get('SAVE_COMP_IMG') == '1':
+        if fig and os.environ.get("SAVE_COMP_IMG") == "1":
             if self.using_git:
                 # Create shortened commit hashes
                 short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
@@ -455,21 +508,23 @@ class ReferenceComparer:
                 ref1_name = Path(self.ref1_path).name if self.ref1_path else "ref1"
                 ref2_name = Path(self.ref2_path).name if self.ref2_path else "ref2"
                 plot_dir = Path(f"comparison_plots_{ref2_name}_vs_{ref1_name}")
-            
+
             plot_dir.mkdir(exist_ok=True)
-            
+
             # Save high-res image in the new directory
             plot_type = "diff_keys" if option == "different keys" else "same_name_diff"
             filename = plot_dir / f"{plot_type}.png"
             fig.write_image(str(filename), scale=4, width=1200, height=800)
             print(f"Saved plot to {filename}")
-        
+
         return fig
 
-    def compare_testspectrumsolver_hdf(self, custom_ref1_path=None, custom_ref2_path=None):
+    def compare_testspectrumsolver_hdf(
+        self, custom_ref1_path=None, custom_ref2_path=None
+    ):
         """
         Perform comparison for TestSpectrumSolver HDF5 files.
-        
+
         Parameters
         ----------
         custom_ref1_path : str or Path, optional
@@ -480,35 +535,41 @@ class ReferenceComparer:
             Custom path to the second TestSpectrumSolver.h5 file, by default None.
             If None, uses the standard path within ref2_path directory (git mode) or
             the direct ref2_path (direct path mode).
-            
+
         Notes
         -----
         The method automatically creates visualization output directories when
         the SAVE_COMP_IMG environment variable is set to '1'. The comparison
         generates specialized plots tailored for spectrum solver data analysis.
-        
+
         Standard file paths (when custom paths are not provided):\n
         - git mode: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n
         - direct path mode: uses ref1_path and ref2_path directly\n
-        
+
         """
         if custom_ref1_path:
             ref1_path = custom_ref1_path
         elif self.using_git:
-            ref1_path = Path(self.ref1_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+            ref1_path = (
+                Path(self.ref1_path)
+                / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+            )
         else:
             ref1_path = self.ref1_path
-            
+
         if custom_ref2_path:
             ref2_path = custom_ref2_path
         elif self.using_git:
-            ref2_path = Path(self.ref2_path) / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+            ref2_path = (
+                Path(self.ref2_path)
+                / "tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5"
+            )
         else:
             ref2_path = self.ref2_path
-        
+
         # Create plot directory first
         plot_dir = None
-        if os.environ.get('SAVE_COMP_IMG') == '1':
+        if os.environ.get("SAVE_COMP_IMG") == "1":
             if self.using_git:
                 short_ref1 = self.ref1_hash[:6] if self.ref1_hash else "current"
                 short_ref2 = self.ref2_hash[:6] if self.ref2_hash else "current"
@@ -518,7 +579,7 @@ class ReferenceComparer:
                 ref2_name = Path(self.ref2_path).name if self.ref2_path else "ref2"
                 plot_dir = Path(f"spectrum_plots_{ref2_name}_vs_{ref1_name}")
             plot_dir.mkdir(exist_ok=True)
-        
+
         # Pass plot_dir to SpectrumSolverComparator
         comparator = SpectrumSolverComparator(ref1_path, ref2_path, plot_dir)
         comparator.setup()

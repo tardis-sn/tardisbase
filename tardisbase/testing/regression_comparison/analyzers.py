@@ -6,35 +6,37 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class DiffAnalyzer:
     """
     A class for analyzing and displaying differences between directory structures.
-    
+
     This class provides methods to visualize directory differences using tree-like
     displays with colored output and detailed file comparison reports.
-    
+
     Parameters
     ----------
     file_manager : tardisbase.testing.regression_comparison.file_manager.FileManager
         A file manager object that handles file operations and provides access
         to temporary directory paths.
-        
+
     Attributes
     ----------
     file_manager : object
         The file manager instance used for path operations.
     """
+
     def __init__(self, file_manager):
         self.file_manager = file_manager
 
-    def display_diff_tree(self, dcmp, prefix=''):
+    def display_diff_tree(self, dcmp, prefix=""):
         """
         Display a tree-like visualization of directory differences.
-        
+
         This method recursively traverses directory comparison objects and
         displays added, removed, and modified files/directories using colored
         symbols in a tree structure.
-        
+
         Parameters
         ----------
         dcmp : filecmp.dircmp
@@ -43,36 +45,36 @@ class DiffAnalyzer:
         prefix : str, optional
             String prefix for indentation in the tree display, by default ''.
             Used internally for recursive calls to maintain proper indentation.
-            
+
         Notes
         -----
         Uses the following symbols:\n
         - '−' (red) for items only in the left directory\n
-        - '+' (green) for items only in the right directory\n 
+        - '+' (green) for items only in the right directory\n
         - '✱' (yellow) for files that differ between directories\n
         - '├' (blue) for common subdirectories\n
         - '│ ' for tree indentation in subdirectories\n
         """
         for item in sorted(dcmp.left_only):
             path = Path(dcmp.left) / item
-            self._print_item(f'{prefix}−', item, 'red', path.is_dir())
+            self._print_item(f"{prefix}−", item, "red", path.is_dir())
 
         for item in sorted(dcmp.right_only):
             path = Path(dcmp.right) / item
-            self._print_item(f'{prefix}+', item, 'green', path.is_dir())
+            self._print_item(f"{prefix}+", item, "green", path.is_dir())
 
         for item in sorted(dcmp.diff_files):
-            self._print_item(f'{prefix}✱', item, 'yellow')
+            self._print_item(f"{prefix}✱", item, "yellow")
 
         for item in sorted(dcmp.common_dirs):
-            self._print_item(f'{prefix}├', item, 'blue', True)
-            subdir = getattr(dcmp, 'subdirs')[item]
-            self.display_diff_tree(subdir, prefix + '│ ')
+            self._print_item(f"{prefix}├", item, "blue", True)
+            subdir = getattr(dcmp, "subdirs")[item]
+            self.display_diff_tree(subdir, prefix + "│ ")
 
     def _print_item(self, symbol, item, color, is_dir=False):
         """
         Print a single item with colored formatting.
-        
+
         Parameters
         ----------
         symbol : str
@@ -85,13 +87,13 @@ class DiffAnalyzer:
             Whether the item is a directory, by default False.
             If True, appends '/' to the item name.
         """
-        dir_symbol = '/' if is_dir else ''
+        dir_symbol = "/" if is_dir else ""
         color_print(f"{symbol} {item}{dir_symbol}", color)
 
     def print_diff_files(self, dcmp):
         """
         Print detailed information about file differences between directories.
-        
+
         Parameters
         ----------
         dcmp : filecmp.dircmp
@@ -100,7 +102,7 @@ class DiffAnalyzer:
         """
         dcmp.right = Path(dcmp.right)
         dcmp.left = Path(dcmp.left)
-        
+
         self._print_new_files(dcmp.right_only, dcmp.right, "ref1")
         self._print_new_files(dcmp.left_only, dcmp.left, "ref2")
         self._print_modified_files(dcmp)
@@ -111,7 +113,7 @@ class DiffAnalyzer:
     def _print_new_files(self, files, path, ref):
         """
         Print information about new files found in one directory but not the other.
-        
+
         Parameters
         ----------
         files : list
@@ -130,7 +132,7 @@ class DiffAnalyzer:
     def _print_modified_files(self, dcmp):
         """
         Print information about files that exist in both directories but differ.
-        
+
         Parameters
         ----------
         dcmp : filecmp.dircmp
@@ -148,12 +150,12 @@ class DiffAnalyzer:
     def _get_relative_path(self, path):
         """
         Get the relative path of a given path with respect to the temporary directory.
-        
+
         Parameters
         ----------
         path : str or Path
             The absolute path to convert to a relative path.
-            
+
         Returns
         -------
         str
@@ -166,30 +168,32 @@ class DiffAnalyzer:
             # If the path is not relative to temp_dir, return the full path
             return str(path)
 
+
 class HDFComparator:
     """
     A class for comparing HDF5 files and analyzing differences between datasets.
-    
+
     This class provides functionality to compare HDF5 files, identify differences
     in keys and data, and display statistical summaries and visualizations of
     the differences found.
-    
+
     Parameters
     ----------
     print_path : bool, optional
         Whether to print file paths in the output, by default False.
     """
+
     def __init__(self, print_path=False):
         self.print_path = print_path
 
     def summarise_changes_hdf(self, name, path1, path2):
         """
         Compare two HDF5 files and summarize the differences between them.
-        
+
         This method performs a comparison of HDF5 files, analyzing
         both structural differences (different keys) and data differences
         (same keys with different values).
-        
+
         Parameters
         ----------
         name : str
@@ -198,12 +202,12 @@ class HDFComparator:
             Path to the first directory containing the HDF5 file.
         path2 : str or Path
             Path to the second directory containing the HDF5 file.
-            
+
         Returns
         -------
         dict or None
             A dictionary containing comparison results if differences are found:
-            
+
             - 'different_keys' : int
                 Number of keys that differ between the files
             - 'identical_keys' : int
@@ -220,9 +224,9 @@ class HDFComparator:
                 Keys present only in the second file
             - 'deleted_keys' : list
                 Keys present only in the first file
-                
+
             Returns None if no differences are found.
-            
+
         Notes
         -----
         The method prints detailed summaries and visualizations when differences
@@ -232,7 +236,7 @@ class HDFComparator:
         ref1 = pd.HDFStore(Path(path1) / name)
         ref2 = pd.HDFStore(Path(path2) / name)
         k1, k2 = set(ref1.keys()), set(ref2.keys())
-        
+
         different_keys = len(k1 ^ k2)
         identical_items = []
         identical_name_different_data = []
@@ -248,8 +252,12 @@ class HDFComparator:
                     identical_items.append(item)
                 else:
                     identical_name_different_data.append(item)
-                    identical_name_different_data_dfs[item] = (ref1[item] - ref2[item]) / ref1[item]
-                    self._compare_and_display_differences(ref1[item], ref2[item], item, name, path1, path2)
+                    identical_name_different_data_dfs[item] = (
+                        ref1[item] - ref2[item]
+                    ) / ref1[item]
+                    self._compare_and_display_differences(
+                        ref1[item], ref2[item], item, name, path1, path2
+                    )
             except Exception as e:
                 print(f"Error comparing item: {item}")
                 print(e)
@@ -262,12 +270,16 @@ class HDFComparator:
             print("\n" + "=" * 50)  # Add a separator line
             print(f"Summary for {name}:")
             print(f"Total number of keys- in ref1: {len(k1)}, in ref2: {len(k2)}")
-            print(f"Number of keys with different names in ref1 and ref2: {different_keys}")
+            print(
+                f"Number of keys with different names in ref1 and ref2: {different_keys}"
+            )
             if added_keys:
                 print(f"Keys added in ref2(k2-k1): {sorted(added_keys)}")
             if deleted_keys:
                 print(f"Keys deleted from ref1(k1-k2): {sorted(deleted_keys)}")
-            print(f"Number of keys with same name but different data in ref1 and ref2: {len(identical_name_different_data)}")
+            print(
+                f"Number of keys with same name but different data in ref1 and ref2: {len(identical_name_different_data)}"
+            )
             print(f"Number of totally same keys: {len(identical_items)}")
             print("=" * 50)  # Add another separator line after the summary
             print()
@@ -280,17 +292,17 @@ class HDFComparator:
             "ref1_keys": list(k1),
             "ref2_keys": list(k2),
             "added_keys": list(added_keys),
-            "deleted_keys": list(deleted_keys)
+            "deleted_keys": list(deleted_keys),
         }
 
     def _compare_and_display_differences(self, df1, df2, item, name, path1, path2):
         """
         Compare two DataFrames and display detailed difference analysis.
-        
+
         This method calculates both absolute and relative differences between
         DataFrames and provides warnings for significant differences that exceed
         floating-point precision limits.
-        
+
         Parameters
         ----------
         df1 : pandas.DataFrame
@@ -305,7 +317,7 @@ class HDFComparator:
             Path to the first file.
         path2 : str or Path
             Path to the second file.
-            
+
         Notes
         -----
         The method uses a floating-point uncertainty threshold of 1e-14 to
@@ -329,7 +341,9 @@ class HDFComparator:
 
         print(f"Displaying heatmap for key {item} in file {name} \r")
         for diff_type, diff in zip(["abs", "rel"], [abs_diff, rel_diff]):
-            print(f"Visualising {'Absolute' if diff_type == 'abs' else 'Relative'} Differences")
+            print(
+                f"Visualising {'Absolute' if diff_type == 'abs' else 'Relative'} Differences"
+            )
             self._display_difference(diff)
 
         if self.print_path:
@@ -339,36 +353,35 @@ class HDFComparator:
             else:
                 print(f"Path: {path1}")
 
-
     def _display_difference(self, diff):
         """
         Display a formatted visualization of DataFrame differences.
-        
+
         This method creates a styled DataFrame showing mean and maximum
         difference values with a red color gradient background for
         easy visual interpretation.
-        
+
         Parameters
         ----------
         diff : pandas.DataFrame or pandas.Series
             The difference data to visualize. Can be either absolute or
             relative differences calculated from DataFrame comparisons.
-            
+
         Notes
         -----
         The output uses pandas styling with:
         - Scientific notation formatting (2 significant digits)
         - Red color gradient background ('Reds' colormap)
         - Automatic handling of Series and MultiIndex data structures
-        
+
         For MultiIndex DataFrames, the index is reset before processing.
         Series data is converted to a single-row DataFrame.
         """
-        with pd.option_context('display.max_rows', 100, 'display.max_columns', 10):
+        with pd.option_context("display.max_rows", 100, "display.max_columns", 10):
             if isinstance(diff, pd.Series):
-                diff = pd.DataFrame([diff.mean(), diff.max()], index=['mean', 'max'])
+                diff = pd.DataFrame([diff.mean(), diff.max()], index=["mean", "max"])
             elif isinstance(diff.index, pd.core.indexes.multi.MultiIndex):
                 diff = diff.reset_index(drop=True)
-            
-            diff = pd.DataFrame([diff.mean(), diff.max()], index=['mean', 'max'])
-            display(diff.style.format('{:.2g}'.format).background_gradient(cmap='Reds'))
+
+            diff = pd.DataFrame([diff.mean(), diff.max()], index=["mean", "max"])
+            display(diff.style.format("{:.2g}".format).background_gradient(cmap="Reds"))
