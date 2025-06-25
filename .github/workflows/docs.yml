@@ -112,6 +112,7 @@ jobs:
           user_email: "tardis.sn.bot@gmail.com"
 
       - uses: tardis-sn/tardis-actions/setup-docs-comments@main
+        if: ${{ github.event_name == 'pull_request_target' }}
         with:
           bot-token: ${{ secrets.BOT_TOKEN }}
           repository: ${{ github.repository }}
