@@ -1,0 +1,281 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tardisbase.testing.regression_comparison.compare module &#8212; tardisbase 0.1.dev1+g0a9d1e1.d20250625 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=7a72fd47"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tardisbase.testing.regression_data package" href="tardisbase.testing.regression_data.html" />
+    <link rel="prev" title="tardisbase.testing.regression_comparison package" href="tardisbase.testing.regression_comparison.html" />
+    <link href="../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="module-tardisbase.testing.regression_comparison.compare">
+<span id="tardisbase-testing-regression-comparison-compare-module"></span><h1>tardisbase.testing.regression_comparison.compare module<a class="headerlink" href="#module-tardisbase.testing.regression_comparison.compare" title="Link to this heading">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.DiffAnalyzer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">DiffAnalyzer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_manager</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#DiffAnalyzer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.DiffAnalyzer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.DiffAnalyzer.display_diff_tree">
+<span class="sig-name descname"><span class="pre">display_diff_tree</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dcmp</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">prefix</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">''</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#DiffAnalyzer.display_diff_tree"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.DiffAnalyzer.display_diff_tree" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.DiffAnalyzer.print_diff_files">
+<span class="sig-name descname"><span class="pre">print_diff_files</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">dcmp</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#DiffAnalyzer.print_diff_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.DiffAnalyzer.print_diff_files" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileManager">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">FileManager</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">repo_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileManager"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileManager" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileManager.copy_file">
+<span class="sig-name descname"><span class="pre">copy_file</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">source</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">destination</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileManager.copy_file"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileManager.copy_file" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileManager.get_temp_path">
+<span class="sig-name descname"><span class="pre">get_temp_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">filename</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileManager.get_temp_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileManager.get_temp_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileManager.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileManager.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileManager.setup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileManager.teardown">
+<span class="sig-name descname"><span class="pre">teardown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileManager.teardown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileManager.teardown" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileSetup">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">FileSetup</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">file_manager</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref1_hash</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref2_hash</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileSetup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileSetup" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.FileSetup.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#FileSetup.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.FileSetup.setup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.HDFComparator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">HDFComparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#HDFComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.HDFComparator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.HDFComparator.summarise_changes_hdf">
+<span class="sig-name descname"><span class="pre">summarise_changes_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#HDFComparator.summarise_changes_hdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.HDFComparator.summarise_changes_hdf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">ReferenceComparer</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref1_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref2_hash</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">print_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare">
+<span class="sig-name descname"><span class="pre">compare</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">print_diff</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.compare"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_hdf_files">
+<span class="sig-name descname"><span class="pre">compare_hdf_files</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.compare_hdf_files"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_hdf_files" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_testspectrumsolver_hdf">
+<span class="sig-name descname"><span class="pre">compare_testspectrumsolver_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">custom_ref1_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">custom_ref2_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.compare_testspectrumsolver_hdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_testspectrumsolver_hdf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.display_hdf_comparison_results">
+<span class="sig-name descname"><span class="pre">display_hdf_comparison_results</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.display_hdf_comparison_results"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.display_hdf_comparison_results" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.generate_graph">
+<span class="sig-name descname"><span class="pre">generate_graph</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">option</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.generate_graph"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.generate_graph" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.get_temp_dir">
+<span class="sig-name descname"><span class="pre">get_temp_dir</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.get_temp_dir"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.get_temp_dir" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.setup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.summarise_changes_hdf">
+<span class="sig-name descname"><span class="pre">summarise_changes_hdf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">name</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">path2</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.summarise_changes_hdf"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.summarise_changes_hdf" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.ReferenceComparer.teardown">
+<span class="sig-name descname"><span class="pre">teardown</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#ReferenceComparer.teardown"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.ReferenceComparer.teardown" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator">
+<em class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">SpectrumSolverComparator</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">ref1_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ref2_path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plot_dir</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#SpectrumSolverComparator"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator" title="Link to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.13)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.plot_matplotlib">
+<span class="sig-name descname"><span class="pre">plot_matplotlib</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#SpectrumSolverComparator.plot_matplotlib"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.plot_matplotlib" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.plot_plotly">
+<span class="sig-name descname"><span class="pre">plot_plotly</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#SpectrumSolverComparator.plot_plotly"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.plot_plotly" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.setup">
+<span class="sig-name descname"><span class="pre">setup</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#SpectrumSolverComparator.setup"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.SpectrumSolverComparator.setup" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.color_print">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">color_print</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#color_print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.color_print" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.get_last_two_commits">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">get_last_two_commits</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#get_last_two_commits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.get_last_two_commits" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.compare.get_relative_path">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.compare.</span></span><span class="sig-name descname"><span class="pre">get_relative_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/compare.html#get_relative_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.compare.get_relative_path" title="Link to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tardisbase.html">tardisbase package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">tardisbase</a><ul>
+  <li><a href="tardisbase.html">tardisbase package</a><ul>
+  <li><a href="tardisbase.testing.html">tardisbase.testing package</a><ul>
+  <li><a href="tardisbase.testing.regression_comparison.html">tardisbase.testing.regression_comparison package</a><ul>
+      <li>Previous: <a href="tardisbase.testing.regression_comparison.html" title="previous chapter">tardisbase.testing.regression_comparison package</a></li>
+      <li>Next: <a href="tardisbase.testing.regression_data.html" title="next chapter">tardisbase.testing.regression_data package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/api/tardisbase.testing.regression_comparison.compare.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
