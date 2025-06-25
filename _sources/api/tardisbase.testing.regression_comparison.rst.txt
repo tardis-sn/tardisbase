@@ -7,7 +7,11 @@ Submodules
 .. toctree::
    :maxdepth: 4
 
+   tardisbase.testing.regression_comparison.analyzers
    tardisbase.testing.regression_comparison.compare
+   tardisbase.testing.regression_comparison.file_manager
+   tardisbase.testing.regression_comparison.util
+   tardisbase.testing.regression_comparison.visualization
 
 Module contents
 ---------------
