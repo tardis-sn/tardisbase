@@ -1,0 +1,7 @@
+tardisbase.testing.regression\_comparison.analyzers module
+==========================================================
+
+.. automodule:: tardisbase.testing.regression_comparison.analyzers
+   :members:
+   :show-inheritance:
+   :undoc-members:

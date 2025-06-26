@@ -1,0 +1,728 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tardisbase.testing.regression_comparison.compare &#8212; tardisbase 0.1.dev1+gc3a580a.d20250626 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../../../_static/documentation_options.js?v=4f024b52"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link href="../../../../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tardisbase.testing.regression_comparison.compare</h1><div class="highlight"><pre>
+<span></span><span class="kn">from</span><span class="w"> </span><span class="nn">filecmp</span><span class="w"> </span><span class="kn">import</span> <span class="n">dircmp</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.graph_objects</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">go</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">random</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">plotly.colors</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pc</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.util</span><span class="w"> </span><span class="kn">import</span> <span class="n">get_relative_path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.file_manager</span><span class="w"> </span><span class="kn">import</span> <span class="n">FileManager</span><span class="p">,</span> <span class="n">FileSetup</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.analyzers</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">DiffAnalyzer</span><span class="p">,</span>
+    <span class="n">HDFComparator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.visualization</span><span class="w"> </span><span class="kn">import</span> <span class="p">(</span>
+    <span class="n">SpectrumSolverComparator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison</span><span class="w"> </span><span class="kn">import</span> <span class="n">CONFIG</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ReferenceComparer">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer">[docs]</a>
+<span class="k">class</span><span class="w"> </span><span class="nc">ReferenceComparer</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    A class for comparing reference data between two regression data commits or direct paths.</span>
+
+<span class="sd">    This class provides functionality to compare HDF5 files, generate visualizations,</span>
+<span class="sd">    and analyze differences between two regression data repo commits or direct directory paths.</span>
+<span class="sd">    It supports directory comparison, HDF5 file analysis, and plot generation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    ref1_hash : str, optional</span>
+<span class="sd">        Git commit hash for the first reference dataset, by default None.</span>
+<span class="sd">        Cannot be used together with refpath1.</span>
+<span class="sd">    ref2_hash : str, optional</span>
+<span class="sd">        Git commit hash for the second reference dataset, by default None.</span>
+<span class="sd">        Cannot be used together with refpath2.</span>
+<span class="sd">    refpath1 : str or Path, optional</span>
+<span class="sd">        Direct path to the first reference directory, by default None.</span>
+<span class="sd">        Cannot be used together with ref1_hash.</span>
+<span class="sd">    refpath2 : str or Path, optional</span>
+<span class="sd">        Direct path to the second reference directory, by default None.</span>
+<span class="sd">        Cannot be used together with ref2_hash.</span>
+<span class="sd">    print_path : bool, optional</span>
+<span class="sd">        Whether to print file paths in comparison output, by default False.</span>
+<span class="sd">    repo_path : str or Path, optional</span>
+<span class="sd">        Path to the repository containing reference data, by default None.</span>
+<span class="sd">        If None, uses the path specified in CONFIG[&#39;compare_path&#39;].</span>
+<span class="sd">        Only used when using git hashes.</span>
+
+<span class="sd">    Raises</span>
+<span class="sd">    ------</span>
+<span class="sd">    AssertionError</span>
+<span class="sd">        If neither git hashes nor direct paths are provided, or if both are provided.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">ref1_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">ref2_hash</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">refpath1</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">refpath2</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">print_path</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+        <span class="n">repo_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="c1"># Validation: Either use git hashes OR direct paths, not both</span>
+        <span class="n">using_git</span> <span class="o">=</span> <span class="p">(</span><span class="n">ref1_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">ref2_hash</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">using_paths</span> <span class="o">=</span> <span class="p">(</span><span class="n">refpath1</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="p">(</span><span class="n">refpath2</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span>
+            <span class="n">using_git</span> <span class="ow">and</span> <span class="n">using_paths</span>
+        <span class="p">),</span> <span class="s2">&quot;Cannot use both git hashes and direct paths&quot;</span>
+        <span class="k">assert</span> <span class="p">(</span>
+            <span class="n">using_git</span> <span class="ow">or</span> <span class="n">using_paths</span>
+        <span class="p">),</span> <span class="s2">&quot;Must provide either git hashes or direct paths&quot;</span>
+
+        <span class="k">if</span> <span class="n">using_git</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">ref1_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">ref2_hash</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">),</span> <span class="s2">&quot;At least one git hash must be provided&quot;</span>
+
+        <span class="k">if</span> <span class="n">using_paths</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="ow">not</span> <span class="p">(</span>
+                <span class="p">(</span><span class="n">refpath1</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">and</span> <span class="p">(</span><span class="n">refpath2</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">)</span>
+            <span class="p">),</span> <span class="s2">&quot;At least one direct path must be provided&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="o">=</span> <span class="n">ref1_hash</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="o">=</span> <span class="n">ref2_hash</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">refpath1</span><span class="p">)</span> <span class="k">if</span> <span class="n">refpath1</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">refpath2</span><span class="p">)</span> <span class="k">if</span> <span class="n">refpath2</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">print_path</span> <span class="o">=</span> <span class="n">print_path</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">repo_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">repo_path</span> <span class="k">else</span> <span class="n">Path</span><span class="p">(</span><span class="n">CONFIG</span><span class="p">[</span><span class="s2">&quot;compare_path&quot;</span><span class="p">])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Initialize components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="o">=</span> <span class="n">using_git</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span> <span class="o">=</span> <span class="n">FileManager</span><span class="p">(</span><span class="n">repo_path</span><span class="p">)</span> <span class="k">if</span> <span class="n">using_git</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="kc">None</span>
+
+<div class="viewcode-block" id="ReferenceComparer.setup">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.setup">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">setup</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Set up all necessary components for reference comparison.</span>
+
+<span class="sd">        This method initializes the file manager (if using git), sets up reference files,</span>
+<span class="sd">        creates analyzer and comparator instances, and establishes directory</span>
+<span class="sd">        comparison objects. Must be called before performing any comparisons.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        After calling this method, the following attributes will be available:</span>
+<span class="sd">        - ref1_path : Path to the first reference directory</span>
+<span class="sd">        - ref2_path : Path to the second reference directory</span>
+<span class="sd">        - dcmp : Directory comparison object</span>
+<span class="sd">        - file_setup : Configured FileSetup instance</span>
+<span class="sd">        - diff_analyzer : Configured DiffAnalyzer instance</span>
+<span class="sd">        - hdf_comparator : Configured HDFComparator instance</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="c1"># Git-based setup</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span> <span class="o">=</span> <span class="n">FileSetup</span><span class="p">(</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span>
+            <span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="o">=</span> <span class="n">DiffAnalyzer</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="n">HDFComparator</span><span class="p">(</span><span class="n">print_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_path</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_setup</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">get_temp_path</span><span class="p">(</span><span class="s2">&quot;ref2&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># Direct path setup</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refpath1</span> <span class="k">else</span> <span class="kc">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refpath2</span> <span class="k">else</span> <span class="kc">None</span>
+
+            <span class="c1"># Validate that paths exist</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Reference path 1 does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span>
+                    <span class="sa">f</span><span class="s2">&quot;Reference path 2 does not exist: </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="p">)</span>
+
+        <span class="c1"># Initialize common components</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span> <span class="o">=</span> <span class="n">HDFComparator</span><span class="p">(</span><span class="n">print_path</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">print_path</span><span class="p">)</span>
+
+        <span class="c1"># Set up directory comparison if both paths are available</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span> <span class="o">=</span> <span class="n">dircmp</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span> <span class="o">=</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.teardown">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.teardown">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">teardown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Clean up temporary files and directories created during comparison.</span>
+
+<span class="sd">        This method should be called after completing all operations</span>
+<span class="sd">        to ensure proper cleanup of resources. Only needed when using git hashes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">teardown</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.compare">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">print_diff</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform comparison between regression datasets.</span>
+
+<span class="sd">        This method executes the main comparison workflow, including optional</span>
+<span class="sd">        directory difference printing and HDF5 file comparison. It updates</span>
+<span class="sd">        the internal test_table_dict with comparison results.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        print_diff : bool, optional</span>
+<span class="sd">            Whether to print detailed directory differences, by default False.</span>
+<span class="sd">            If True, displays a tree-like view of file differences.</span>
+<span class="sd">            Only available when using git hashes and both references are available.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">print_diff</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">diff_analyzer</span><span class="o">.</span><span class="n">print_diff_files</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">dcmp</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">print_diff</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Warning: print_diff is only available when using git hashes&quot;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">compare_hdf_files</span><span class="p">()</span>
+
+        <span class="c1"># Update test_table_dict with added and deleted keys</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">ref1_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ref1_keys&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="n">ref2_keys</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ref2_keys&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;added_keys&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ref2_keys</span> <span class="o">-</span> <span class="n">ref1_keys</span><span class="p">)</span>
+            <span class="n">results</span><span class="p">[</span><span class="s2">&quot;deleted_keys&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">ref1_keys</span> <span class="o">-</span> <span class="n">ref2_keys</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.compare_hdf_files">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_hdf_files">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare_hdf_files</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Discover and compare all HDF5 files in the reference directories.</span>
+
+<span class="sd">        This method recursively walks through the reference directories,</span>
+<span class="sd">        identifies HDF5 files (.h5, .hdf5), and compares them. When both</span>
+<span class="sd">        paths are available, it compares files that exist in both directories.</span>
+<span class="sd">        When only one path is available, it lists all HDF5 files in that directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="c1"># Compare files in both directories</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
+                        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span>
+                        <span class="n">ref2_file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span> <span class="o">/</span> <span class="n">rel_path</span> <span class="o">/</span> <span class="n">file</span>
+                        <span class="k">if</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+                            <span class="bp">self</span><span class="o">.</span><span class="n">summarise_changes_hdf</span><span class="p">(</span>
+                                <span class="n">file</span><span class="p">,</span> <span class="n">root</span><span class="p">,</span> <span class="n">ref2_file_path</span><span class="o">.</span><span class="n">parent</span>
+                            <span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">:</span>
+            <span class="c1"># Only ref1 available - just catalog the files</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only ref1_path provided. Cataloging HDF5 files:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found HDF5 file: </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">:</span>
+            <span class="c1"># Only ref2 available - just catalog the files</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Only ref2_path provided. Cataloging HDF5 files:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">files</span> <span class="ow">in</span> <span class="n">os</span><span class="o">.</span><span class="n">walk</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">):</span>
+                <span class="k">for</span> <span class="n">file</span> <span class="ow">in</span> <span class="n">files</span><span class="p">:</span>
+                    <span class="n">file_path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
+                        <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Found HDF5 file: </span><span class="si">{</span><span class="n">Path</span><span class="p">(</span><span class="n">root</span><span class="p">)</span><span class="w"> </span><span class="o">/</span><span class="w"> </span><span class="n">file</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.summarise_changes_hdf">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.summarise_changes_hdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">summarise_changes_hdf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Analyze and store changes for a specific HDF5 file pair.</span>
+
+<span class="sd">        This method performs detailed comparison of an HDF5 file between two</span>
+<span class="sd">        reference directories and stores the results in the internal test_table_dict.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        name : str</span>
+<span class="sd">            Name of the HDF5 file to compare.</span>
+<span class="sd">        path1 : str or Path</span>
+<span class="sd">            Path to the directory containing the first reference file.</span>
+<span class="sd">        path2 : str or Path</span>
+<span class="sd">            Path to the directory containing the second reference file.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The results are stored in test_table_dict[name] and include:</span>
+<span class="sd">        - Relative path information (when using git)</span>
+<span class="sd">        - All comparison results from HDFComparator</span>
+<span class="sd">        - Lists of keys from both reference files</span>
+<span class="sd">        - Summary statistics about differences</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="n">get_relative_path</span><span class="p">(</span><span class="n">path1</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span> <span class="o">/</span> <span class="s2">&quot;ref1&quot;</span><span class="p">)</span>
+            <span class="p">}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="s2">&quot;path&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">Path</span><span class="p">(</span><span class="n">path1</span><span class="p">)</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="n">path1</span>
+                <span class="p">)</span>
+            <span class="p">}</span>
+
+        <span class="n">results</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">hdf_comparator</span><span class="o">.</span><span class="n">summarise_changes_hdf</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">path1</span><span class="p">,</span> <span class="n">path2</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">results</span><span class="p">)</span>
+
+        <span class="c1"># Store keys for both references</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;ref1_keys&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ref1_keys&quot;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="s2">&quot;ref2_keys&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;ref2_keys&quot;</span><span class="p">,</span> <span class="p">[])</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.display_hdf_comparison_results">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.display_hdf_comparison_results">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">display_hdf_comparison_results</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print a formatted summary of all HDF5 comparison results.</span>
+
+<span class="sd">        This method provides a comprehensive overview of comparison results</span>
+<span class="sd">        for all HDF5 files that were analyzed, displaying key-value pairs</span>
+<span class="sd">        for each file&#39;s comparison statistics.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The output includes information such as:\n</span>
+<span class="sd">        - Number of different keys\n</span>
+<span class="sd">        - Identical keys count\n</span>
+<span class="sd">        - Keys with same name but different data\n</span>
+<span class="sd">        - File paths and reference key lists\n</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Results for </span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">:&quot;</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">results</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;  </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">value</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.get_temp_dir">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.get_temp_dir">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_temp_dir</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Get the temporary directory path used for file operations.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Path or None</span>
+<span class="sd">            The temporary directory path managed by the file manager when using git,</span>
+<span class="sd">            or None when using direct paths.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">file_manager</span><span class="o">.</span><span class="n">temp_dir</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span> <span class="k">else</span> <span class="kc">None</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.generate_graph">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.generate_graph">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">generate_graph</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">option</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Generate interactive visualizations of comparison results.</span>
+
+<span class="sd">        This method creates Plotly bar charts to visualize differences between</span>
+<span class="sd">        reference datasets, supporting two types of comparisons: keys with same</span>
+<span class="sd">        names but different data, and structural key differences.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        option : str</span>
+<span class="sd">            Type of comparison to visualize. Must be one of:</span>
+<span class="sd">            - &quot;different keys same name&quot; : Shows keys with identical names but different data</span>
+<span class="sd">            - &quot;different keys&quot; : Shows structural differences (added/deleted keys)</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        plotly.graph_objects.Figure or None</span>
+<span class="sd">            Interactive Plotly figure showing the comparison results.</span>
+<span class="sd">            Returns None if no data matches the specified option.</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError</span>
+<span class="sd">            If option is not one of the supported values.</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For &quot;different keys same name&quot; option:</span>
+<span class="sd">        - Bar colors represent relative difference magnitude using blue color scale</span>
+<span class="sd">        - Hover information includes maximum relative differences and percentages</span>
+<span class="sd">        - Handles NaN and infinite values gracefully</span>
+
+<span class="sd">        For &quot;different keys&quot; option:</span>
+<span class="sd">        - Green bars represent added keys</span>
+<span class="sd">        - Red bars represent deleted keys</span>
+<span class="sd">        - Random color variations within each category for distinction</span>
+
+<span class="sd">        If the environment variable SAVE_COMP_IMG is set to &#39;1&#39;, the plot will</span>
+<span class="sd">        be saved as a high-resolution PNG file in a comparison_plots directory.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Generating graph with updated hovertemplate&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">option</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;different keys same name&quot;</span><span class="p">,</span> <span class="s2">&quot;different keys&quot;</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid option. Choose &#39;different keys same name&#39; or &#39;different keys&#39;.&quot;</span>
+            <span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">results</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">test_table_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;different keys same name&quot;</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;identical_keys_diff_data&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">diff_data</span> <span class="o">=</span> <span class="n">results</span><span class="p">[</span><span class="s2">&quot;identical_name_different_data_dfs&quot;</span><span class="p">]</span>
+                    <span class="n">keys</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">diff_data</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+                    <span class="n">rel_diffs</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">keys</span><span class="p">:</span>
+                        <span class="n">df</span> <span class="o">=</span> <span class="n">diff_data</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+                        <span class="k">try</span><span class="p">:</span>
+                            <span class="n">values</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">abs</span><span class="p">()</span><span class="o">.</span><span class="n">fillna</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">values</span>
+                            <span class="n">max_diff</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">nanmax</span><span class="p">(</span><span class="n">values</span><span class="p">))</span>
+                            <span class="k">if</span> <span class="ow">not</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">max_diff</span><span class="p">):</span>
+                                <span class="n">max_diff</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error calculating diff for key </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+                            <span class="n">max_diff</span> <span class="o">=</span> <span class="mf">0.0</span>
+                        <span class="n">rel_diffs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">max_diff</span><span class="p">)</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">rel_diffs</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># &quot;different keys&quot;</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;different_keys&quot;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">added</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;added_keys&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                    <span class="n">deleted</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">results</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;deleted_keys&quot;</span><span class="p">,</span> <span class="p">[]))</span>
+                    <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">name</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">deleted</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">data</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">fig</span> <span class="o">=</span> <span class="n">go</span><span class="o">.</span><span class="n">Figure</span><span class="p">()</span>
+
+        <span class="c1"># Extract filenames from the full paths</span>
+        <span class="n">filenames</span> <span class="o">=</span> <span class="p">[</span><span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;/&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span><span class="p">:</span>
+            <span class="n">name</span> <span class="o">=</span> <span class="n">item</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;different keys same name&quot;</span><span class="p">:</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">keys</span><span class="p">,</span> <span class="n">rel_diffs</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="k">if</span> <span class="n">rel_diffs</span><span class="p">:</span>
+                    <span class="c1"># Handle potential NaN or infinite values</span>
+                    <span class="n">finite_diffs</span> <span class="o">=</span> <span class="p">[</span><span class="n">diff</span> <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">rel_diffs</span> <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">diff</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="n">finite_diffs</span><span class="p">:</span>
+                        <span class="n">max_diff</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">finite_diffs</span><span class="p">)</span>
+                        <span class="c1"># Ensure we don&#39;t divide by zero and handle NaN/infinite values</span>
+                        <span class="n">normalized_diffs</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="nb">min</span><span class="p">(</span>
+                                <span class="mf">1.0</span><span class="p">,</span>
+                                <span class="p">(</span>
+                                    <span class="n">diff</span> <span class="o">/</span> <span class="n">max_diff</span>
+                                    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">isfinite</span><span class="p">(</span><span class="n">diff</span><span class="p">)</span> <span class="ow">and</span> <span class="n">max_diff</span> <span class="o">&gt;</span> <span class="mi">0</span>
+                                    <span class="k">else</span> <span class="mf">0.0</span>
+                                <span class="p">),</span>
+                            <span class="p">)</span>
+                            <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">rel_diffs</span>
+                        <span class="p">]</span>
+                        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span>
+                            <span class="n">pc</span><span class="o">.</span><span class="n">sample_colorscale</span><span class="p">(</span><span class="s2">&quot;Blues&quot;</span><span class="p">,</span> <span class="n">diff</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                            <span class="k">for</span> <span class="n">diff</span> <span class="ow">in</span> <span class="n">normalized_diffs</span>
+                        <span class="p">]</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;rgb(220, 220, 255)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">colors</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;rgb(220, 220, 255)&quot;</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>
+                    <span class="n">rel_diffs</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">)</span>  <span class="c1"># Set all differences to 0</span>
+
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+                        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">),</span>
+                        <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">keys</span><span class="p">),</span>
+                        <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span>
+                        <span class="n">text</span><span class="o">=</span><span class="n">keys</span><span class="p">,</span>
+                        <span class="n">customdata</span><span class="o">=</span><span class="n">rel_diffs</span><span class="p">,</span>
+                        <span class="n">marker_color</span><span class="o">=</span><span class="n">colors</span><span class="p">,</span>
+                        <span class="n">hoverinfo</span><span class="o">=</span><span class="s2">&quot;text&quot;</span><span class="p">,</span>
+                        <span class="n">hovertext</span><span class="o">=</span><span class="p">[</span>
+                            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2">&lt;br&gt;Key: </span><span class="si">{</span><span class="n">key</span><span class="si">}</span><span class="s2">&lt;br&gt;Max relative difference: </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.2e</span><span class="si">}</span><span class="s2">&lt;br&gt;(Versions differ by </span><span class="si">{</span><span class="n">diff</span><span class="si">:</span><span class="s2">.1%</span><span class="si">}</span><span class="s2">)&quot;</span>
+                            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">diff</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">keys</span><span class="p">,</span> <span class="n">rel_diffs</span><span class="p">)</span>
+                        <span class="p">],</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>  <span class="c1"># &quot;different keys&quot;</span>
+                <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">added</span><span class="p">,</span> <span class="n">deleted</span> <span class="o">=</span> <span class="n">item</span>
+                <span class="n">colors_added</span> <span class="o">=</span> <span class="p">[</span><span class="sa">f</span><span class="s2">&quot;rgb(0, </span><span class="si">{</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">255</span><span class="p">)</span><span class="si">}</span><span class="s2">, 0)&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">added</span><span class="p">]</span>
+                <span class="n">colors_deleted</span> <span class="o">=</span> <span class="p">[</span>
+                    <span class="sa">f</span><span class="s2">&quot;rgb(</span><span class="si">{</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">100</span><span class="p">,</span><span class="w"> </span><span class="mi">255</span><span class="p">)</span><span class="si">}</span><span class="s2">, 0, 0)&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">deleted</span>
+                <span class="p">]</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+                        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">added</span><span class="p">),</span>
+                        <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">added</span><span class="p">),</span>
+                        <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (Added)&quot;</span><span class="p">,</span>
+                        <span class="n">text</span><span class="o">=</span><span class="n">added</span><span class="p">,</span>
+                        <span class="n">hovertemplate</span><span class="o">=</span><span class="s2">&quot;%</span><span class="si">{y}</span><span class="s2">&lt;br&gt;Added Key: %</span><span class="si">{text}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
+                        <span class="n">marker_color</span><span class="o">=</span><span class="n">colors_added</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+                <span class="n">fig</span><span class="o">.</span><span class="n">add_trace</span><span class="p">(</span>
+                    <span class="n">go</span><span class="o">.</span><span class="n">Bar</span><span class="p">(</span>
+                        <span class="n">y</span><span class="o">=</span><span class="p">[</span><span class="n">name</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">deleted</span><span class="p">),</span>
+                        <span class="n">x</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="nb">len</span><span class="p">(</span><span class="n">deleted</span><span class="p">),</span>
+                        <span class="n">orientation</span><span class="o">=</span><span class="s2">&quot;h&quot;</span><span class="p">,</span>
+                        <span class="n">name</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">name</span><span class="si">}</span><span class="s2"> (Deleted)&quot;</span><span class="p">,</span>
+                        <span class="n">text</span><span class="o">=</span><span class="n">deleted</span><span class="p">,</span>
+                        <span class="n">hovertemplate</span><span class="o">=</span><span class="s2">&quot;%</span><span class="si">{y}</span><span class="s2">&lt;br&gt;Deleted Key: %</span><span class="si">{text}</span><span class="s2">&lt;extra&gt;&lt;/extra&gt;&quot;</span><span class="p">,</span>
+                        <span class="n">marker_color</span><span class="o">=</span><span class="n">colors_deleted</span><span class="p">,</span>
+                    <span class="p">)</span>
+                <span class="p">)</span>
+
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+            <span class="n">title</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="s1">&#39;Different Keys with Same Name&#39;</span><span class="w"> </span><span class="k">if</span><span class="w"> </span><span class="n">option</span><span class="w"> </span><span class="o">==</span><span class="w"> </span><span class="s1">&#39;different keys same name&#39;</span><span class="w"> </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;Different Keys&#39;</span><span class="si">}</span><span class="s2"> Comparison&quot;</span><span class="p">,</span>
+            <span class="n">barmode</span><span class="o">=</span><span class="s2">&quot;stack&quot;</span><span class="p">,</span>
+            <span class="n">height</span><span class="o">=</span><span class="nb">max</span><span class="p">(</span><span class="mi">300</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="o">*</span> <span class="mi">40</span><span class="p">),</span>  <span class="c1"># Adjust height based on number of files</span>
+            <span class="n">xaxis_title</span><span class="o">=</span><span class="s2">&quot;Number of Keys&quot;</span><span class="p">,</span>
+            <span class="n">yaxis</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                <span class="n">title</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span>
+                <span class="n">tickmode</span><span class="o">=</span><span class="s2">&quot;array&quot;</span><span class="p">,</span>
+                <span class="n">tickvals</span><span class="o">=</span><span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">filenames</span><span class="p">))),</span>
+                <span class="n">ticktext</span><span class="o">=</span><span class="n">filenames</span><span class="p">,</span>
+                <span class="n">showgrid</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">),</span>
+            <span class="n">showlegend</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="n">bargap</span><span class="o">=</span><span class="mf">0.1</span><span class="p">,</span>
+            <span class="n">bargroupgap</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span>
+            <span class="n">margin</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span><span class="n">l</span><span class="o">=</span><span class="mi">200</span><span class="p">),</span>  <span class="c1"># Increase left margin to accommodate longer filenames</span>
+        <span class="p">)</span>
+
+        <span class="c1"># Remove the text on the right side of the bars</span>
+        <span class="n">fig</span><span class="o">.</span><span class="n">update_traces</span><span class="p">(</span><span class="n">textposition</span><span class="o">=</span><span class="s2">&quot;none&quot;</span><span class="p">)</span>
+
+        <span class="c1"># Add a color bar to show the scale</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">item</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="k">for</span> <span class="n">item</span> <span class="ow">in</span> <span class="n">data</span> <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;different keys same name&quot;</span><span class="p">):</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">update_layout</span><span class="p">(</span>
+                <span class="n">coloraxis_colorbar</span><span class="o">=</span><span class="nb">dict</span><span class="p">(</span>
+                    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;Relative Difference&quot;</span><span class="p">,</span>
+                    <span class="n">tickvals</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
+                    <span class="n">ticktext</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;Low&quot;</span><span class="p">,</span> <span class="s2">&quot;Medium&quot;</span><span class="p">,</span> <span class="s2">&quot;High&quot;</span><span class="p">],</span>
+                    <span class="n">lenmode</span><span class="o">=</span><span class="s2">&quot;fraction&quot;</span><span class="p">,</span>
+                    <span class="nb">len</span><span class="o">=</span><span class="mf">0.75</span><span class="p">,</span>
+                <span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fig</span> <span class="ow">and</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SAVE_COMP_IMG&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+                <span class="c1"># Create shortened commit hashes</span>
+                <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># Use directory names for direct paths</span>
+                <span class="n">ref1_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="s2">&quot;ref1&quot;</span>
+                <span class="n">ref2_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="k">else</span> <span class="s2">&quot;ref2&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">ref2_name</span><span class="si">}</span><span class="s2">_vs_</span><span class="si">{</span><span class="n">ref1_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+            <span class="n">plot_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+            <span class="c1"># Save high-res image in the new directory</span>
+            <span class="n">plot_type</span> <span class="o">=</span> <span class="s2">&quot;diff_keys&quot;</span> <span class="k">if</span> <span class="n">option</span> <span class="o">==</span> <span class="s2">&quot;different keys&quot;</span> <span class="k">else</span> <span class="s2">&quot;same_name_diff&quot;</span>
+            <span class="n">filename</span> <span class="o">=</span> <span class="n">plot_dir</span> <span class="o">/</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">plot_type</span><span class="si">}</span><span class="s2">.png&quot;</span>
+            <span class="n">fig</span><span class="o">.</span><span class="n">write_image</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">filename</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">1200</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Saved plot to </span><span class="si">{</span><span class="n">filename</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">fig</span></div>
+
+
+<div class="viewcode-block" id="ReferenceComparer.compare_testspectrumsolver_hdf">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer.compare_testspectrumsolver_hdf">[docs]</a>
+    <span class="k">def</span><span class="w"> </span><span class="nf">compare_testspectrumsolver_hdf</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">custom_ref1_path</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">custom_ref2_path</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+<span class="w">        </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Perform comparison for TestSpectrumSolver HDF5 files.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        custom_ref1_path : str or Path, optional</span>
+<span class="sd">            Custom path to the first TestSpectrumSolver.h5 file, by default None.</span>
+<span class="sd">            If None, uses the standard path within ref1_path directory (git mode) or</span>
+<span class="sd">            the direct ref1_path (direct path mode).</span>
+<span class="sd">        custom_ref2_path : str or Path, optional</span>
+<span class="sd">            Custom path to the second TestSpectrumSolver.h5 file, by default None.</span>
+<span class="sd">            If None, uses the standard path within ref2_path directory (git mode) or</span>
+<span class="sd">            the direct ref2_path (direct path mode).</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        The method automatically creates visualization output directories when</span>
+<span class="sd">        the SAVE_COMP_IMG environment variable is set to &#39;1&#39;. The comparison</span>
+<span class="sd">        generates specialized plots tailored for spectrum solver data analysis.</span>
+
+<span class="sd">        Standard file paths (when custom paths are not provided):\n</span>
+<span class="sd">        - git mode: ``tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5``\n</span>
+<span class="sd">        - direct path mode: uses ref1_path and ref2_path directly\n</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">custom_ref1_path</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="n">custom_ref1_path</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span>
+                <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref1_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span>
+
+        <span class="k">if</span> <span class="n">custom_ref2_path</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="n">custom_ref2_path</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span>
+                <span class="o">/</span> <span class="s2">&quot;tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5&quot;</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ref2_path</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span>
+
+        <span class="c1"># Create plot directory first</span>
+        <span class="n">plot_dir</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;SAVE_COMP_IMG&quot;</span><span class="p">)</span> <span class="o">==</span> <span class="s2">&quot;1&quot;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">using_git</span><span class="p">:</span>
+                <span class="n">short_ref1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">short_ref2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span><span class="p">[:</span><span class="mi">6</span><span class="p">]</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_hash</span> <span class="k">else</span> <span class="s2">&quot;current&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;comparison_plots_</span><span class="si">{</span><span class="n">short_ref2</span><span class="si">}</span><span class="s2">_new_</span><span class="si">{</span><span class="n">short_ref1</span><span class="si">}</span><span class="s2">_old&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">ref1_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref1_path</span> <span class="k">else</span> <span class="s2">&quot;ref1&quot;</span>
+                <span class="n">ref2_name</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span><span class="p">)</span><span class="o">.</span><span class="n">name</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ref2_path</span> <span class="k">else</span> <span class="s2">&quot;ref2&quot;</span>
+                <span class="n">plot_dir</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;spectrum_plots_</span><span class="si">{</span><span class="n">ref2_name</span><span class="si">}</span><span class="s2">_vs_</span><span class="si">{</span><span class="n">ref1_name</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+            <span class="n">plot_dir</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># Pass plot_dir to SpectrumSolverComparator</span>
+        <span class="n">comparator</span> <span class="o">=</span> <span class="n">SpectrumSolverComparator</span><span class="p">(</span><span class="n">ref1_path</span><span class="p">,</span> <span class="n">ref2_path</span><span class="p">,</span> <span class="n">plot_dir</span><span class="p">)</span>
+        <span class="n">comparator</span><span class="o">.</span><span class="n">setup</span><span class="p">()</span>
+        <span class="n">comparator</span><span class="o">.</span><span class="n">plot_matplotlib</span><span class="p">()</span>
+        <span class="n">comparator</span><span class="o">.</span><span class="n">plot_plotly</span><span class="p">()</span></div>
+</div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
