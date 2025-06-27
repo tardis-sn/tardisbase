@@ -156,8 +156,7 @@ def get_last_n_commits(n=2, repo_path=None):
 
     try:
         if not Path(repo_path).exists():
-            logger.error(f"Regression data repository not found at {repo_path}")
-            return []
+            raise ValueError(f"Regression data repository not found at {repo_path}")
 
         result = subprocess.run(
             ["git", "-C", str(repo_path), "log", "--format=%H", f"-n", str(n)],
@@ -170,5 +169,4 @@ def get_last_n_commits(n=2, repo_path=None):
         return [commit for commit in commits if commit]
 
     except (subprocess.SubprocessError, subprocess.CalledProcessError):
-        logger.error("Unable to get git commits.")
-        return []
+        raise ValueError("Unable to get git commits.")

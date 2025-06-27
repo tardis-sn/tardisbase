@@ -63,6 +63,12 @@ class ReferenceComparer:
         refpath2=None,
         print_path=False,
         repo_path=None,
+        tardis_repo_path=None,
+        branch="master",
+        n=2,
+        target_file="tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5",
+        commits_input=None,
+        auto_generate_reference=True,
     ):
         # Validation: Either use git hashes OR direct paths, not both
         using_git = (ref1_hash is not None) or (ref2_hash is not None)
@@ -99,6 +105,24 @@ class ReferenceComparer:
         self.file_setup = None
         self.diff_analyzer = None
         self.hdf_comparator = None
+
+        # Store reference generation parameters
+        self.tardis_repo_path = tardis_repo_path
+        self.branch = branch
+        self.n = n
+        self.target_file = target_file
+        self.commits_input = commits_input
+        self.auto_generate_reference = auto_generate_reference
+
+        # Initialize reference generation results
+        self.processed_commits = None
+        self.regression_commits = None
+        self.original_head = None
+        self.target_file_path = None
+
+        # Auto-generate reference if n > 2 and auto_generate_reference is True
+        if self.auto_generate_reference and n > 2 and tardis_repo_path:
+            self.generate_reference(auto_mode=True)
 
     def setup(self):
         """
@@ -162,6 +186,72 @@ class ReferenceComparer:
         """
         if self.using_git and self.file_manager:
             self.file_manager.teardown()
+
+    def generate_reference(
+        self,
+        tardis_repo_path=None,
+        branch=None,
+        n=None,
+        target_file=None,
+        commits_input=None,
+        auto_mode=False,
+    ):
+        # Use stored parameters if auto_mode is True and parameters are None
+        if auto_mode:
+            tardis_repo_path = tardis_repo_path or self.tardis_repo_path
+            branch = branch or self.branch
+            n = n or self.n
+            target_file = target_file or self.target_file
+            commits_input = commits_input or self.commits_input
+
+        # Validate required parameters
+        if not tardis_repo_path:
+            print("Error: tardis_repo_path is required")
+            return None, None, None, None
+
+        if n <= 2:
+            print("Skipping generate_reference: n <= 2, using standard comparison mode")
+            return None, None, None, None
+
+        try:
+            # Import the process_commits function from git_utils
+            from tardisbase.testing.regression_comparison.compare_range.tardis_analysis.git_utils import process_commits
+        except ImportError:
+            # Try alternative import path
+            try:
+                from compare_range.tardis_analysis.git_utils import process_commits
+            except ImportError:
+                print("Warning: git_utils module not found. Skipping generate_reference.")
+                return None, None, None, None
+
+        tardis_path = Path(tardis_repo_path)
+        regression_path = Path(self.repo_path)
+        target_file_path = regression_path / target_file
+
+        print(f"Starting generate_reference with n={n}")
+        print(f"Tardis repo: {tardis_path}")
+        print(f"Regression data repo: {regression_path}")
+        print(f"Target file: {target_file}")
+
+        # Process commits using the existing git_utils function
+        processed_commits, regression_commits, original_head, target_file_path = process_commits(
+            tardis_repo_path=tardis_path,
+            regression_data_repo_path=regression_path,
+            branch=branch,
+            target_file=target_file,
+            commits_input=commits_input,
+            n=n
+        )
+
+        print(f"Generated {len(processed_commits)} tardis commits and {len(regression_commits)} regression commits")
+        
+        # Store the results for potential use in comparison
+        self.processed_commits = processed_commits
+        self.regression_commits = regression_commits
+        self.original_head = original_head
+        self.target_file_path = target_file_path
+
+        return processed_commits, regression_commits, original_head, target_file_path
 
     def compare(self, print_diff=False):
         """
