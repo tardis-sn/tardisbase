@@ -213,17 +213,6 @@ class ReferenceComparer:
             print("Skipping generate_reference: n <= 2, using standard comparison mode")
             return None, None, None, None
 
-        try:
-            # Import the process_commits function from git_utils
-            from tardisbase.testing.regression_comparison.compare_range.tardis_analysis.git_utils import process_commits
-        except ImportError:
-            # Try alternative import path
-            try:
-                from compare_range.tardis_analysis.git_utils import process_commits
-            except ImportError:
-                print("Warning: git_utils module not found. Skipping generate_reference.")
-                return None, None, None, None
-
         tardis_path = Path(tardis_repo_path)
         regression_path = Path(self.repo_path)
         target_file_path = regression_path / target_file
