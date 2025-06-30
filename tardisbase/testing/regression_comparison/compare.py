@@ -16,6 +16,7 @@ from tardisbase.testing.regression_comparison.visualization import (
 )
 from tardisbase.testing.regression_comparison import CONFIG
 import logging
+from tardisbase.testing.regression_comparison.run_tests import run_tests
 
 logger = logging.getLogger(__name__)
 
@@ -223,7 +224,7 @@ class ReferenceComparer:
         print(f"Target file: {target_file}")
 
         # Process commits using the existing git_utils function
-        processed_commits, regression_commits, original_head, target_file_path = process_commits(
+        processed_commits, regression_commits, original_head, target_file_path = run_tests(
             tardis_repo_path=tardis_path,
             regression_data_repo_path=regression_path,
             branch=branch,
