@@ -2,8 +2,22 @@ import subprocess
 from pathlib import Path
 from git import Repo
 
-def create_conda_env(env_name, lockfile_path):
-    cmd = ["conda", "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
+def create_conda_env(env_name, lockfile_path, conda_manager="conda"):
+    # Check if environment already exists
+    check_cmd = [conda_manager, "env", "list"]
+    print(f"Checking if environment {env_name} exists...")
+    result = subprocess.run(check_cmd, capture_output=True, text=True)
+    
+    if result.returncode == 0:
+        # Parse the output to see if our environment exists
+        env_lines = result.stdout.split('\n')
+        for line in env_lines:
+            if line.strip().startswith(env_name + ' '):
+                print(f"Environment {env_name} already exists, skipping creation.")
+                return True
+    
+    # Environment doesn't exist, create it
+    cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
     print(f"Creating conda environment: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -11,8 +25,8 @@ def create_conda_env(env_name, lockfile_path):
         return False
     return True
 
-def install_tardis_in_env(env_name, tardis_path):
-    cmd = ["conda", "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
+def install_tardis_in_env(env_name, tardis_path, conda_manager="conda"):
+    cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
     print(f"Installing TARDIS in environment: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
     if result.returncode != 0:
@@ -20,7 +34,7 @@ def install_tardis_in_env(env_name, tardis_path):
         return False
     return True
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda"):
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
     target_file_path = regression_path / target_file
@@ -71,18 +85,18 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, 
             env_name = f"tardis-test-{commit.hexsha[:8]}"
             print(f"Creating conda environment: {env_name}")
             
-            if not create_conda_env(env_name, lockfile_path):
+            if not create_conda_env(env_name, lockfile_path, conda_manager):
                 print(f"Failed to create conda environment for commit {commit.hexsha}")
                 continue
             
-            if not install_tardis_in_env(env_name, tardis_path):
+            if not install_tardis_in_env(env_name, tardis_path, conda_manager):
                 print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
                 continue
 
         # Prepare pytest command
         if use_conda and env_name:
             cmd = [
-                "conda", "run", "-n", env_name,
+                conda_manager, "run", "-n", env_name,
                 "python", "-m", "pytest",
                 test_path,
                 f"--tardis-regression-data={regression_path}",
