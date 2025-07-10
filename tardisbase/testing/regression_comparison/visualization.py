@@ -513,8 +513,8 @@ class FileChangeMatrixVisualizer:
             return
 
         short_commits = [commit[:6] for commit in self.commits]
-        symbols = {'•': '•', '+': '+', '-': '-', '*': '*'}
-        symbol_colors = {'•': 'blue', '+': 'green', '-': 'red', '*': 'orange'}
+        symbols = {'•': '•', '+': '+', '-': '-', '*': '*', '∅': '∅'}
+        symbol_colors = {'•': 'blue', '+': 'green', '-': 'red', '*': 'orange', '∅': 'grey'}
 
         self._print_dataframe_matrix(short_commits, symbols, symbol_colors)
 
@@ -523,7 +523,7 @@ class FileChangeMatrixVisualizer:
 
         def style_symbol(val):
             """Apply color and bold styling to symbols."""
-            color_map = {'•': 'blue', '*': 'gold', '+': 'green', '-': 'red'}
+            color_map = {'•': 'blue', '*': 'gold', '+': 'green', '-': 'red', '∅': 'grey'}
             if val in color_map:
                 return f'color: {color_map[val]}; font-weight: bold; font-size: 24px;'
             return ''
@@ -533,18 +533,26 @@ class FileChangeMatrixVisualizer:
                               'display.max_colwidth', None, 'display.width', None):
             # Changed Files
             if self.changed_files:
-                changed_data = [
-                    {'Files': file_path, **{commit[:6]: symbols.get(
-                        self.file_changes.get(commit, {}).get(file_path, '•'), '•'
-                    ) for commit in self.commits}}
-                    for file_path in sorted(self.changed_files)
-                ]
+                changed_data = []
+                for file_path in sorted(self.changed_files):
+                    row = {'Files': file_path}
+                    for commit in self.commits:
+                        commit_short = commit[:6]
+                        if commit in self.file_changes and file_path in self.file_changes[commit]:
+                            # File has a recorded change for this commit
+                            symbol = self.file_changes[commit][file_path]
+                            row[commit_short] = symbols.get(symbol, symbol)
+                        else:
+                            # File doesn't exist in this commit
+                            row[commit_short] = symbols['∅']
+                    changed_data.append(row)
 
                 changed_df = pd.DataFrame(changed_data)
                 print(f"\nChanged Files Matrix ({len(self.changed_files)} files):")
                 print("=" * 60)
 
                 # Apply styling to symbol columns only
+                short_commits = [commit[:6] for commit in self.commits]
                 try:
                     styled_df = changed_df.style.map(style_symbol, subset=short_commits)
                     display(styled_df)
@@ -578,7 +586,7 @@ class FileChangeMatrixVisualizer:
         # Simple legend with colors
         print(f"\nLegend:")
         print("─" * 30)
-        legend_items = [('•', 'blue', 'unchanged'), ('*', 'gold', 'modified'), ('+', 'green', 'added'), ('-', 'red', 'deleted')]
+        legend_items = [('•', 'blue', 'unchanged'), ('*', 'gold', 'modified'), ('+', 'green', 'added'), ('-', 'red', 'deleted'), ('∅', 'grey', 'not present')]
         for symbol, color, description in legend_items:
             print(f"  {symbol} = {description} ({color})")
 
@@ -613,5 +621,5 @@ class FileChangeMatrixVisualizer:
 
         print(f"\nLegend:")
         print("─" * 30)
-        for symbol, description in [('•', 'unchanged'), ('*', 'modified'), ('+', 'added'), ('-', 'deleted')]:
+        for symbol, description in [('•', 'unchanged'), ('*', 'modified'), ('+', 'added'), ('-', 'deleted'), ('∅', 'not present')]:
             print(f"  {symbol} = {description}")
