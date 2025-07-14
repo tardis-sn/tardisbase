@@ -109,12 +109,10 @@ class FileChangeMatrixVisualizer:
 
         df = pd.DataFrame(commit_data)
 
-        print(f"\n📋 COMMIT INFORMATION ({len(self.commits)} commits) - {commit_type}:")
+        print(f"\nCOMMIT INFORMATION ({len(self.commits)} commits) - {commit_type}:")
         print("=" * 80)
 
-        # Set pandas options to show full content without truncation
-        with pd.option_context('display.max_colwidth', None, 'display.width', None, 'display.max_columns', None):
-            display(df)
+        display(df)
 
     def analyze_commits(self):
         """Analyze file changes across commits and separate changed vs unchanged files."""
@@ -253,11 +251,9 @@ class FileChangeMatrixVisualizer:
                 return f'color: {color_map[val]}; font-weight: bold; font-size: 24px;'
             return ''
 
-        # Set pandas options to show all rows and full column content
-        with pd.option_context('display.max_rows', None, 'display.max_columns', None,
-                              'display.max_colwidth', None, 'display.width', None):
-            # Changed Files
-            if self.changed_files:
+        # Display dataframes with styling
+        # Changed Files
+        if self.changed_files:
                 changed_data = []
                 for file_path in sorted(self.changed_files):
                     row = {'Files': file_path}
@@ -284,11 +280,11 @@ class FileChangeMatrixVisualizer:
                 except AttributeError:
                     styled_df = changed_df.style.applymap(style_symbol, subset=short_commits)
                     display(styled_df)
-            else:
-                print("\nNo files changed across the analyzed commits.")
+        else:
+            print("\nNo files changed across the analyzed commits.")
 
-            # Unchanged Files
-            if self.unchanged_files:
+        # Unchanged Files
+        if self.unchanged_files:
                 unchanged_data = [
                     {'Files': file_path, **{commit[:6]: symbols['•'] for commit in self.commits}}
                     for file_path in sorted(self.unchanged_files)
@@ -305,8 +301,8 @@ class FileChangeMatrixVisualizer:
                 except AttributeError:
                     styled_df = unchanged_df.style.applymap(style_symbol, subset=short_commits)
                     display(styled_df)
-            else:
-                print("\nAll files changed across the analyzed commits.")
+        else:
+            print("\nAll files changed across the analyzed commits.")
 
         # Simple legend with colors
         print(f"\nLegend:")
