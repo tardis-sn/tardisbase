@@ -1,0 +1,277 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>tardisbase.testing.regression_comparison.file_utils &#8212; tardisbase 0.1.dev1+g659ae5e.d20250715 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../../../_static/documentation_options.js?v=d2304eb7"></script>
+    <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <link href="../../../../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <h1>Source code for tardisbase.testing.regression_comparison.file_utils</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">Shared file utilities for regression comparison modules.</span>
+
+<span class="sd">This module provides centralized file operations to reduce code duplication</span>
+<span class="sd">across the regression comparison package.</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">logging</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pathlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">Path</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.config</span><span class="w"> </span><span class="kn">import</span> <span class="n">ERROR_MESSAGES</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="get_h5_files">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.file_utils.html#tardisbase.testing.regression_comparison.file_utils.get_h5_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">get_h5_files</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">relative_to</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Get all .h5 and .hdf5 files from a given path.</span>
+<span class="sd">    </span>
+<span class="sd">    This function centralizes the file discovery logic used in multiple modules.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    path : str or Path</span>
+<span class="sd">        Path to search for HDF5 files</span>
+<span class="sd">    relative_to : str or Path, optional</span>
+<span class="sd">        Base path to make paths relative to. If None, returns absolute paths</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    set</span>
+<span class="sd">        Set of file paths (relative or absolute)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">path</span> <span class="o">=</span> <span class="n">Path</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">():</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">ERROR_MESSAGES</span><span class="p">[</span><span class="s2">&quot;file_not_found&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">file</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">path</span><span class="p">)))</span>
+        <span class="k">return</span> <span class="n">files</span>
+        
+    <span class="k">try</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.h5&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">file_path</span><span class="o">.</span><span class="n">suffix</span> <span class="ow">in</span> <span class="p">(</span><span class="s2">&quot;.h5&quot;</span><span class="p">,</span> <span class="s2">&quot;.hdf5&quot;</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">relative_to</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">rel_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">relative_to</span><span class="p">)</span>
+                        <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rel_path</span><span class="p">))</span>
+                    <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                        <span class="c1"># If the path is not relative to the base, use the full path</span>
+                        <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+                    
+        <span class="c1"># Also search for .hdf5 extension explicitly</span>
+        <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">path</span><span class="o">.</span><span class="n">rglob</span><span class="p">(</span><span class="s2">&quot;*.hdf5&quot;</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">relative_to</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">rel_path</span> <span class="o">=</span> <span class="n">file_path</span><span class="o">.</span><span class="n">relative_to</span><span class="p">(</span><span class="n">relative_to</span><span class="p">)</span>
+                    <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">rel_path</span><span class="p">))</span>
+                <span class="k">except</span> <span class="ne">ValueError</span><span class="p">:</span>
+                    <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">file_path</span><span class="p">))</span>
+                
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Error discovering HDF5 files in </span><span class="si">{</span><span class="n">path</span><span class="si">}</span><span class="s2">: </span><span class="si">{</span><span class="nb">str</span><span class="p">(</span><span class="n">e</span><span class="p">)</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">)</span>
+        
+    <span class="k">return</span> <span class="n">files</span></div>
+
+
+
+<div class="viewcode-block" id="categorize_files">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.file_utils.html#tardisbase.testing.regression_comparison.file_utils.categorize_files">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">categorize_files</span><span class="p">(</span><span class="n">file_changes</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Categorize files into changed and unchanged based on change types.</span>
+<span class="sd">    </span>
+<span class="sd">    This function centralizes the file categorization logic used in multiple modules.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    file_changes : dict</span>
+<span class="sd">        Dictionary mapping commits to dictionaries of file paths and change types</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tuple</span>
+<span class="sd">        (all_files, changed_files, unchanged_files) sets</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    <span class="n">changed_files</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+    
+    <span class="c1"># Collect all files and identify changed ones</span>
+    <span class="k">for</span> <span class="n">changes</span> <span class="ow">in</span> <span class="n">file_changes</span><span class="o">.</span><span class="n">values</span><span class="p">():</span>
+        <span class="n">all_files</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">changes</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">for</span> <span class="n">file_path</span><span class="p">,</span> <span class="n">change_type</span> <span class="ow">in</span> <span class="n">changes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="n">change_type</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;+&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">,</span> <span class="s1">&#39;*&#39;</span><span class="p">]:</span>  <span class="c1"># Added, deleted, or modified</span>
+                <span class="n">changed_files</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">file_path</span><span class="p">)</span>
+    
+    <span class="c1"># Remaining files are unchanged</span>
+    <span class="n">unchanged_files</span> <span class="o">=</span> <span class="n">all_files</span> <span class="o">-</span> <span class="n">changed_files</span>
+    
+    <span class="k">return</span> <span class="n">all_files</span><span class="p">,</span> <span class="n">changed_files</span><span class="p">,</span> <span class="n">unchanged_files</span></div>
+
+
+
+<div class="viewcode-block" id="compare_file_sets">
+<a class="viewcode-back" href="../../../../api/tardisbase.testing.regression_comparison.file_utils.html#tardisbase.testing.regression_comparison.file_utils.compare_file_sets">[docs]</a>
+<span class="k">def</span><span class="w"> </span><span class="nf">compare_file_sets</span><span class="p">(</span><span class="n">prev_files</span><span class="p">,</span> <span class="n">current_files</span><span class="p">,</span> <span class="n">prev_commit</span><span class="p">,</span> <span class="n">current_commit</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">,</span> <span class="n">is_modified_func</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Compare two sets of files to determine changes.</span>
+<span class="sd">    </span>
+<span class="sd">    This function centralizes the file comparison logic used in multiple modules.</span>
+<span class="sd">    </span>
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    prev_files : set</span>
+<span class="sd">        Set of files from the previous commit</span>
+<span class="sd">    current_files : set</span>
+<span class="sd">        Set of files from the current commit</span>
+<span class="sd">    prev_commit : str</span>
+<span class="sd">        Previous commit hash</span>
+<span class="sd">    current_commit : str</span>
+<span class="sd">        Current commit hash</span>
+<span class="sd">    repo_path : str or Path</span>
+<span class="sd">        Path to the repository</span>
+<span class="sd">    is_modified_func : callable, optional</span>
+<span class="sd">        Function to check if a file was modified. If None, uses git_utils.is_file_modified</span>
+<span class="sd">        </span>
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary mapping file paths to change types</span>
+<span class="sd">    dict</span>
+<span class="sd">        Dictionary mapping file paths to change details</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">tardisbase.testing.regression_comparison.git_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">is_file_modified</span><span class="p">,</span> <span class="n">get_file_change_details</span>
+    
+    <span class="k">if</span> <span class="n">is_modified_func</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">is_modified_func</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">f</span><span class="p">:</span> <span class="n">is_file_modified</span><span class="p">(</span><span class="n">f</span><span class="p">,</span> <span class="n">prev_commit</span><span class="p">,</span> <span class="n">current_commit</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">)</span>
+    
+    <span class="n">changes</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">details</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">all_files</span> <span class="o">=</span> <span class="n">prev_files</span> <span class="o">|</span> <span class="n">current_files</span>
+    
+    <span class="k">for</span> <span class="n">file_path</span> <span class="ow">in</span> <span class="n">all_files</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">file_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prev_files</span><span class="p">:</span>
+            <span class="c1"># File was added</span>
+            <span class="n">changes</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;+&#39;</span>
+            <span class="n">details</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;File added&quot;</span>
+        <span class="k">elif</span> <span class="n">file_path</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">current_files</span><span class="p">:</span>
+            <span class="c1"># File was deleted</span>
+            <span class="n">changes</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;-&#39;</span>
+            <span class="n">details</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;File deleted&quot;</span>
+        <span class="k">elif</span> <span class="n">is_modified_func</span><span class="p">(</span><span class="n">file_path</span><span class="p">):</span>
+            <span class="c1"># File was modified</span>
+            <span class="n">changes</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;*&#39;</span>
+            <span class="n">details</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_file_change_details</span><span class="p">(</span><span class="n">file_path</span><span class="p">,</span> <span class="n">prev_commit</span><span class="p">,</span> <span class="n">current_commit</span><span class="p">,</span> <span class="n">repo_path</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># File is unchanged</span>
+            <span class="n">changes</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;•&#39;</span>
+            <span class="n">details</span><span class="p">[</span><span class="n">file_path</span><span class="p">]</span> <span class="o">=</span> <span class="s2">&quot;No changes&quot;</span>
+    
+    <span class="k">return</span> <span class="n">changes</span><span class="p">,</span> <span class="n">details</span></div>
+
+</pre></div>
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../../index.html">Module code</a><ul>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

@@ -1,0 +1,7 @@
+tardisbase.testing.regression\_comparison.git\_utils module
+===========================================================
+
+.. automodule:: tardisbase.testing.regression_comparison.git_utils
+   :members:
+   :show-inheritance:
+   :undoc-members:

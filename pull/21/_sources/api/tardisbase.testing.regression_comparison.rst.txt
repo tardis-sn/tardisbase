@@ -9,7 +9,10 @@ Submodules
 
    tardisbase.testing.regression_comparison.analyzers
    tardisbase.testing.regression_comparison.compare
+   tardisbase.testing.regression_comparison.config
    tardisbase.testing.regression_comparison.file_manager
+   tardisbase.testing.regression_comparison.file_utils
+   tardisbase.testing.regression_comparison.git_utils
    tardisbase.testing.regression_comparison.util
    tardisbase.testing.regression_comparison.visualization
    tardisbase.testing.regression_comparison.visualize_files
