@@ -14,6 +14,7 @@ from tardisbase.testing.regression_comparison.analyzers import (
 from tardisbase.testing.regression_comparison.visualization import (
     SpectrumSolverComparator,
 )
+from tardisbase.testing.regression_comparison.file_utils import discover_and_compare_h5_files
 from tardisbase.testing.regression_comparison import CONFIG
 import logging
 from tardisbase.testing.regression_comparison.run_tests import run_tests
@@ -276,39 +277,27 @@ class ReferenceComparer:
         """
         Discover and compare all HDF5 files in the reference directories.
 
-        This method recursively walks through the reference directories,
-        identifies HDF5 files (.h5, .hdf5), and compares them. When both
-        paths are available, it compares files that exist in both directories.
-        When only one path is available, it lists all HDF5 files in that directory.
+        This method uses the centralized file discovery utility to recursively
+        walk through the reference directories, identify HDF5 files (.h5, .hdf5),
+        and compare them. When both paths are available, it compares files that
+        exist in both directories. When only one path is available, it lists all
+        HDF5 files in that directory.
         """
         if self.ref1_path and self.ref2_path:
-            # Compare files in both directories
-            for root, _, files in os.walk(self.ref1_path):
-                for file in files:
-                    file_path = Path(file)
-                    if file_path.suffix in (".h5", ".hdf5"):
-                        rel_path = Path(root).relative_to(self.ref1_path)
-                        ref2_file_path = Path(self.ref2_path) / rel_path / file
-                        if ref2_file_path.exists():
-                            self.summarise_changes_hdf(
-                                file, root, ref2_file_path.parent
-                            )
+            # Compare files in both directories using centralized utility
+            discover_and_compare_h5_files(
+                self.ref1_path,
+                self.ref2_path,
+                callback=self.summarise_changes_hdf
+            )
         elif self.ref1_path:
             # Only ref1 available - just catalog the files
             print("Only ref1_path provided. Cataloging HDF5 files:")
-            for root, _, files in os.walk(self.ref1_path):
-                for file in files:
-                    file_path = Path(file)
-                    if file_path.suffix in (".h5", ".hdf5"):
-                        print(f"Found HDF5 file: {Path(root) / file}")
+            discover_and_compare_h5_files(self.ref1_path)
         elif self.ref2_path:
             # Only ref2 available - just catalog the files
             print("Only ref2_path provided. Cataloging HDF5 files:")
-            for root, _, files in os.walk(self.ref2_path):
-                for file in files:
-                    file_path = Path(file)
-                    if file_path.suffix in (".h5", ".hdf5"):
-                        print(f"Found HDF5 file: {Path(root) / file}")
+            discover_and_compare_h5_files(self.ref2_path)
 
     def summarise_changes_hdf(self, name, path1, path2):
         """
