@@ -108,53 +108,31 @@ class FileChangeMatrixVisualizer:
                 self.all_files.update(current_files)
             else:
                 # Compare with previous commit using the shared utilities
-                changes = self._compare_commits_with_dircmp(self.commits[i-1], commit_hash)
+                changes, _ = compare_commits_with_dircmp(
+                    self.commits[i-1],
+                    commit_hash,
+                    self.regression_repo_path
+                )
                 self.file_changes[commit_hash] = changes
                 self.all_files.update(changes.keys())
+
+                # Store file details for this commit
+                if commit_hash not in self.file_details:
+                    self.file_details[commit_hash] = {}
+
+                for file_path, change_type in changes.items():
+                    self.file_details[commit_hash][file_path] = SYMBOL_DESCRIPTIONS.get(
+                        change_type, "Unknown change"
+                    )
 
         self.repo.git.checkout(original_head)
 
         # Separate changed and unchanged files
-        self._categorize_files()
+        self.all_files, self.changed_files, self.unchanged_files = categorize_files(self.file_changes)
 
         print(f"Found {len(self.all_files)} total files across all commits.")
         print(f"Changed files: {len(self.changed_files)}")
         print(f"Unchanged files: {len(self.unchanged_files)}")
-
-
-
-    def _compare_commits_with_dircmp(self, prev_commit_hash, current_commit_hash):
-        """Compare two commits using dircmp with centralized utility."""
-        changes, _ = compare_commits_with_dircmp(
-            prev_commit_hash,
-            current_commit_hash,
-            self.regression_repo_path
-        )
-
-        # Store file details for this commit
-        if current_commit_hash not in self.file_details:
-            self.file_details[current_commit_hash] = {}
-
-        # Map change symbols to descriptions
-        change_descriptions = {
-            '+': "File added",
-            '-': "File deleted",
-            '*': "File modified",
-            '•': "No changes"
-        }
-
-        for file_path, change_type in changes.items():
-            self.file_details[current_commit_hash][file_path] = change_descriptions.get(
-                change_type, "Unknown change"
-            )
-
-        return changes
-
-
-
-    def _categorize_files(self):
-        """Separate files into changed and unchanged categories using shared utility."""
-        self.all_files, self.changed_files, self.unchanged_files = categorize_files(self.file_changes)
 
     def print_matrix(self):
         """Print file change analysis as clean DataFrames with better visual distinction."""
@@ -168,10 +146,6 @@ class FileChangeMatrixVisualizer:
         short_commits = [commit[:6] for commit in self.commits]
         self._print_dataframe_matrix(short_commits)
 
-    def _style_symbol(self, val):
-        """Apply color and bold styling to symbols using shared function."""
-        return style_symbol_function(val)
-
     def _create_file_data_row(self, file_path, file_set):
         """Create a data row for a file in the matrix."""
         row = {'Files': file_path}
@@ -179,19 +153,19 @@ class FileChangeMatrixVisualizer:
             commit_short = commit[:6]
             if file_set == self.unchanged_files:
                 # For unchanged files, always use the unchanged symbol
-                row[commit_short] = self.symbols['•']
+                row[commit_short] = self.symbols['unchanged']
             elif commit in self.file_changes and file_path in self.file_changes[commit]:
                 # File has a recorded change for this commit
                 symbol = self.file_changes[commit][file_path]
                 row[commit_short] = self.symbols.get(symbol, symbol)
             else:
                 # File doesn't exist in this commit
-                row[commit_short] = self.symbols['∅']
+                row[commit_short] = self.symbols['not_present']
         return row
 
     def _display_styled_dataframe(self, df, short_commits):
         """Apply styling to a dataframe and display it."""
-        styled_df = df.style.map(self._style_symbol, subset=short_commits)
+        styled_df = df.style.map(style_symbol_function, subset=short_commits)
         display(styled_df)
 
     def _print_dataframe_matrix(self, short_commits):

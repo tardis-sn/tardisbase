@@ -1,7 +1,8 @@
-import subprocess
 from pathlib import Path
 import logging
+from git import Repo
 from tardisbase.testing.regression_comparison import CONFIG
+from tardisbase.testing.regression_comparison.config import ANSI_COLORS
 
 logger = logging.getLogger(__name__)
 
@@ -20,26 +21,14 @@ def color_print(text, color):
         The text string to be printed with color formatting.
     color : str
         The color name for the text. Supported colors are:
-        'red', 'green', 'yellow', 'blue'. If an unsupported color
+        'red', 'green', 'yellow', 'blue', 'gold', 'grey'. If an unsupported color
         is provided, the text will be printed without color formatting.
 
     Notes
     -----
-    The function uses ANSI escape codes for coloring:
-    - Red: \\033[91m
-    - Green: \\033[92m
-    - Yellow: \\033[93m
-    - Blue: \\033[94m
-    - Reset: \\033[0m
+    Uses centralized ANSI color codes from config.py to avoid duplication.
     """
-    colors = {
-        "red": "\033[91m",
-        "green": "\033[92m",
-        "yellow": "\033[93m",
-        "blue": "\033[94m",
-        "reset": "\033[0m",
-    }
-    print(f"{colors.get(color, '')}{text}{colors['reset']}")
+    print(f"{ANSI_COLORS.get(color, '')}{text}{ANSI_COLORS['reset']}")
 
 def get_relative_path(path, base):
     """
@@ -78,6 +67,26 @@ def get_relative_path(path, base):
     return str(Path(path).relative_to(base))
 
 def get_last_n_commits(n=2, repo_path=None):
+    """
+    Get the last n commits from a git repository using GitPython.
+
+    Parameters
+    ----------
+    n : int, optional
+        Number of commits to retrieve, by default 2
+    repo_path : str or Path, optional
+        Path to the repository. If None, uses CONFIG["regression_data_repo"]
+
+    Returns
+    -------
+    list
+        List of commit hashes (strings)
+
+    Raises
+    ------
+    ValueError
+        If repository not found or git operations fail
+    """
     if repo_path is None:
         repo_path = CONFIG["regression_data_repo"]
 
@@ -85,15 +94,9 @@ def get_last_n_commits(n=2, repo_path=None):
         if not Path(repo_path).exists():
             raise ValueError(f"Regression data repository not found at {repo_path}")
 
-        result = subprocess.run(
-            ["git", "-C", str(repo_path), "log", "--format=%H", f"-n", str(n)],
-            capture_output=True,
-            text=True,
-            check=True,
-        )
+        repo = Repo(repo_path)
+        commits = list(repo.iter_commits(max_count=n))
+        return [commit.hexsha for commit in commits]
 
-        commits = result.stdout.strip().split("\n")
-        return [commit for commit in commits if commit]
-
-    except (subprocess.SubprocessError, subprocess.CalledProcessError):
-        raise ValueError("Unable to get git commits.")
+    except Exception as e:
+        raise ValueError(f"Unable to get git commits: {str(e)}")

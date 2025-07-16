@@ -10,12 +10,61 @@ from pathlib import Path
 from git import Repo
 from tardisbase.testing.regression_comparison.config import ERROR_MESSAGES
 from tardisbase.testing.regression_comparison.file_manager import FileManager, FileSetup
-from tardisbase.testing.regression_comparison.file_utils import extract_h5_changes_from_dircmp
+
 from filecmp import dircmp
 import tempfile
 import os
 
 logger = logging.getLogger(__name__)
+
+
+def extract_h5_changes_from_dircmp(dcmp):
+    """
+    Extract HDF5 file changes from dircmp results.
+
+    This function centralizes the dircmp-based file change detection
+    logic used in visualize_files.py.
+
+    Parameters
+    ----------
+    dcmp : filecmp.dircmp
+        Directory comparison object
+
+    Returns
+    -------
+    dict
+        Dictionary mapping file paths to change types (+, -, *, •)
+    """
+
+    changes = {}
+
+    def process_dcmp_level(dcmp_obj):
+        # Added files (only in right/current)
+        for f in dcmp_obj.right_only:
+            if f.endswith(('.h5', '.hdf5')):
+                changes[f] = '+'
+
+        # Deleted files (only in left/previous)
+        for f in dcmp_obj.left_only:
+            if f.endswith(('.h5', '.hdf5')):
+                changes[f] = '-'
+
+        # Modified files
+        for f in dcmp_obj.diff_files:
+            if f.endswith(('.h5', '.hdf5')):
+                changes[f] = '*'
+
+        # Unchanged files
+        for f in dcmp_obj.same_files:
+            if f.endswith(('.h5', '.hdf5')):
+                changes[f] = '•'
+
+        # Recurse into subdirectories
+        for sub_dcmp in dcmp_obj.subdirs.values():
+            process_dcmp_level(sub_dcmp)
+
+    process_dcmp_level(dcmp)
+    return changes
 
 
 def get_commit_info(commit_hash, repo_path=None, repo=None):
@@ -167,48 +216,6 @@ def safe_checkout(repo, commit_hash):
         logger.error(error_msg)
         return False
 
-
-def extract_commit_files(commit_hash, target_dir, repo_path):
-    """
-    Extract files from a commit to a target directory using GitPython archive.
-
-    This function reuses the logic from FileSetup._copy_data_from_hash().
-
-    Parameters
-    ----------
-    commit_hash : str
-        Commit hash to extract files from
-    target_dir : str or Path
-        Target directory to extract files to
-    repo_path : str or Path
-        Path to the repository
-
-    Returns
-    -------
-    bool
-        True if extraction was successful, False otherwise
-    """
-    try:
-        repo = Repo(repo_path)
-        # Use GitPython to create archive and extract with subprocess for piping
-        # This is more reliable than shell=True approach
-        import subprocess
-        import tempfile
-
-        with tempfile.NamedTemporaryFile(suffix='.tar', delete=False) as temp_file:
-            # Create archive to temporary file
-            repo.git.archive(commit_hash, format='tar', output=temp_file.name)
-
-            # Extract the archive to target directory
-            subprocess.run(['tar', '-x', '-f', temp_file.name, '-C', str(target_dir)], check=True)
-
-            # Clean up temporary file
-            Path(temp_file.name).unlink()
-
-        return True
-    except Exception as e:
-        logger.error(f"Failed to extract files from commit {commit_hash[:8]}: {str(e)}")
-        return False
 
 
 def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path, file_manager=None):

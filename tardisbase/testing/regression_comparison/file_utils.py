@@ -134,62 +134,6 @@ def discover_and_compare_h5_files(ref1_path, ref2_path=None, callback=None):
     return discovered_files
 
 
-def extract_h5_changes_from_dircmp(dcmp, base_path=""):
-    """
-    Extract HDF5 file changes from dircmp results.
-
-    This function centralizes the dircmp-based file change detection
-    logic used in visualize_files.py.
-
-    Parameters
-    ----------
-    dcmp : filecmp.dircmp
-        Directory comparison object
-    base_path : str, optional
-        Base path for building relative file paths
-
-    Returns
-    -------
-    dict
-        Dictionary mapping file paths to change types (+, -, *, •)
-    """
-    import os
-
-    changes = {}
-
-    def process_dcmp_level(dcmp_obj, current_base_path=""):
-        # Added files (only in right/current)
-        for f in dcmp_obj.right_only:
-            if f.endswith(('.h5', '.hdf5')):
-                file_path = os.path.join(current_base_path, f) if current_base_path else f
-                changes[file_path] = '+'
-
-        # Deleted files (only in left/previous)
-        for f in dcmp_obj.left_only:
-            if f.endswith(('.h5', '.hdf5')):
-                file_path = os.path.join(current_base_path, f) if current_base_path else f
-                changes[file_path] = '-'
-
-        # Modified files
-        for f in dcmp_obj.diff_files:
-            if f.endswith(('.h5', '.hdf5')):
-                file_path = os.path.join(current_base_path, f) if current_base_path else f
-                changes[file_path] = '*'
-
-        # Unchanged files
-        for f in dcmp_obj.same_files:
-            if f.endswith(('.h5', '.hdf5')):
-                file_path = os.path.join(current_base_path, f) if current_base_path else f
-                changes[file_path] = '•'
-
-        # Recurse into subdirectories
-        for subdir, sub_dcmp in dcmp_obj.subdirs.items():
-            sub_path = os.path.join(current_base_path, subdir) if current_base_path else subdir
-            process_dcmp_level(sub_dcmp, sub_path)
-
-    process_dcmp_level(dcmp, base_path)
-    return changes
-
 
 def categorize_files(file_changes):
     """
