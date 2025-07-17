@@ -2,7 +2,6 @@ from pathlib import Path
 import logging
 from git import Repo
 from tardisbase.testing.regression_comparison import CONFIG
-from tardisbase.testing.regression_comparison.config import ANSI_COLORS
 
 logger = logging.getLogger(__name__)
 
@@ -21,14 +20,27 @@ def color_print(text, color):
         The text string to be printed with color formatting.
     color : str
         The color name for the text. Supported colors are:
-        'red', 'green', 'yellow', 'blue', 'gold', 'grey'. If an unsupported color
+        'red', 'green', 'yellow', 'blue'. If an unsupported color
         is provided, the text will be printed without color formatting.
 
     Notes
     -----
-    Uses centralized ANSI color codes from config.py to avoid duplication.
+    The function uses ANSI escape codes for coloring:
+    - Red: \\033[91m
+    - Green: \\033[92m
+    - Yellow: \\033[93m
+    - Blue: \\033[94m
+    - Reset: \\033[0m
     """
-    print(f"{ANSI_COLORS.get(color, '')}{text}{ANSI_COLORS['reset']}")
+    colors = {
+        "red": "\033[91m",
+        "green": "\033[92m",
+        "yellow": "\033[93m",
+        "blue": "\033[94m",
+        "reset": "\033[0m",
+    }
+    print(f"{colors.get(color, '')}{text}{colors['reset']}")
+
 
 def get_relative_path(path, base):
     """
@@ -65,6 +77,7 @@ def get_relative_path(path, base):
     a ValueError will be raised.
     """
     return str(Path(path).relative_to(base))
+
 
 def get_last_n_commits(n=2, repo_path=None):
     """
