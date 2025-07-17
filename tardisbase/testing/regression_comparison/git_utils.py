@@ -1,18 +1,9 @@
-"""
-Shared git utilities for regression comparison modules.
-
-This module provides centralized git operations to reduce code duplication
-across the regression comparison package.
-"""
-
 import logging
 from pathlib import Path
 from git import Repo
 from tardisbase.testing.regression_comparison.config import ERROR_MESSAGES
 from tardisbase.testing.regression_comparison.file_manager import FileManager, FileSetup
-
 from filecmp import dircmp
-import tempfile
 import os
 
 logger = logging.getLogger(__name__)
@@ -217,8 +208,7 @@ def safe_checkout(repo, commit_hash):
         return False
 
 
-
-def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path, file_manager=None):
+def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path):
     """
     Compare two commits using dircmp and return file changes.
 
@@ -233,8 +223,6 @@ def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path
         Current commit hash
     repo_path : str or Path
         Path to the repository
-    file_manager : FileManager, optional
-        File manager instance. If None, creates a temporary one
 
     Returns
     -------
@@ -244,24 +232,18 @@ def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path
         Directory comparison object for further analysis
     """
 
-    # Use provided file manager or create temporary one
-    if file_manager is None:
-        temp_file_manager = FileManager(repo_path)
-        temp_file_manager.setup()
-        cleanup_needed = True
-    else:
-        temp_file_manager = file_manager
-        cleanup_needed = False
+    file_manager = FileManager(repo_path)
+    file_manager.setup()
 
     try:
         # Create temporary directories for both commits
-        prev_dir = Path(temp_file_manager.get_temp_path("prev_commit"))
-        current_dir = Path(temp_file_manager.get_temp_path("current_commit"))
+        prev_dir = Path(file_manager.get_temp_path("prev_commit"))
+        current_dir = Path(file_manager.get_temp_path("current_commit"))
         os.makedirs(prev_dir, exist_ok=True)
         os.makedirs(current_dir, exist_ok=True)
 
         # Use FileSetup to extract commit data
-        file_setup = FileSetup(temp_file_manager, prev_commit_hash, current_commit_hash)
+        file_setup = FileSetup(file_manager, prev_commit_hash, current_commit_hash)
         file_setup._copy_data_from_hash(prev_commit_hash, prev_dir)
         file_setup._copy_data_from_hash(current_commit_hash, current_dir)
 
@@ -274,5 +256,4 @@ def compare_commits_with_dircmp(prev_commit_hash, current_commit_hash, repo_path
         return changes, dcmp
 
     finally:
-        if cleanup_needed:
-            temp_file_manager.teardown()
+        file_manager.teardown()

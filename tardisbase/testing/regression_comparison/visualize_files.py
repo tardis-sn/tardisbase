@@ -3,15 +3,9 @@ from pathlib import Path
 from git import Repo
 from IPython.display import display
 from tardisbase.testing.regression_comparison.config import (
-    FILE_CHANGE_SYMBOLS, SYMBOL_COLORS, SYMBOL_DESCRIPTIONS,
-    style_symbol_function
+    FILE_CHANGE_SYMBOLS, SYMBOL_COLORS, SYMBOL_DESCRIPTIONS
 )
-from tardisbase.testing.regression_comparison.git_utils import (
-    get_commit_info, safe_checkout, compare_commits_with_dircmp
-)
-from tardisbase.testing.regression_comparison.file_utils import (
-    get_h5_files, categorize_files
-)
+from tardisbase.testing.regression_comparison.git_utils import get_commit_info
 
 class FileChangeMatrixVisualizer:
     """
@@ -45,11 +39,12 @@ class FileChangeMatrixVisualizer:
             except:
                 print(f"Warning: Could not access TARDIS repository at {self.tardis_repo_path}")
 
-        self.file_changes = {}  # {commit: {file_path: change_type}}
-        self.file_details = {}  # {commit: {file_path: change_details}}
-        self.all_files = set()  # All files that appear across all commits
-        self.changed_files = set()  # Files that changed in any commit
+        self.file_transitions = {}  # {transition_key: {file_path: change_type}} e.g., {"4cc3a0-cb0155": {file: "+"}}
+        self.file_details = {}  # {transition_key: {file_path: change_details}}
+        self.all_files = set()  # All files that appear across all transitions
+        self.changed_files = set()  # Files that changed in any transition
         self.unchanged_files = set()  # Files that never changed
+        self.transition_columns = []  # List of transition column names (newer-older format)
 
         # Use shared styling configuration from constants
         self.symbols = FILE_CHANGE_SYMBOLS
@@ -91,111 +86,137 @@ class FileChangeMatrixVisualizer:
 
         display(df)
 
+
     def analyze_commits(self):
-        """Analyze file changes across commits and separate changed vs unchanged files."""
-        print(f"Analyzing {len(self.commits)} commits...")
+        if len(self.commits) < 2:
+            print("Need at least 2 commits to analyze transitions.")
+            return
 
-        original_head = self.repo.head.commit.hexsha
+        print(f"Analyzing {len(self.commits)} commits ({len(self.commits)-1} transitions)...")
 
-        for i, commit_hash in enumerate(self.commits):
-            print(f"Processing commit {i+1}/{len(self.commits)}: {commit_hash[:8]}")
+        # Generate transition columns (newer-older format)
+        self.transition_columns = [f"{self.commits[i][:6]}-{self.commits[i-1][:6]}"
+                                  for i in range(1, len(self.commits))]
 
-            if i == 0:
-                # First commit - all files are "unchanged"
-                safe_checkout(self.repo, commit_hash)
-                current_files = get_h5_files(self.regression_repo_path, relative_to=self.regression_repo_path)
-                self.file_changes[commit_hash] = {f: '•' for f in current_files}
-                self.all_files.update(current_files)
-            else:
-                # Compare with previous commit using the shared utilities
-                changes, _ = compare_commits_with_dircmp(
-                    self.commits[i-1],
-                    commit_hash,
-                    self.regression_repo_path
+        for i in range(1, len(self.commits)):
+            older_commit = self.commits[i-1]
+            newer_commit = self.commits[i]
+            transition_key = f"{newer_commit[:6]}-{older_commit[:6]}"
+
+            print(f"Processing transition {i}/{len(self.commits)-1}: {transition_key}")
+
+            # Use GitPython for change detection
+            changes = self._get_changes_with_git(older_commit, newer_commit)
+
+            # Store changes with transition key
+            self.file_transitions[transition_key] = changes
+            self.all_files.update(changes.keys())
+
+            # Store file details for this transition
+            if transition_key not in self.file_details:
+                self.file_details[transition_key] = {}
+
+            for file_path, change_type in changes.items():
+                self.file_details[transition_key][file_path] = SYMBOL_DESCRIPTIONS.get(
+                    change_type, "Unknown change"
                 )
-                self.file_changes[commit_hash] = changes
-                self.all_files.update(changes.keys())
 
-                # Store file details for this commit
-                if commit_hash not in self.file_details:
-                    self.file_details[commit_hash] = {}
+        # Separate changed and unchanged files using transition data
+        self.all_files, self.changed_files, self.unchanged_files = self._categorize_files_from_transitions()
 
-                for file_path, change_type in changes.items():
-                    self.file_details[commit_hash][file_path] = SYMBOL_DESCRIPTIONS.get(
-                        change_type, "Unknown change"
-                    )
-
-        self.repo.git.checkout(original_head)
-
-        # Separate changed and unchanged files
-        self.all_files, self.changed_files, self.unchanged_files = categorize_files(self.file_changes)
-
-        print(f"Found {len(self.all_files)} total files across all commits.")
+        print(f"Found {len(self.all_files)} total files across all transitions.")
         print(f"Changed files: {len(self.changed_files)}")
         print(f"Unchanged files: {len(self.unchanged_files)}")
+        print(f"All .h5 files found: {sorted([f for f in self.all_files if f.endswith(('.h5', '.hdf5'))])}")
+
+
+    def _categorize_files_from_transitions(self):
+        all_files = set()
+        changed_files = set()
+
+        # Collect all files
+        for changes in self.file_transitions.values():
+            all_files.update(changes.keys())
+
+        unchanged_files = set()
+        return all_files, changed_files, unchanged_files
+
+    def _get_changes_with_git(self, older_commit, newer_commit):
+        older_files = self._get_h5_files_in_commit(older_commit)
+        newer_files = self._get_h5_files_in_commit(newer_commit)
+        all_files = older_files | newer_files
+
+        changes = {}
+        for file_path in all_files:
+            in_older = file_path in older_files
+            in_newer = file_path in newer_files
+
+            if not in_older and not in_newer:
+                changes[file_path] = "−"
+            elif not in_older and in_newer:
+                changes[file_path] = "A"
+            elif in_older and not in_newer:
+                changes[file_path] = "D"
+            elif self._is_file_modified(file_path, older_commit, newer_commit):
+                changes[file_path] = "M"
+            else:
+                changes[file_path] = "•"
+
+        return changes
+
+    def _get_h5_files_in_commit(self, commit_hash):
+        files = set()
+        try:
+            tree_output = self.repo.git.execute(['git', 'ls-tree', '-r', '--name-only', commit_hash])
+            for filepath in tree_output.split('\n'):
+                filepath = filepath.strip()
+                if filepath and filepath.endswith(('.h5', '.hdf5')):
+                    files.add(filepath)
+        except Exception as e:
+            print(f"Warning: Could not list files in commit {commit_hash[:8]}: {e}")
+        return files
+
+    def _is_file_modified(self, file_path, older_commit, newer_commit):
+        try:
+            diff_output = self.repo.git.diff(f'{older_commit}..{newer_commit}', '--', file_path)
+            return bool(diff_output.strip())
+        except Exception:
+            return False
 
     def print_matrix(self):
         """Print file change analysis as clean DataFrames with better visual distinction."""
-        if not self.file_changes:
+        if not self.file_transitions:
             print("No analysis done. Run analyze_commits() first.")
             return
 
         # Show commit information first
         self.print_commit_info()
 
-        short_commits = [commit[:6] for commit in self.commits]
-        self._print_dataframe_matrix(short_commits)
+        # Use transition columns instead of individual commits
+        self._print_dataframe_matrix()
 
-    def _create_file_data_row(self, file_path, file_set):
-        """Create a data row for a file in the matrix."""
+    def _create_file_data_row(self, file_path):
         row = {'Files': file_path}
-        for commit in self.commits:
-            commit_short = commit[:6]
-            if file_set == self.unchanged_files:
-                # For unchanged files, always use the unchanged symbol
-                row[commit_short] = self.symbols['unchanged']
-            elif commit in self.file_changes and file_path in self.file_changes[commit]:
-                # File has a recorded change for this commit
-                symbol = self.file_changes[commit][file_path]
-                row[commit_short] = self.symbols.get(symbol, symbol)
-            else:
-                # File doesn't exist in this commit
-                row[commit_short] = self.symbols['not_present']
+        for transition_key in self.transition_columns:
+            change_type = self.file_transitions.get(transition_key, {}).get(file_path, "−")
+            row[transition_key] = change_type
         return row
 
-    def _display_styled_dataframe(self, df, short_commits):
-        """Apply styling to a dataframe and display it."""
-        styled_df = df.style.map(style_symbol_function, subset=short_commits)
-        display(styled_df)
+    def _display_styled_dataframe(self, df):
+        display(df)
 
-    def _print_dataframe_matrix(self, short_commits):
-        """Print using pandas DataFrames with colored symbols."""
-        # Changed Files
-        if self.changed_files:
-            changed_data = [self._create_file_data_row(file_path, self.changed_files)
-                           for file_path in sorted(self.changed_files)]
+    def _print_dataframe_matrix(self):
+        # All Files
+        all_data = [self._create_file_data_row(file_path)
+                   for file_path in sorted(self.all_files)]
 
-            changed_df = pd.DataFrame(changed_data)
-            print(f"\nChanged Files Matrix ({len(self.changed_files)} files):")
+        if all_data:
+            df = pd.DataFrame(all_data)
+            print(f"\nFile Changes Matrix ({len(self.all_files)} files):")
             print("=" * 60)
-            self._display_styled_dataframe(changed_df, short_commits)
+            self._display_styled_dataframe(df)
         else:
-            print("\nNo files changed across the analyzed commits.")
-
-        # Unchanged Files
-        if self.unchanged_files:
-            unchanged_data = [self._create_file_data_row(file_path, self.unchanged_files)
-                             for file_path in sorted(self.unchanged_files)]
-
-            unchanged_df = pd.DataFrame(unchanged_data)
-            print(f"\nUnchanged Files Table ({len(self.unchanged_files)} files):")
-            print("=" * 60)
-            self._display_styled_dataframe(unchanged_df, short_commits)
-        else:
-            print("\nAll files changed across the analyzed commits.")
-
-        # Print legend
-        self._print_legend()
+            print("\nNo files found across the analyzed transitions.")
 
     def _print_legend(self):
         """Print the legend for file change symbols."""
