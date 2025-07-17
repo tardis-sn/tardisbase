@@ -1,8 +1,8 @@
 import shutil
+import subprocess
 import tempfile
 from pathlib import Path
 import os
-from git import Repo
 from tardisbase.testing.regression_comparison import CONFIG
 
 
@@ -150,7 +150,7 @@ class FileSetup:
         - ref1: Contains data from ref1_hash commit (or current state if None)
         - ref2: Contains data from ref2_hash commit (or current state if None)
 
-        For git commits, uses git checkout and shutil to copy files.
+        For git commits, uses 'git archive' to extract files efficiently.
         For current state, copies all files from the repository directory.
         """
         for ref_id, ref_hash in enumerate([self.ref1_hash, self.ref2_hash], 1):
@@ -159,47 +159,41 @@ class FileSetup:
             if ref_hash:
                 self._copy_data_from_hash(ref_hash, ref_dir)
             else:
-                # Copy all files from repository directory using shutil
-                for item in Path(self.repo_path).iterdir():
-                    if item.is_file():
-                        shutil.copy2(item, ref_dir)
-                    elif item.is_dir() and not item.name.startswith('.'):
-                        shutil.copytree(item, Path(ref_dir) / item.name, dirs_exist_ok=True)
+                subprocess.run(f"cp -r {self.repo_path}/* {ref_dir}", shell=True)
 
     def _copy_data_from_hash(self, ref_hash, ref_dir):
         """
         Extract and copy data from a specific git commit to a directory.
 
-        This method checks out the specified commit and copies all files
-        to the target directory using shutil operations.
+        This method uses git archive to extract all files from a specific
+        commit and extract them directly to the target directory using tar.
 
         Parameters
         ----------
         ref_hash : str
             Git commit hash to extract data from.
         ref_dir : str or Path
-            Target directory where the commit files will be copied.
+            Target directory where the git archive contents will be extracted.
 
         Notes
         -----
-        Uses git checkout to switch to the specified commit, copies all files
-        using shutil, then restores the original HEAD. This approach is simple
-        and reliable.
+        The method uses a shell command pipeline:
+        'git archive <hash> | tar -x -C <target_dir>'
+
+        This approach is efficient for extracting large repositories as it
+        streams the archive directly to the extraction process without
+        creating intermediate files.
         """
-        try:
-            repo = Repo(self.repo_path)
-            original_head = repo.head.commit
-            repo.git.checkout(ref_hash)
-
-            # Copy all files
-            for item in Path(self.repo_path).iterdir():
-                if item.is_file() and not item.name.startswith('.'):
-                    shutil.copy2(item, ref_dir)
-                elif item.is_dir() and not item.name.startswith('.'):
-                    shutil.copytree(item, Path(ref_dir) / item.name, dirs_exist_ok=True)
-
-            # Restore original head
-            repo.git.checkout(original_head)
-
-        except Exception as e:
-            print(f"Error extracting files from commit {ref_hash}: {str(e)}")
+        git_cmd = [
+            "git",
+            "-C",
+            str(self.repo_path),
+            "archive",
+            ref_hash,
+            "|",
+            "tar",
+            "-x",
+            "-C",
+            str(ref_dir),
+        ]
+        subprocess.run(" ".join(git_cmd), shell=True)

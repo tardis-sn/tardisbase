@@ -14,10 +14,8 @@ from tardisbase.testing.regression_comparison.analyzers import (
 from tardisbase.testing.regression_comparison.visualization import (
     SpectrumSolverComparator,
 )
-from tardisbase.testing.regression_comparison.file_utils import discover_and_compare_h5_files
 from tardisbase.testing.regression_comparison import CONFIG
 import logging
-from tardisbase.testing.regression_comparison.run_tests import run_tests
 
 logger = logging.getLogger(__name__)
 
@@ -65,12 +63,6 @@ class ReferenceComparer:
         refpath2=None,
         print_path=False,
         repo_path=None,
-        tardis_repo_path=None,
-        branch="master",
-        n=2,
-        target_file="tardis/spectrum/tests/test_spectrum_solver/test_spectrum_solver/TestSpectrumSolver.h5",
-        commits_input=None,
-        auto_generate_reference=True,
     ):
         # Validation: Either use git hashes OR direct paths, not both
         using_git = (ref1_hash is not None) or (ref2_hash is not None)
@@ -107,24 +99,6 @@ class ReferenceComparer:
         self.file_setup = None
         self.diff_analyzer = None
         self.hdf_comparator = None
-
-        # Store reference generation parameters
-        self.tardis_repo_path = tardis_repo_path
-        self.branch = branch
-        self.n = n
-        self.target_file = target_file
-        self.commits_input = commits_input
-        self.auto_generate_reference = auto_generate_reference
-
-        # Initialize reference generation results
-        self.processed_commits = None
-        self.regression_commits = None
-        self.original_head = None
-        self.target_file_path = None
-
-        # Auto-generate reference if n > 2 and auto_generate_reference is True
-        if self.auto_generate_reference and n > 2 and tardis_repo_path:
-            self.generate_reference(auto_mode=True)
 
     def setup(self):
         """
@@ -189,61 +163,6 @@ class ReferenceComparer:
         if self.using_git and self.file_manager:
             self.file_manager.teardown()
 
-    def generate_reference(
-        self,
-        tardis_repo_path=None,
-        branch=None,
-        n=None,
-        target_file=None,
-        commits_input=None,
-        auto_mode=False,
-    ):
-        # Use stored parameters if auto_mode is True and parameters are None
-        if auto_mode:
-            tardis_repo_path = tardis_repo_path or self.tardis_repo_path
-            branch = branch or self.branch
-            n = n or self.n
-            target_file = target_file or self.target_file
-            commits_input = commits_input or self.commits_input
-
-        # Validate required parameters
-        if not tardis_repo_path:
-            print("Error: tardis_repo_path is required")
-            return None, None, None, None
-
-        if n <= 2:
-            print("Skipping generate_reference: n <= 2, using standard comparison mode")
-            return None, None, None, None
-
-        tardis_path = Path(tardis_repo_path)
-        regression_path = Path(self.repo_path)
-        target_file_path = regression_path / target_file
-
-        print(f"Starting generate_reference with n={n}")
-        print(f"Tardis repo: {tardis_path}")
-        print(f"Regression data repo: {regression_path}")
-        print(f"Target file: {target_file}")
-
-        # Process commits using the existing git_utils function
-        processed_commits, regression_commits, original_head, target_file_path = run_tests(
-            tardis_repo_path=tardis_path,
-            regression_data_repo_path=regression_path,
-            branch=branch,
-            target_file=target_file,
-            commits_input=commits_input,
-            n=n
-        )
-
-        print(f"Generated {len(processed_commits)} tardis commits and {len(regression_commits)} regression commits")
-        
-        # Store the results for potential use in comparison
-        self.processed_commits = processed_commits
-        self.regression_commits = regression_commits
-        self.original_head = original_head
-        self.target_file_path = target_file_path
-
-        return processed_commits, regression_commits, original_head, target_file_path
-
     def compare(self, print_diff=False):
         """
         Perform comparison between regression datasets.
@@ -277,27 +196,39 @@ class ReferenceComparer:
         """
         Discover and compare all HDF5 files in the reference directories.
 
-        This method uses the centralized file discovery utility to recursively
-        walk through the reference directories, identify HDF5 files (.h5, .hdf5),
-        and compare them. When both paths are available, it compares files that
-        exist in both directories. When only one path is available, it lists all
-        HDF5 files in that directory.
+        This method recursively walks through the reference directories,
+        identifies HDF5 files (.h5, .hdf5), and compares them. When both
+        paths are available, it compares files that exist in both directories.
+        When only one path is available, it lists all HDF5 files in that directory.
         """
         if self.ref1_path and self.ref2_path:
-            # Compare files in both directories using centralized utility
-            discover_and_compare_h5_files(
-                self.ref1_path,
-                self.ref2_path,
-                callback=self.summarise_changes_hdf
-            )
+            # Compare files in both directories
+            for root, _, files in os.walk(self.ref1_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in (".h5", ".hdf5"):
+                        rel_path = Path(root).relative_to(self.ref1_path)
+                        ref2_file_path = Path(self.ref2_path) / rel_path / file
+                        if ref2_file_path.exists():
+                            self.summarise_changes_hdf(
+                                file, root, ref2_file_path.parent
+                            )
         elif self.ref1_path:
             # Only ref1 available - just catalog the files
             print("Only ref1_path provided. Cataloging HDF5 files:")
-            discover_and_compare_h5_files(self.ref1_path)
+            for root, _, files in os.walk(self.ref1_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in (".h5", ".hdf5"):
+                        print(f"Found HDF5 file: {Path(root) / file}")
         elif self.ref2_path:
             # Only ref2 available - just catalog the files
             print("Only ref2_path provided. Cataloging HDF5 files:")
-            discover_and_compare_h5_files(self.ref2_path)
+            for root, _, files in os.walk(self.ref2_path):
+                for file in files:
+                    file_path = Path(file)
+                    if file_path.suffix in (".h5", ".hdf5"):
+                        print(f"Found HDF5 file: {Path(root) / file}")
 
     def summarise_changes_hdf(self, name, path1, path2):
         """
