@@ -1,22 +1,37 @@
 import subprocess
+import tempfile
+import os
 from pathlib import Path
 from git import Repo
 
-def create_conda_env(env_name, lockfile_path, conda_manager="conda"):
+def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     # Check if environment already exists
     check_cmd = [conda_manager, "env", "list"]
     print(f"Checking if environment {env_name} exists...")
     result = subprocess.run(check_cmd, capture_output=True, text=True)
-    
+
+    env_exists = False
     if result.returncode == 0:
         # Parse the output to see if our environment exists
         env_lines = result.stdout.split('\n')
         for line in env_lines:
             if line.strip().startswith(env_name + ' '):
-                print(f"Environment {env_name} already exists, skipping creation.")
-                return True
-    
-    # Environment doesn't exist, create it
+                env_exists = True
+                break
+
+    if env_exists:
+        if force_recreate:
+            print(f"Environment {env_name} exists, removing it for recreation...")
+            remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
+            remove_result = subprocess.run(remove_cmd, capture_output=True, text=True)
+            if remove_result.returncode != 0:
+                print(f"Error removing environment: {remove_result.stderr}")
+                return False
+        else:
+            print(f"Environment {env_name} already exists, skipping creation.")
+            return True
+
+    # Environment doesn't exist (or was removed), create it
     cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
     print(f"Creating conda environment: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
@@ -24,6 +39,18 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda"):
         print(f"Error creating environment: {result.stderr}")
         return False
     return True
+
+def get_lockfile_for_commit(tardis_repo, commit_hash, tardis_path):
+    """Get the conda lockfile content for a specific commit and save it temporarily."""
+    # Use git show to get the lockfile content without checking out
+    result = tardis_repo.git.show(f"{commit_hash}:conda-linux-64.lock")
+
+    # Create a temporary file with the lockfile content
+    temp_lockfile = tempfile.NamedTemporaryFile(mode='w', suffix='.lock', delete=False)
+    temp_lockfile.write(result)
+    temp_lockfile.close()
+
+    return temp_lockfile.name
 
 def install_tardis_in_env(env_name, tardis_path, conda_manager="conda"):
     cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
@@ -34,11 +61,10 @@ def install_tardis_in_env(env_name, tardis_path, conda_manager="conda"):
         return False
     return True
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda"):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda"):
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
-    target_file_path = regression_path / target_file
-    lockfile_path = tardis_path / "conda-linux-64.lock"
+    target_file_path = regression_path / target_file if target_file else None
 
     tardis_repo = Repo(tardis_path)
     regression_repo = Repo(regression_path)
@@ -75,23 +101,37 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, 
 
     for i, commit in enumerate(commits, 1):
         print(f"Processing commit {i}/{n}: {commit.hexsha}")
-        tardis_repo.git.checkout(commit.hexsha)
-        tardis_repo.git.reset('--hard')
-        tardis_repo.git.clean('-fd')
 
         env_name = None
+        temp_lockfile_path = None
         if use_conda:
             # Create unique environment name for this commit
             env_name = f"tardis-test-{commit.hexsha[:8]}"
             print(f"Creating conda environment: {env_name}")
-            
-            if not create_conda_env(env_name, lockfile_path, conda_manager):
+
+            # Get the lockfile for this specific commit
+            temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha, tardis_path)
+
+            if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=True):
                 print(f"Failed to create conda environment for commit {commit.hexsha}")
+                # Clean up temporary lockfile
+                if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
+                        os.unlink(temp_lockfile_path)
                 continue
-            
+
+            # Clean up temporary lockfile after environment creation
+            if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):     
+                    os.unlink(temp_lockfile_path)
+
+
             if not install_tardis_in_env(env_name, tardis_path, conda_manager):
                 print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
                 continue
+
+        # Now checkout the commit for running tests (after environment creation)
+        tardis_repo.git.checkout(commit.hexsha)
+        tardis_repo.git.reset('--hard')
+        tardis_repo.git.clean('-fd')
 
         # Prepare pytest command
         if use_conda and env_name:
@@ -128,7 +168,8 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, 
             print("Pytest stderr:")
             print(result.stderr)
 
-            if not target_file_path.exists():
+            # Validate target file if specified
+            if target_file_path and not target_file_path.exists():
                 print(f"Error: HDF5 file {target_file_path} was not generated.")
                 continue
 
@@ -153,4 +194,4 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file, 
     for hash in regression_commits:
         print(hash)
 
-    return processed_commits, regression_commits, original_head, str(target_file_path)
+    return processed_commits, regression_commits, original_head, str(target_file_path) if target_file_path else None

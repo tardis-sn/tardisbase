@@ -103,13 +103,10 @@ def get_last_n_commits(n=2, repo_path=None):
     if repo_path is None:
         repo_path = CONFIG["regression_data_repo"]
 
-    try:
-        if not Path(repo_path).exists():
-            raise ValueError(f"Regression data repository not found at {repo_path}")
+    if not Path(repo_path).exists():
+        raise ValueError(f"Regression data repository not found at {repo_path}")
 
-        repo = Repo(repo_path)
-        commits = list(repo.iter_commits(max_count=n))
-        return [commit.hexsha for commit in commits]
+    repo = Repo(repo_path)
+    commits = list(repo.iter_commits(max_count=n))
+    return [commit.hexsha for commit in commits]
 
-    except Exception as e:
-        raise ValueError(f"Unable to get git commits: {str(e)}")
