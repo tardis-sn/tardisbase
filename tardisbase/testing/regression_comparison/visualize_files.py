@@ -2,7 +2,7 @@ import pandas as pd
 from pathlib import Path
 from git import Repo
 
-class FileChangeMatrixVisualizer:
+class MultiCommitCompare:
     """
     Visualizes file changes across commits in a matrix format.
 
