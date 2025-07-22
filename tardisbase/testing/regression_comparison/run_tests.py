@@ -3,6 +3,7 @@ import tempfile
 import os
 from pathlib import Path
 from git import Repo
+from git.exc import GitCommandError
 
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     # Check if environment already exists
@@ -40,17 +41,21 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         return False
     return True
 
-def get_lockfile_for_commit(tardis_repo, commit_hash, tardis_path):
+def get_lockfile_for_commit(tardis_repo, commit_hash):
     """Get the conda lockfile content for a specific commit and save it temporarily."""
-    # Use git show to get the lockfile content without checking out
-    result = tardis_repo.git.show(f"{commit_hash}:conda-linux-64.lock")
+    try:
+        # Use git show to get the lockfile content without checking out
+        result = tardis_repo.git.show(f"{commit_hash}:conda-linux-64.lock")
 
-    # Create a temporary file with the lockfile content
-    temp_lockfile = tempfile.NamedTemporaryFile(mode='w', suffix='.lock', delete=False)
-    temp_lockfile.write(result)
-    temp_lockfile.close()
+        # Create a temporary file with the lockfile content
+        temp_lockfile = tempfile.NamedTemporaryFile(mode='w', suffix='.lock', delete=False)
+        temp_lockfile.write(result)
+        temp_lockfile.close()
 
-    return temp_lockfile.name
+        return temp_lockfile.name
+    except GitCommandError as e:
+        print(f"Warning: Could not get lockfile for commit {commit_hash}: {e}")
+        return None
 
 def install_tardis_in_env(env_name, tardis_path, conda_manager="conda"):
     cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
@@ -61,7 +66,7 @@ def install_tardis_in_env(env_name, tardis_path, conda_manager="conda"):
         return False
     return True
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda"):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None):
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
     target_file_path = regression_path / target_file if target_file else None
@@ -83,12 +88,8 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
             n = len(commits_input)
             commits = []
             for commit_hash in commits_input:
-                try:
-                    commit = tardis_repo.commit(commit_hash)
-                    commits.append(commit)
-                except Exception as e:
-                    print(f"Error finding commit {commit_hash}: {e}")
-                    continue
+                commit = tardis_repo.commit(commit_hash)
+                commits.append(commit)
         else:
             commits = list(tardis_repo.iter_commits(branch, max_count=n))
             commits.reverse()
@@ -105,28 +106,36 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
         env_name = None
         temp_lockfile_path = None
         if use_conda:
-            # Create unique environment name for this commit
-            env_name = f"tardis-test-{commit.hexsha[:8]}"
-            print(f"Creating conda environment: {env_name}")
+            if default_curr_env:
+                # Use the provided default environment instead of creating new ones
+                env_name = default_curr_env
+                print(f"Using provided environment: {env_name}")
+            else:
+                # Create unique environment name for this commit
+                env_name = f"tardis-test-{commit.hexsha[:8]}"
+                print(f"Creating conda environment: {env_name}")
 
-            # Get the lockfile for this specific commit
-            temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha, tardis_path)
+                # Get the lockfile for this specific commit
+                temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
 
-            if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=True):
-                print(f"Failed to create conda environment for commit {commit.hexsha}")
-                # Clean up temporary lockfile
+                if temp_lockfile_path is None:
+                    print(f"Could not get lockfile for commit {commit.hexsha}, skipping environment creation")
+                    continue
+
+                if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=True):
+                    print(f"Failed to create conda environment for commit {commit.hexsha}")
+                    # Clean up temporary lockfile
+                    if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
+                            os.unlink(temp_lockfile_path)
+                    continue
+
+                # Clean up temporary lockfile after environment creation
                 if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
                         os.unlink(temp_lockfile_path)
-                continue
 
-            # Clean up temporary lockfile after environment creation
-            if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):     
-                    os.unlink(temp_lockfile_path)
-
-
-            if not install_tardis_in_env(env_name, tardis_path, conda_manager):
-                print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-                continue
+                if not install_tardis_in_env(env_name, tardis_path, conda_manager):
+                    print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
+                    continue
 
         # Now checkout the commit for running tests (after environment creation)
         tardis_repo.git.checkout(commit.hexsha)
