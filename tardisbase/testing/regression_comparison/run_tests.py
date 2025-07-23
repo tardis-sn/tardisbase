@@ -58,8 +58,11 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         return None
 
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
+    # Determine if env_name is a path or name
+    env_flag = "-p" if "/" in env_name else "-n"
+
     #  Try installing with tardisbase extra first
-    cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", f"{tardis_path}[tardisbase]"]
+    cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", f"{tardis_path}[tardisbase]"]
     print(f"Installing TARDIS with tardisbase in environment: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
 
@@ -68,7 +71,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
         if "does not provide the extra" in result.stderr:
             print(f"tardisbase extra not available in this commit, installing TARDIS only")
             # Fall back to installing just TARDIS
-            cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
+            cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
             print(f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}")
             result = subprocess.run(cmd, capture_output=True, text=True)
             if result.returncode != 0:
@@ -158,8 +161,10 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
 
         # Prepare pytest command
         if use_conda and env_name:
+            # Determine if env_name is a path or name
+            env_flag = "-p" if "/" in env_name else "-n"
             cmd = [
-                conda_manager, "run", "-n", env_name,
+                conda_manager, "run", env_flag, env_name,
                 "python", "-m", "pytest",
                 test_path,
                 f"--tardis-regression-data={regression_path}",
