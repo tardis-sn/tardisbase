@@ -79,7 +79,7 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     print(f"Running {phase_name} tests: {' '.join(cmd)}")
     result = subprocess.run(
         cmd,
-        check=True,
+        check=False,  # Don't raise exception on non-zero exit code
         capture_output=True,
         text=True,
         cwd=tardis_path
@@ -204,28 +204,41 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
         try:
             # Run "not continuum" tests
             print(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
-            run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+            result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
             # Run "continuum" tests
             print(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
-            run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+            result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+
+            # Check if either phase had failures but still generated data
+            if result1.returncode != 0:
+                print(f"Warning: 'not continuum' tests had failures for commit {commit.hexsha}")
+                print("Stdout:", result1.stdout)
+                print("Stderr:", result1.stderr)
+
+            if result2.returncode != 0:
+                print(f"Warning: 'continuum' tests had failures for commit {commit.hexsha}")
+                print("Stdout:", result2.stdout)
+                print("Stderr:", result2.stderr)
 
             # Validate target file if specified
             if target_file_path and not target_file_path.exists():
                 print(f"Error: HDF5 file {target_file_path} was not generated.")
                 continue
 
+            # Even if tests failed, if regression data was generated, commit it
             regression_repo.git.add(A=True)
             regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
             regression_commits.append(regression_commit.hexsha)
             processed_commits.append(commit.hexsha)
 
-        except subprocess.CalledProcessError as e:
+            if result1.returncode == 0 and result2.returncode == 0:
+                print(f"All tests passed for commit {commit.hexsha}")
+            else:
+                print(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
+
+        except Exception as e:
             print(f"Error running pytest for commit {commit.hexsha}: {e}")
-            print("Pytest stdout:")
-            print(e.stdout)
-            print("Pytest stderr:")
-            print(e.stderr)
             continue
 
     print("\nProcessed Tardis Commits:")
