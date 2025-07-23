@@ -73,7 +73,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda", tar
     return True
 
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None, force_recreate=False):
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
     target_file_path = regression_path / target_file if target_file else None
@@ -129,7 +129,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
                     print(f"Could not get lockfile for commit {commit.hexsha}, skipping environment creation")
                     continue
 
-                if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=True):
+                if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate):
                     print(f"Failed to create conda environment for commit {commit.hexsha}")
                     # Clean up temporary lockfile
                     if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
