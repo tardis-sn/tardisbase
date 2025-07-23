@@ -202,12 +202,15 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
                 check=True,
                 capture_output=True,
                 text=True,
-                cwd=tardis_path 
+                cwd=tardis_path
             )
-            print("Pytest stdout:")
-            print(result.stdout)
-            print("Pytest stderr:")
-            print(result.stderr)
+            # Show only the last line of pytest output with carriage return
+            if result.stdout:
+                last_line = result.stdout.strip().split('\n')[-1]
+                print(f"\rPytest last output: {last_line}", end="", flush=True)
+            if result.stderr:
+                last_stderr = result.stderr.strip().split('\n')[-1]
+                print(f"\rPytest last stderr: {last_stderr}", end="", flush=True)
 
             # Validate target file if specified
             if target_file_path and not target_file_path.exists():
