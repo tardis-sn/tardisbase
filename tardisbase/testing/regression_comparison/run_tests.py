@@ -57,19 +57,26 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         print(f"Warning: Could not get lockfile for commit {commit_hash}: {e}")
         return None
 
-def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda", tardisbase=False):
-    if tardisbase:
-        cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "tardisbase"]
-        print(f"Installing tardisbase in environment: {' '.join(cmd)}")
-    else:
-        cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
-        print(f"Installing TARDIS in environment: {' '.join(cmd)}")
-
+def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
+    #  Try installing with tardisbase extra first
+    cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", f"{tardis_path}[tardisbase]"]
+    print(f"Installing TARDIS with tardisbase in environment: {' '.join(cmd)}")
     result = subprocess.run(cmd, capture_output=True, text=True)
+
     if result.returncode != 0:
-        package_name = "tardisbase" if tardisbase else "TARDIS"
-        print(f"Error installing {package_name}: {result.stderr}")
-        return False
+        # Check if the error is due to missing extra
+        if "does not provide the extra" in result.stderr:
+            print(f"tardisbase extra not available in this commit, installing TARDIS only")
+            # Fall back to installing just TARDIS
+            cmd = [conda_manager, "run", "-n", env_name, "pip", "install", "-e", str(tardis_path)]
+            print(f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}")
+            result = subprocess.run(cmd, capture_output=True, text=True)
+            if result.returncode != 0:
+                print(f"Error installing TARDIS (fallback): {result.stderr}")
+                return False
+        else:
+            print(f"Error installing TARDIS with tardisbase: {result.stderr}")
+            return False
     return True
 
 
@@ -142,11 +149,6 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
 
                 if not install_tardis_in_env(env_name, tardis_path, conda_manager):
                     print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-                    continue
-
-                # Install tardisbase after TARDIS installation
-                if not install_tardis_in_env(env_name, conda_manager=conda_manager, tardisbase=True):
-                    print(f"Failed to install tardisbase in environment for commit {commit.hexsha}")
                     continue
 
         # Now checkout the commit for running tests (after environment creation)
