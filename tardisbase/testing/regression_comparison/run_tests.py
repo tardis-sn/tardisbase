@@ -57,6 +57,43 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         print(f"Warning: Could not get lockfile for commit {commit_hash}: {e}")
         return None
 
+def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, use_conda, env_name, conda_manager):
+    """Helper function to run pytest"""
+    # Build base pytest command
+    pytest_args = [
+        "python", "-m", "pytest",
+        test_path,
+        f"--tardis-regression-data={regression_path}",
+        "--generate-reference",
+        "-x",
+        "--disable-warnings",
+        "-m", marker_expr
+    ]
+
+    # Prepend conda command if needed
+    if use_conda and env_name:
+        env_flag = "-p" if "/" in env_name else "-n"
+        cmd = [conda_manager, "run", env_flag, env_name] + pytest_args
+    else:
+        cmd = pytest_args
+
+    print(f"Running {phase_name} tests: {' '.join(cmd)}")
+    result = subprocess.run(
+        cmd,
+        check=True,
+        capture_output=True,
+        text=True,
+        cwd=tardis_path
+    )
+
+    if result.stdout:
+        last_line = result.stdout.strip().split('\n')[-1]
+        print(f"\r{phase_name} last output: {last_line}", end="", flush=True)
+    if result.stderr:
+        last_stderr = result.stderr.strip().split('\n')[-1]
+        print(f"\r{phase_name} last stderr: {last_stderr}", end="", flush=True)
+    return result
+
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     # Determine if env_name is a path or name
     env_flag = "-p" if "/" in env_name else "-n"
@@ -172,45 +209,14 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
         tardis_repo.git.reset('--hard')
         tardis_repo.git.clean('-fd')
 
-        # Prepare pytest command
-        if use_conda and env_name:
-            # Determine if env_name is a path or name
-            env_flag = "-p" if "/" in env_name else "-n"
-            cmd = [
-                conda_manager, "run", env_flag, env_name,
-                "python", "-m", "pytest",
-                test_path,
-                f"--tardis-regression-data={regression_path}",
-                "--generate-reference",
-                "-x",
-                "--disable-warnings"
-            ]
-        else:
-            cmd = [
-                "python", "-m", "pytest",
-                test_path,
-                f"--tardis-regression-data={regression_path}",
-                "--generate-reference",
-                "-x",
-                "--disable-warnings"
-            ]
-        
-        print(f"Running pytest command: {' '.join(cmd)}")
         try:
-            result = subprocess.run(
-                cmd,
-                check=True,
-                capture_output=True,
-                text=True,
-                cwd=tardis_path
-            )
-            # Show only the last line of pytest output with carriage return
-            if result.stdout:
-                last_line = result.stdout.strip().split('\n')[-1]
-                print(f"\rPytest last output: {last_line}", end="", flush=True)
-            if result.stderr:
-                last_stderr = result.stderr.strip().split('\n')[-1]
-                print(f"\rPytest last stderr: {last_stderr}", end="", flush=True)
+            # Run "not continuum" tests
+            print(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
+            run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+
+            # Run "continuum" tests
+            print(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
+            run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
             # Validate target file if specified
             if target_file_path and not target_file_path.exists():
@@ -221,7 +227,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
             regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
             regression_commits.append(regression_commit.hexsha)
             processed_commits.append(commit.hexsha)
-            
+
         except subprocess.CalledProcessError as e:
             print(f"Error running pytest for commit {commit.hexsha}: {e}")
             print("Pytest stdout:")
