@@ -65,7 +65,6 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
         test_path,
         f"--tardis-regression-data={regression_path}",
         "--generate-reference",
-        "-x",
         "--disable-warnings",
         "-m", marker_expr
     ]
