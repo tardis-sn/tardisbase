@@ -84,13 +84,6 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
         text=True,
         cwd=tardis_path
     )
-
-    if result.stdout:
-        last_line = result.stdout.strip().split('\n')[-1]
-        print(f"\r{phase_name} last output: {last_line}", end="", flush=True)
-    if result.stderr:
-        last_stderr = result.stderr.strip().split('\n')[-1]
-        print(f"\r{phase_name} last stderr: {last_stderr}", end="", flush=True)
     return result
 
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
