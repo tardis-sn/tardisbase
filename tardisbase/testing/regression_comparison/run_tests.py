@@ -188,12 +188,14 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
                     continue
             else:
                 # Try to create the environment
-                if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate):
-                    print(f"Failed to create conda environment for commit {commit.hexsha}")
-                    # Clean up temporary lockfile
-                    if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
-                            os.unlink(temp_lockfile_path)
+                env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
 
+                # Clean up temporary lockfile (regardless of success/failure)
+                if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
+                    os.unlink(temp_lockfile_path)
+
+                if not env_creation_success:
+                    print(f"Failed to create conda environment for commit {commit.hexsha}")
                     if default_curr_env:
                         print(f"Falling back to provided default environment: {default_curr_env}")
                         env_name = default_curr_env
@@ -201,10 +203,6 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
                         print(f"No default environment provided, skipping commit")
                         continue
                 else:
-                    # Environment created successfully, clean up temporary lockfile
-                    if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
-                            os.unlink(temp_lockfile_path)
-
                     # Install TARDIS in the newly created environment
                     if not install_tardis_in_env(env_name, tardis_path, conda_manager):
                         print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
@@ -220,45 +218,40 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
         tardis_repo.git.reset('--hard')
         tardis_repo.git.clean('-fd')
 
-        try:
-            # Run "not continuum" tests
-            print(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
-            result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        # Run "not continuum" tests
+        print(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
+        result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
-            # Run "continuum" tests
-            print(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
-            result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        # Run "continuum" tests
+        print(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
+        result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
-            # Check if either phase had failures but still generated data
-            if result1.returncode != 0:
-                print(f"Warning: 'not continuum' tests had failures for commit {commit.hexsha}")
-                print("Stdout:", result1.stdout)
-                print("Stderr:", result1.stderr)
+        # Check if either phase had failures but still generated data
+        if result1.returncode != 0:
+            print(f"Warning: 'not continuum' tests had failures for commit {commit.hexsha}")
+            print("Stdout:", result1.stdout)
+            print("Stderr:", result1.stderr)
 
-            if result2.returncode != 0:
-                print(f"Warning: 'continuum' tests had failures for commit {commit.hexsha}")
-                print("Stdout:", result2.stdout)
-                print("Stderr:", result2.stderr)
+        if result2.returncode != 0:
+            print(f"Warning: 'continuum' tests had failures for commit {commit.hexsha}")
+            print("Stdout:", result2.stdout)
+            print("Stderr:", result2.stderr)
 
-            # Validate target file if specified
-            if target_file_path and not target_file_path.exists():
-                print(f"Error: HDF5 file {target_file_path} was not generated.")
-                continue
-
-            # Even if tests failed, if regression data was generated, commit it
-            regression_repo.git.add(A=True)
-            regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
-            regression_commits.append(regression_commit.hexsha)
-            processed_commits.append(commit.hexsha)
-
-            if result1.returncode == 0 and result2.returncode == 0:
-                print(f"All tests passed for commit {commit.hexsha}")
-            else:
-                print(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
-
-        except Exception as e:
-            print(f"Error running pytest for commit {commit.hexsha}: {e}")
+        # Validate target file if specified
+        if target_file_path and not target_file_path.exists():
+            print(f"Error: HDF5 file {target_file_path} was not generated.")
             continue
+
+        # Even if tests failed, if regression data was generated, commit it
+        regression_repo.git.add(A=True)
+        regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
+        regression_commits.append(regression_commit.hexsha)
+        processed_commits.append(commit.hexsha)
+
+        if result1.returncode == 0 and result2.returncode == 0:
+            print(f"All tests passed for commit {commit.hexsha}")
+        else:
+            print(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
 
     print("\nProcessed Tardis Commits:")
     for hash in processed_commits:
