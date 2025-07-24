@@ -5,6 +5,11 @@ from pathlib import Path
 from git import Repo
 from git.exc import GitCommandError
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     # Check if environment already exists
     check_cmd = [conda_manager, "env", "list"]
@@ -86,29 +91,43 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     )
     return result
 
+def get_all_optional_dependencies(tardis_path):
+    """Get all available optional dependencies from pyproject.toml"""
+    pyproject_path = Path(tardis_path) / "pyproject.toml"
+    if not pyproject_path.exists():
+        return []
+
+    with open(pyproject_path, "rb") as f:
+        data = tomllib.load(f)
+
+    return list(data.get("project", {}).get("optional-dependencies", {}).keys())
+
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     # Determine if env_name is a path or name
     env_flag = "-p" if "/" in env_name else "-n"
 
-    #  Try installing with tardisbase extra first
-    cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", f"{tardis_path}[tardisbase]"]
-    print(f"Installing TARDIS with tardisbase in environment: {' '.join(cmd)}")
-    result = subprocess.run(cmd, capture_output=True, text=True)
+    # Get all available optional dependencies
+    all_extras = get_all_optional_dependencies(tardis_path)
 
-    if result.returncode != 0:
-        # Check if the error is due to missing extra
-        if "does not provide the extra" in result.stderr:
-            print(f"tardisbase extra not available in this commit, installing TARDIS only")
-            # Fall back to installing just TARDIS
-            cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
-            print(f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}")
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            if result.returncode != 0:
-                print(f"Error installing TARDIS (fallback): {result.stderr}")
-                return False
+    if all_extras:
+        # Try installing with all optional dependencies first
+        extras_str = f"[{','.join(all_extras)}]"
+        cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", f"{tardis_path}{extras_str}"]
+        print(f"Installing TARDIS with all extras {all_extras}: {' '.join(cmd)}")
+        result = subprocess.run(cmd, capture_output=True, text=True)
+
+        if result.returncode == 0:
+            return True
         else:
-            print(f"Error installing TARDIS with tardisbase: {result.stderr}")
-            return False
+            print(f"Error installing TARDIS with extras: {result.stderr}")
+
+    # Fall back to installing just TARDIS
+    cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
+    print(f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}")
+    result = subprocess.run(cmd, capture_output=True, text=True)
+    if result.returncode != 0:
+        print(f"Error installing TARDIS (fallback): {result.stderr}")
+        return False
     return True
 
 
