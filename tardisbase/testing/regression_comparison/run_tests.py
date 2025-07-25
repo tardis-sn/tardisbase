@@ -11,6 +11,25 @@ except ImportError:
     import tomli as tomllib
 
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
+    """
+    Create a conda environment from a lockfile.
+
+    Parameters
+    ----------
+    env_name : str
+        Name of the conda environment to create.
+    lockfile_path : str or Path
+        Path to the conda lockfile.
+    conda_manager : str, optional
+        Conda manager to use ('conda' or 'mamba'), by default "conda".
+    force_recreate : bool, optional
+        Whether to remove existing environment before creating, by default False.
+
+    Returns
+    -------
+    bool
+        True if environment creation succeeded, False otherwise.
+    """
     # Check if environment already exists
     check_cmd = [conda_manager, "env", "list"]
     print(f"Checking if environment {env_name} exists...")
@@ -47,7 +66,21 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
     return True
 
 def get_lockfile_for_commit(tardis_repo, commit_hash):
-    """Get the conda lockfile content for a specific commit and save it temporarily."""
+    """
+    Get conda lockfile content for a specific commit and save temporarily.
+
+    Parameters
+    ----------
+    tardis_repo : git.Repo
+        Git repository object for TARDIS.
+    commit_hash : str
+        Hash of the commit to get lockfile from.
+
+    Returns
+    -------
+    str or None
+        Path to temporary lockfile, or None if lockfile not found.
+    """
     try:
         # Use git show to get the lockfile content without checking out
         result = tardis_repo.git.show(f"{commit_hash}:conda-linux-64.lock")
@@ -63,7 +96,33 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         return None
 
 def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, use_conda, env_name, conda_manager):
-    """Helper function to run pytest"""
+    """
+    Run pytest with specific marker expression.
+
+    Parameters
+    ----------
+    marker_expr : str
+        Pytest marker expression to filter tests.
+    phase_name : str
+        Descriptive name for the test phase.
+    test_path : str
+        Path to the test file or directory.
+    regression_path : str or Path
+        Path to regression data directory.
+    tardis_path : str or Path
+        Path to TARDIS repository.
+    use_conda : bool
+        Whether to use conda environment.
+    env_name : str or None
+        Name of conda environment to use.
+    conda_manager : str
+        Conda manager to use ('conda' or 'mamba').
+
+    Returns
+    -------
+    subprocess.CompletedProcess
+        Result of the pytest command execution.
+    """
     # Build base pytest command
     pytest_args = [
         "python", "-m", "pytest",
@@ -92,7 +151,19 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     return result
 
 def get_all_optional_dependencies(tardis_path):
-    """Get all available optional dependencies from pyproject.toml"""
+    """
+    Get all available optional dependencies from pyproject.toml.
+
+    Parameters
+    ----------
+    tardis_path : str or Path
+        Path to TARDIS repository containing pyproject.toml.
+
+    Returns
+    -------
+    list of str
+        List of optional dependency group names.
+    """
     pyproject_path = Path(tardis_path) / "pyproject.toml"
     if not pyproject_path.exists():
         return []
@@ -103,6 +174,23 @@ def get_all_optional_dependencies(tardis_path):
     return list(data.get("project", {}).get("optional-dependencies", {}).keys())
 
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
+    """
+    Install TARDIS with optional dependencies in conda environment.
+
+    Parameters
+    ----------
+    env_name : str
+        Name or path of the conda environment.
+    tardis_path : str or Path, optional
+        Path to TARDIS repository, by default None.
+    conda_manager : str, optional
+        Conda manager to use ('conda' or 'mamba'), by default "conda".
+
+    Returns
+    -------
+    bool
+        True if installation succeeded, False otherwise.
+    """
     # Determine if env_name is a path or name
     env_flag = "-p" if "/" in env_name else "-n"
 
@@ -132,6 +220,40 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
 
 
 def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None, force_recreate=False):
+    """
+    Run pytest across multiple TARDIS commits.
+
+    Parameters
+    ----------
+    tardis_repo_path : str or Path
+        Path to TARDIS repository.
+    regression_data_repo_path : str or Path
+        Path to regression data repository.
+    branch : str
+        Branch name to iterate commits from.
+    target_file : str, optional
+        Target file to validate after test runs, by default None.
+    commits_input : str, list, or int, optional
+        Specific commits to test or number of commits, by default None.
+    n : int, optional
+        Number of recent commits to test, by default 10.
+    test_path : str, optional
+        Path to test file, by default "tardis/spectrum/tests/test_spectrum_solver.py".
+    use_conda : bool, optional
+        Whether to use conda environments, by default False.
+    conda_manager : str, optional
+        Conda manager to use ('conda' or 'mamba'), by default "conda".
+    default_curr_env : str, optional
+        Default environment to fall back to, by default None.
+    force_recreate : bool, optional
+        Whether to force recreate conda environments, by default False.
+
+    Returns
+    -------
+    tuple
+        (processed_commits, regression_commits, original_head, target_file_path)
+        Lists of commit hashes and paths.
+    """
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
     target_file_path = regression_path / target_file if target_file else None
