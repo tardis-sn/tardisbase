@@ -30,19 +30,15 @@ class MultiCommitCompare:
     compare_function : str, optional
         Comparison method to use. Options: 'git_diff', 'cmd_diff'.
         Default is 'git_diff'.
-    diff_command : str, optional
-        Command-line diff tool to use when compare_function='cmd_diff'.
-        Default is 'diff'.
     """
 
-    def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None, compare_function="git_diff", diff_command="diff"):
+    def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None, compare_function="git_diff"):
         self.regression_repo_path = Path(regression_repo_path)
         self.commits = commits
         self.tardis_commits = tardis_commits
         self.tardis_repo_path = Path(tardis_repo_path) if tardis_repo_path else None
         self.file_extensions = file_extensions
         self.compare_function = compare_function
-        self.diff_command = diff_command
 
         # Validate compare_function
         available_functions = ["git_diff", "cmd_diff"]
@@ -147,7 +143,7 @@ class MultiCommitCompare:
             newer_file = self.extract_file_from_commit(newer_commit, file_path, temp_dir, "newer")
 
             # Run command-line diff
-            result = subprocess.run([self.diff_command, older_file, newer_file],
+            result = subprocess.run(["diff", older_file, newer_file],
                                     capture_output=True, text=True)
             return result.returncode != 0  # Non-zero means files differ
         finally:
