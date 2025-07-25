@@ -52,6 +52,10 @@ jobs:
         with:
           ref: ${{ github.event.pull_request.head.sha }}
         if: github.event_name == 'pull_request_target'
+      
+      - name: Install Gitpython
+        run: |
+          micromamba install gitpython
 
       - name: Install package
         run: pip install -e .
