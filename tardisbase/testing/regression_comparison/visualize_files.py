@@ -1,6 +1,10 @@
 import pandas as pd
 from pathlib import Path
 from git import Repo
+import subprocess
+import tempfile
+import shutil
+from tardisbase.testing.regression_comparison import CONFIG
 
 class MultiCommitCompare:
     """
@@ -23,14 +27,27 @@ class MultiCommitCompare:
     file_extensions : tuple of str, optional
         File extensions to filter by (e.g., ('.h5', '.hdf5')).
         If None, analyzes all files.
+    compare_function : str, optional
+        Comparison method to use. Options: 'git_diff', 'cmd_diff'.
+        Default is 'git_diff'.
+    diff_command : str, optional
+        Command-line diff tool to use when compare_function='cmd_diff'.
+        Default is 'diff'.
     """
 
-    def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None):
+    def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None, compare_function="git_diff", diff_command="diff"):
         self.regression_repo_path = Path(regression_repo_path)
         self.commits = commits
         self.tardis_commits = tardis_commits
         self.tardis_repo_path = Path(tardis_repo_path) if tardis_repo_path else None
         self.file_extensions = file_extensions
+        self.compare_function = compare_function
+        self.diff_command = diff_command
+
+        # Validate compare_function
+        available_functions = ["git_diff", "cmd_diff"]
+        if self.compare_function not in available_functions:
+            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {available_functions}")
 
         self.repo = Repo(self.regression_repo_path)
         self.tardis_repo = None
@@ -71,9 +88,78 @@ class MultiCommitCompare:
         return files
 
 
+    def extract_file_from_commit(self, commit_hash, file_path, temp_dir, suffix):
+        """
+        Extract a single file from a git commit to temporary location.
+
+        Parameters
+        ----------
+        commit_hash : str
+            Git commit hash to extract file from.
+        file_path : str
+            Path to the file within the commit.
+        temp_dir : str or Path
+            Temporary directory to extract file to.
+        suffix : str
+            Suffix to add to the extracted filename.
+
+        Returns
+        -------
+        str
+            Path to the extracted file.
+        """
+        output_path = Path(temp_dir) / f"{Path(file_path).name}_{suffix}"
+
+        # Use git show to extract file content
+        file_content = self.repo.git.show(f"{commit_hash}:{file_path}")
+        # Write as binary to handle both text and binary files properly
+        with open(output_path, 'wb') as f:
+            if isinstance(file_content, str):
+                f.write(file_content.encode('utf-8'))
+            else:
+                f.write(file_content)
+
+        return str(output_path)
+
+
+    def cmd_diff_compare(self, file_path, older_commit, newer_commit):
+        """
+        Compare files using command-line diff tool.
+
+        Parameters
+        ----------
+        file_path : str
+            Path to the file to compare.
+        older_commit : str
+            Older commit hash.
+        newer_commit : str
+            Newer commit hash.
+
+        Returns
+        -------
+        bool
+            True if files differ, False if identical.
+
+        """
+        temp_dir = tempfile.mkdtemp(prefix=CONFIG.get("temp_dir_prefix", "file_compare_"))
+        try:
+            older_file = self.extract_file_from_commit(older_commit, file_path, temp_dir, "older")
+            newer_file = self.extract_file_from_commit(newer_commit, file_path, temp_dir, "newer")
+
+            # Run command-line diff
+            result = subprocess.run([self.diff_command, older_file, newer_file],
+                                    capture_output=True, text=True)
+            return result.returncode != 0  # Non-zero means files differ
+        finally:
+            shutil.rmtree(temp_dir)
+
+
     def is_file_modified(self, file_path, older_commit, newer_commit):
         """
         Check if a file was modified between two commits.
+
+        Uses the configured comparison function (git_diff or cmd_diff) to determine
+        if the file content differs between the two commits.
 
         Parameters
         ----------
@@ -88,9 +174,25 @@ class MultiCommitCompare:
         -------
         bool
             True if file was modified, False otherwise.
+
+        Raises
+        ------
+        ValueError
+            If an invalid comparison function is configured.
+        FileNotFoundError
+            If cmd_diff is used but the diff command is not available.
+        subprocess.CalledProcessError
+            If file extraction fails when using cmd_diff.
         """
-        diff_output = self.repo.git.diff(f'{older_commit}..{newer_commit}', '--', file_path)
-        return bool(diff_output.strip())
+        if self.compare_function == "git_diff":
+            diff_output = self.repo.git.diff(f'{older_commit}..{newer_commit}', '--', file_path)
+            return bool(diff_output.strip())
+        elif self.compare_function == "cmd_diff":
+            return self.cmd_diff_compare(file_path, older_commit, newer_commit)
+        else:
+            # This should not happen due to validation in __init__, but just in case
+            available_functions = ["git_diff", "cmd_diff"]
+            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {available_functions}")
 
 
     def get_changes_with_git(self, older_commit, newer_commit):
