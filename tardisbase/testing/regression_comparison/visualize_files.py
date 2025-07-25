@@ -35,10 +35,7 @@ class MultiCommitCompare:
         self.repo = Repo(self.regression_repo_path)
         self.tardis_repo = None
         if self.tardis_repo_path and self.tardis_repo_path.exists():
-            try:
-                self.tardis_repo = Repo(self.tardis_repo_path)
-            except:
-                print(f"Warning: Could not access TARDIS repository at {self.tardis_repo_path}")
+            self.tardis_repo = Repo(self.tardis_repo_path)
 
         self.file_transitions = {}
         self.all_files = set()
@@ -199,7 +196,13 @@ class MultiCommitCompare:
 
         for i, commit_hash in enumerate(self.commits):
             commit = self.repo.commit(commit_hash)
-            description = f"Regression data for --{commit.message.strip().split('\n')[0][:60]}"
+
+            # Use TARDIS commit message if available, otherwise use regression commit message
+            if self.tardis_commits and i < len(self.tardis_commits) and self.tardis_repo:
+                tardis_commit = self.tardis_repo.commit(self.tardis_commits[i])
+                description = f"Regression data for --{tardis_commit.message.strip().split('\n')[0][:60]}"
+            else:
+                description = f"{commit.message.strip().split('\n')[0][:60]}"
 
             commit_data.append({
                 'Commit #': i + 1,
