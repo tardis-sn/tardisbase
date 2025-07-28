@@ -219,7 +219,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     return True
 
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=None, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None, force_recreate=False):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None, force_recreate=False):
     """
     Run pytest across multiple TARDIS commits.
 
@@ -231,8 +231,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
         Path to regression data repository.
     branch : str
         Branch name to iterate commits from.
-    target_file : str, optional
-        Target file to validate after test runs, by default None.
+
     commits_input : str, list, or int, optional
         Specific commits to test or number of commits, by default None.
     n : int, optional
@@ -251,12 +250,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
     Returns
     -------
     tuple
-        (processed_commits, regression_commits, original_head, target_file_path)
-        Lists of commit hashes and paths.
+        (processed_commits, regression_commits, original_head)
+        Lists of commit hashes and original head commit.
     """
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
-    target_file_path = regression_path / target_file if target_file else None
 
     tardis_repo = Repo(tardis_path)
     regression_repo = Repo(regression_path)
@@ -359,10 +357,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
             print("Stdout:", result2.stdout)
             print("Stderr:", result2.stderr)
 
-        # Validate target file if specified
-        if target_file_path and not target_file_path.exists():
-            print(f"Error: HDF5 file {target_file_path} was not generated.")
-            continue
+
 
         # Even if tests failed, if regression data was generated, commit it
         regression_repo.git.add(A=True)
@@ -383,4 +378,4 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, target_file=N
     for hash in regression_commits:
         print(hash)
 
-    return processed_commits, regression_commits, original_head, str(target_file_path) if target_file_path else None
+    return processed_commits, regression_commits, original_head
