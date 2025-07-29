@@ -10,9 +10,12 @@ class MultiCommitCompare:
     """
     Visualizes file changes across commits in a matrix format.
 
-    This class analyzes changes to HDF5 files across multiple Git commits
+    This class analyzes changes to files across multiple Git commits
     and displays the results in a tabular matrix format showing file
     transitions (added, deleted, modified, unchanged) between commits.
+
+    Supports filtering by file extensions to focus analysis on specific
+    file types (e.g., .h5, .hdf5, .py files).
 
     Parameters
     ----------
@@ -57,7 +60,7 @@ class MultiCommitCompare:
 
     def get_files_in_commit(self, commit_hash, file_extensions=None):
         """
-        Extract files from a Git commit, optionally filtered by extensions.
+        Extract file paths from a Git commit, optionally filtered by extensions.
 
         Parameters
         ----------
@@ -175,10 +178,6 @@ class MultiCommitCompare:
         ------
         ValueError
             If an invalid comparison function is configured.
-        FileNotFoundError
-            If cmd_diff is used but the diff command is not available.
-        subprocess.CalledProcessError
-            If file extraction fails when using cmd_diff.
         """
         if self.compare_function == "git_diff":
             diff_output = self.repo.git.diff(f'{older_commit}..{newer_commit}', '--', file_path)
@@ -311,18 +310,6 @@ class MultiCommitCompare:
 
         df = pd.DataFrame(commit_data)
         return df
-
-    def get_commit_type(self):
-        """
-        Get the commit type description.
-
-        Returns
-        -------
-        str
-            Description of commit type.
-        """
-        return ("Generated Commits from TARDIS" if self.tardis_commits
-                else "Direct Regression Data Commits")
 
 
     def analyze_commits(self):

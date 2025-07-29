@@ -304,7 +304,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                     print(f"Falling back to provided default environment: {default_curr_env}")
                     env_name = default_curr_env
                 else:
-                    print(f"No default environment provided, skipping commit")
+                    print("No default environment provided, skipping commit")
                     continue
             else:
                 # Try to create the environment
@@ -320,7 +320,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                         print(f"Falling back to provided default environment: {default_curr_env}")
                         env_name = default_curr_env
                     else:
-                        print(f"No default environment provided, skipping commit")
+                        print("No default environment provided, skipping commit")
                         continue
                 else:
                     # Install TARDIS in the newly created environment
@@ -330,7 +330,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                             print(f"Falling back to provided default environment: {default_curr_env}")
                             env_name = default_curr_env
                         else:
-                            print(f"No default environment provided, skipping commit")
+                            print("No default environment provided, skipping commit")
                             continue
 
         # Now checkout the commit for running tests (after environment creation)
