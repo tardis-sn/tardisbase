@@ -94,7 +94,7 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         logger.warning(f"Could not get lockfile for commit {commit_hash}: {e}")
         return None
 
-def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, use_conda, env_name, conda_manager):
+def run_pytest_with_marker(marker_expr, test_path, regression_path, tardis_path, use_conda, env_name, conda_manager):
     """
     Run pytest with specific marker expression.
 
@@ -102,8 +102,6 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     ----------
     marker_expr : str
         Pytest marker expression to filter tests.
-    phase_name : str
-        Descriptive name for the test phase.
     test_path : str
         Path to the test file or directory.
     regression_path : str or Path
@@ -139,7 +137,7 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     else:
         cmd = pytest_args
 
-    logger.info(f"Running {phase_name} tests: {' '.join(cmd)}")
+    logger.info(f"Running {marker_expr} tests: {' '.join(cmd)}")
     result = subprocess.run(
         cmd,
         check=False,  # Don't raise exception on non-zero exit code
@@ -339,11 +337,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
 
         # Run "not continuum" tests
         logger.info(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
-        result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        result1 = run_pytest_with_marker("not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
         # Run "continuum" tests
         logger.info(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
-        result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        result2 = run_pytest_with_marker("continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
 
         # Check if either phase had failures but still generated data
         if result1.returncode != 0:
