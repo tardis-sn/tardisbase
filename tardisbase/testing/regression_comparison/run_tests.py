@@ -9,6 +9,11 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
+class EnvironmentSetupError(Exception):
+    """Custom exception for environment setup failures."""
+    pass
+
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     """
     Create a conda environment from a lockfile.
@@ -211,6 +216,60 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     return True
 
 
+def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, force_recreate, default_curr_env):
+    """
+    Set up conda environment for a specific commit.
+
+    Parameters
+    ----------
+    commit : git.Commit
+        Git commit object.
+    tardis_repo : git.Repo
+        Git repository object for TARDIS.
+    tardis_path : str or Path
+        Path to TARDIS repository.
+    conda_manager : str
+        Conda manager to use ('conda' or 'mamba').
+    force_recreate : bool
+        Whether to force recreate conda environments.
+    default_curr_env : str or None
+        Default environment to fall back to when setup fails.
+
+    Returns
+    -------
+    str or None
+        Environment name to use, or None if commit should be skipped.
+    """
+    env_name = f"tardis-test-{commit.hexsha[:8]}"
+
+    try:
+        # Try complete setup - any failure raises exception
+        temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
+        if not temp_lockfile_path:
+            raise EnvironmentSetupError("Could not get lockfile")
+
+        if not create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate):
+            raise EnvironmentSetupError("Environment creation failed")
+
+        # Clean up temp file
+        if temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
+            os.unlink(temp_lockfile_path)
+
+        if not install_tardis_in_env(env_name, tardis_path, conda_manager):
+            raise EnvironmentSetupError("TARDIS installation failed")
+
+        return env_name
+
+    except EnvironmentSetupError:
+        # Any failure - fallback logic
+        if default_curr_env:
+            logger.info(f"Falling back to provided default environment: {default_curr_env}")
+            return default_curr_env
+
+        logger.warning("No default environment provided, skipping commit")
+        return None
+
+
 def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", conda_manager="conda", default_curr_env=None, force_recreate=False):
     """
     Run pytest across multiple TARDIS commits using isolated conda environments.
@@ -280,47 +339,12 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
     for i, commit in enumerate(commits, 1):
         logger.info(f"Processing commit {i}/{n}: {commit.hexsha}")
 
-        # Create unique environment for this commit
-        env_name = f"tardis-test-{commit.hexsha[:8]}"
-        logger.info(f"Creating conda environment: {env_name}")
+        # Set up environment for this commit
+        env_name = setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, force_recreate, default_curr_env)
+        if env_name is None:
+            continue
 
-        # Get the lockfile for this specific commit
-        temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
-
-        if temp_lockfile_path is None:
-            logger.warning(f"Could not get lockfile for commit {commit.hexsha}")
-            if default_curr_env:
-                logger.info(f"Falling back to provided default environment: {default_curr_env}")
-                env_name = default_curr_env
-            else:
-                logger.warning("No default environment provided, skipping commit")
-                continue
-        else:
-            # Try to create the environment
-            env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
-
-            # Clean up temporary lockfile (regardless of success/failure)
-            if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
-                os.unlink(temp_lockfile_path)
-
-            if not env_creation_success:
-                logger.error(f"Failed to create conda environment for commit {commit.hexsha}")
-                if default_curr_env:
-                    logger.info(f"Falling back to provided default environment: {default_curr_env}")
-                    env_name = default_curr_env
-                else:
-                    logger.warning("No default environment provided, skipping commit")
-                    continue
-            else:
-                # Install TARDIS in the newly created environment
-                if not install_tardis_in_env(env_name, tardis_path, conda_manager):
-                    logger.error(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-                    if default_curr_env:
-                        logger.info(f"Falling back to provided default environment: {default_curr_env}")
-                        env_name = default_curr_env
-                    else:
-                        logger.warning("No default environment provided, skipping commit")
-                        continue
+        logger.info(f"Using conda environment: {env_name}")
 
         # Now checkout the commit for running tests (after environment creation)
         tardis_repo.git.checkout(commit.hexsha)
