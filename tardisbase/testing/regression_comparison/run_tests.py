@@ -370,10 +370,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
             logger.debug("Stdout:", result2.stdout)
             logger.debug("Stderr:", result2.stderr)
 
-
-
         # Even if tests failed, if regression data was generated, commit it
         regression_repo.git.add(A=True)
+        if not regression_repo.index.diff(original_head):
+            logger.warning(f"No files were added to git for commit {commit.hexsha}, skipping commit")
+            continue
         regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
         regression_commits.append(regression_commit.hexsha)
         processed_commits.append(commit.hexsha)
