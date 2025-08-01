@@ -48,6 +48,10 @@ jobs:
           os-label: ${{ matrix.label }}
           lock-file-url-prefix: "https://raw.githubusercontent.com/tardis-sn/tardisbase/master"
       
+      - name: Install Gitpython
+        run: |
+          micromamba install gitpython
+
       - name: Install package editable
         run: |
           pip install -e .
