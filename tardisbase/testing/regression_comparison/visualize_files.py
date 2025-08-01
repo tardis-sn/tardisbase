@@ -307,8 +307,8 @@ class MultiCommitCompare:
 
             commit_data.append({
                 'Commit #': i + 1,
-                'Regression Hash': commit_hash[:8],
-                'Description': description,
+                'Regression Hash (first 6 chars)': commit_hash[:6],
+                'Description (first 60 chars)': description,
                 'Date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M')
             })
 
