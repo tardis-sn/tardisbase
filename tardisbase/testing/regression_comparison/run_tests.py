@@ -360,15 +360,12 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         result2 = run_pytest_with_marker("continuum", test_path, regression_path, tardis_path, env_name, conda_manager)
 
         # Check if either phase had failures but still generated data
-        if result1.returncode != 0:
-            logger.warning(f"'not continuum' tests had failures for commit {commit.hexsha}")
-            logger.debug("Stdout:", result1.stdout)
-            logger.debug("Stderr:", result1.stderr)
-
-        if result2.returncode != 0:
-            logger.warning(f"'continuum' tests had failures for commit {commit.hexsha}")
-            logger.debug("Stdout:", result2.stdout)
-            logger.debug("Stderr:", result2.stderr)
+        test_types = ["'not continuum'", "'continuum'"]
+        for result, test_type in zip([result1, result2], test_types):
+            if result.returncode != 0:
+                logger.warning(f"{test_type} tests had failures for commit {commit.hexsha}")
+                logger.debug("Stdout:", result.stdout)
+                logger.debug("Stderr:", result.stderr)
 
         # Even if tests failed, if regression data was generated, commit it
         regression_repo.git.add(A=True)
