@@ -7,13 +7,13 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Visualizing File Changes Across Commits &#8212; tardisbase 0.1.dev1+gae9d73e.d20250801 documentation</title>
+    <title>Visualizing File Changes Across Commits &#8212; tardisbase 0.1.dev1+ga6f3d4d.d20250804 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
-    <script src="_static/documentation_options.js?v=0b779806"></script>
+    <script src="_static/documentation_options.js?v=11a7f655"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -84,6 +84,7 @@
     <span class="s2">&quot;n&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="c1"># Last n commits</span>
     <span class="c1"># &quot;commits&quot;: [&quot;300e565e83112528faaa76e970057ffb1b13f743&quot;, &quot;2a06fdfb60190bbd9b49ff572d78772607138660&quot;, &quot;2d775dcd1c486227532f537fc41066e942000e56&quot;],  # Uncomment for specific commits</span>
     <span class="c1"># &quot;commits&quot;: commits.calculate_commits(n=10, gap=0, info=False), #Uncomment for n commits with custom gap</span>
+    <span class="s2">&quot;use_conda&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
     <span class="s2">&quot;conda_manager&quot;</span><span class="p">:</span> <span class="s2">&quot;conda&quot;</span>
 <span class="p">}</span>
 </pre></div>
@@ -102,6 +103,7 @@
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;regression_data_repo_path&quot;</span><span class="p">],</span>
         <span class="n">config</span><span class="p">[</span><span class="s2">&quot;branch&quot;</span><span class="p">],</span>
         <span class="n">n</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;n&quot;</span><span class="p">],</span>
+        <span class="n">use_conda</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;use_conda&quot;</span><span class="p">],</span>
         <span class="n">conda_manager</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s2">&quot;conda_manager&quot;</span><span class="p">],</span>
         <span class="n">force_recreate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
         <span class="n">test_path</span><span class="o">=</span><span class="s2">&quot;tardis&quot;</span><span class="p">,</span>
@@ -2070,6 +2072,7 @@ d0f1f808edf21ccfb3772fcb3f2a493fd31d4621
 <span class="c1">#     config[&quot;regression_data_repo_path&quot;],</span>
 <span class="c1">#     config[&quot;branch&quot;],</span>
 <span class="c1">#     commits_input=config[&quot;commits&quot;],</span>
+<span class="c1">#     use_conda=config[&quot;use_conda&quot;],</span>
 <span class="c1">#     conda_manager=config[&quot;conda_manager&quot;]</span>
 <span class="c1"># )</span>
 </pre></div>
