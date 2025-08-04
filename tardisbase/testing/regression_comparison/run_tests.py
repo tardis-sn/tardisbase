@@ -95,7 +95,7 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         print(f"Warning: Could not get lockfile for commit {commit_hash}: {e}")
         return None
 
-def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, use_conda, env_name, conda_manager):
+def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, env_name, conda_manager):
     """
     Run pytest with specific marker expression.
 
@@ -111,8 +111,6 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
         Path to regression data directory.
     tardis_path : str or Path
         Path to TARDIS repository.
-    use_conda : bool
-        Whether to use conda environment.
     env_name : str or None
         Name of conda environment to use.
     conda_manager : str
@@ -133,12 +131,11 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
         "-m", marker_expr
     ]
 
-    # Prepend conda command if needed
-    if use_conda and env_name:
-        env_flag = "-p" if "/" in env_name else "-n"
-        cmd = [conda_manager, "run", env_flag, env_name] + pytest_args
-    else:
-        cmd = pytest_args
+    # Prepend conda command
+
+    env_flag = "-p" if "/" in env_name else "-n"
+    cmd = [conda_manager, "run", env_flag, env_name] + pytest_args
+
 
     print(f"Running {phase_name} tests: {' '.join(cmd)}")
     result = subprocess.run(
@@ -219,7 +216,51 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     return True
 
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", use_conda=False, conda_manager="conda", default_curr_env=None, force_recreate=False):
+def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate):
+    
+    env_name = None
+    temp_lockfile_path = None
+
+    # Create unique environment for this commit
+    env_name = f"tardis-test-{commit.hexsha[:8]}"
+    print(f"Creating conda environment: {env_name}")
+    
+    # Get the lockfile for this specific commit
+    temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
+    
+    if temp_lockfile_path is None:
+        print(f"Could not get lockfile for commit {commit.hexsha}")
+        return handle_fallback(default_curr_env)
+    
+    # Try to create the environment
+    env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
+    
+    # Clean up temporary lockfile (regardless of success/failure)
+    if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
+        os.unlink(temp_lockfile_path)
+    
+    if not env_creation_success:
+        print(f"Failed to create conda environment for commit {commit.hexsha}")
+        return handle_fallback(default_curr_env)
+    
+    # Install TARDIS in the newly created environment
+    if not install_tardis_in_env(env_name, tardis_path, conda_manager):
+        print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
+        return handle_fallback(default_curr_env)
+    
+    return True, env_name
+
+
+def handle_fallback(default_curr_env):
+    if default_curr_env:
+        print(f"Falling back to provided default environment: {default_curr_env}")
+        return True, default_curr_env
+    else:
+        print("No default environment provided, skipping commit")
+        return False, None
+
+
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", conda_manager="conda", default_curr_env=None, force_recreate=False):
     """
     Run pytest across multiple TARDIS commits.
 
@@ -238,8 +279,6 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         Number of recent commits to test, by default 10.
     test_path : str, optional
         Path to test file, by default "tardis/spectrum/tests/test_spectrum_solver.py".
-    use_conda : bool, optional
-        Whether to use conda environments, by default False.
     conda_manager : str, optional
         Conda manager to use ('conda' or 'mamba'), by default "conda".
     default_curr_env : str, optional
@@ -288,50 +327,10 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
     for i, commit in enumerate(commits, 1):
         print(f"Processing commit {i}/{n}: {commit.hexsha}")
 
-        env_name = None
-        temp_lockfile_path = None
-        if use_conda:
-            # Create unique environment for this commit
-            env_name = f"tardis-test-{commit.hexsha[:8]}"
-            print(f"Creating conda environment: {env_name}")
-
-            # Get the lockfile for this specific commit
-            temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
-
-            if temp_lockfile_path is None:
-                print(f"Could not get lockfile for commit {commit.hexsha}")
-                if default_curr_env:
-                    print(f"Falling back to provided default environment: {default_curr_env}")
-                    env_name = default_curr_env
-                else:
-                    print("No default environment provided, skipping commit")
-                    continue
-            else:
-                # Try to create the environment
-                env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
-
-                # Clean up temporary lockfile (regardless of success/failure)
-                if temp_lockfile_path and temp_lockfile_path != str(tardis_path / "conda-linux-64.lock"):
-                    os.unlink(temp_lockfile_path)
-
-                if not env_creation_success:
-                    print(f"Failed to create conda environment for commit {commit.hexsha}")
-                    if default_curr_env:
-                        print(f"Falling back to provided default environment: {default_curr_env}")
-                        env_name = default_curr_env
-                    else:
-                        print("No default environment provided, skipping commit")
-                        continue
-                else:
-                    # Install TARDIS in the newly created environment
-                    if not install_tardis_in_env(env_name, tardis_path, conda_manager):
-                        print(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-                        if default_curr_env:
-                            print(f"Falling back to provided default environment: {default_curr_env}")
-                            env_name = default_curr_env
-                        else:
-                            print("No default environment provided, skipping commit")
-                            continue
+        success, env_name = setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate)
+        
+        if not success:
+            continue
 
         # Now checkout the commit for running tests (after environment creation)
         tardis_repo.git.checkout(commit.hexsha)
@@ -340,11 +339,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
 
         # Run "not continuum" tests
         print(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
-        result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, env_name, conda_manager)
 
         # Run "continuum" tests
         print(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
-        result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, use_conda, env_name, conda_manager)
+        result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, env_name, conda_manager)
 
         # Check if either phase had failures but still generated data
         if result1.returncode != 0:
