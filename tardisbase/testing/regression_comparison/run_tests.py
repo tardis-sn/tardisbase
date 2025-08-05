@@ -257,7 +257,7 @@ def handle_fallback(default_curr_env):
         return False, None
 
 
-def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", conda_manager="conda", default_curr_env=None, force_recreate=False):
+def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", conda_manager="conda", default_curr_env=None, force_recreate=False, use_new_envs=True):
     """
     Run pytest across multiple TARDIS commits.
 
@@ -282,6 +282,9 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         Default environment to fall back to, by default None.
     force_recreate : bool, optional
         Whether to force recreate conda environments, by default False.
+    use_new_envs : bool, optional
+        Whether to use new environments for each commit, by default True.
+
 
     Returns
     -------
@@ -317,10 +320,16 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
     for i, commit in enumerate(commits, 1):
         logger.info(f"Processing commit {i}/{n}: {commit.hexsha}")
 
-        success, env_name = setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate)
-        
-        if not success:
-            continue
+        if use_new_envs:
+            success, env_name = setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate)
+            
+            if not success:
+                continue
+        else:
+            success, env_name = handle_fallback(default_curr_env)
+            
+            if not success:
+                continue
 
         # Now checkout the commit for running tests (after environment creation)
         tardis_repo.git.checkout(commit.hexsha)
