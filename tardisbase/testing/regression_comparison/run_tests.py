@@ -95,7 +95,7 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         logger.warning(f"Could not get lockfile for commit {commit_hash}: {e}")
         return None
 
-def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, tardis_path, env_name, conda_manager):
+def run_pytest_with_marker(marker_expr, test_path, regression_path, tardis_path, env_name, conda_manager):
     """
     Run pytest with specific marker expression.
 
@@ -103,8 +103,6 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     ----------
     marker_expr : str
         Pytest marker expression to filter tests.
-    phase_name : str
-        Descriptive name for the test phase.
     test_path : str
         Path to the test file or directory.
     regression_path : str or Path
@@ -137,7 +135,7 @@ def run_pytest_with_marker(marker_expr, phase_name, test_path, regression_path, 
     cmd = [conda_manager, "run", env_flag, env_name] + pytest_args
 
 
-    logger.info(f"Running {phase_name} tests: {' '.join(cmd)}")
+    logger.info(f"Running {marker_expr} tests: {' '.join(cmd)}")
     result = subprocess.run(
         cmd,
         check=False,  # Don't raise exception on non-zero exit code
@@ -336,25 +334,22 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         tardis_repo.git.reset('--hard')
         tardis_repo.git.clean('-fd')
 
-        # Run "not continuum" tests
-        logger.info(f"\n=== Phase 1: Running 'not continuum' tests for commit {commit.hexsha} ===")
-        result1 = run_pytest_with_marker("not continuum", "Not continuum", test_path, regression_path, tardis_path, env_name, conda_manager)
+        # Define test phases
+        test_phases = [
+            ("not continuum", "Phase 1"),
+            ("continuum", "Phase 2")
+        ]
 
-        # Run "continuum" tests
-        logger.info(f"\n=== Phase 2: Running 'continuum' tests for commit {commit.hexsha} ===")
-        result2 = run_pytest_with_marker("continuum", "Continuum", test_path, regression_path, tardis_path, env_name, conda_manager)
-
-        # Check if either phase had failures but still generated data
-        if result1.returncode != 0:
-            logger.warning(f"Warning: 'not continuum' tests had failures for commit {commit.hexsha}")
-            logger.info("Stdout:", result1.stdout)
-            logger.error("Stderr:", result1.stderr)
-
-        if result2.returncode != 0:
-            logger.warning(f"Warning: 'continuum' tests had failures for commit {commit.hexsha}")
-            logger.info("Stdout:", result2.stdout)
-            logger.error("Stderr:", result2.stderr)
-
+        results = []
+        for marker, phase_name in test_phases:
+            logger.info(f"\n=== {phase_name}: Running '{marker}' tests for commit {commit.hexsha} ===")
+            result = run_pytest_with_marker(marker, phase_name, test_path, regression_path, tardis_path, env_name, conda_manager)
+            results.append(result)
+            
+            if result.returncode != 0:
+                logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
+                logger.info("Stdout:", result.stdout)
+                logger.error("Stderr:", result.stderr)
 
 
         # Even if tests failed, if regression data was generated, commit it
@@ -363,7 +358,8 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         regression_commits.append(regression_commit.hexsha)
         processed_commits.append(commit.hexsha)
 
-        if result1.returncode == 0 and result2.returncode == 0:
+        # Check overall success
+        if all(result.returncode == 0 for result in results):
             logger.info(f"All tests passed for commit {commit.hexsha}")
         else:
             logger.warning(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
