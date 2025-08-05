@@ -270,7 +270,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
     branch : str
         Branch name to iterate commits from.
 
-    commits_input : str, list, or int, optional
+    commits_input : str, list, or optional
         Specific commits to test or number of commits, by default None.
     n : int, optional
         Number of recent commits to test, by default 10.
@@ -301,19 +301,12 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
     if commits_input:
         if isinstance(commits_input, str):
             commits_input = [commits_input]
-        elif isinstance(commits_input, int):
-            n = commits_input  
-            commits_input = None
-
-        if commits_input:
-            n = len(commits_input)
-            commits = []
-            for commit_hash in commits_input:
-                commit = tardis_repo.commit(commit_hash)
-                commits.append(commit)
-        else:
-            commits = list(tardis_repo.iter_commits(branch, max_count=n))
-            commits.reverse()
+        
+        n = len(commits_input)
+        commits = []
+        for commit_hash in commits_input:
+            commit = tardis_repo.commit(commit_hash)
+            commits.append(commit)
     else:
         commits = list(tardis_repo.iter_commits(branch, max_count=n))
         commits.reverse()
@@ -343,7 +336,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         results = []
         for marker, phase_name in test_phases:
             logger.info(f"\n=== {phase_name}: Running '{marker}' tests for commit {commit.hexsha} ===")
-            result = run_pytest_with_marker(marker, phase_name, test_path, regression_path, tardis_path, env_name, conda_manager)
+            result = run_pytest_with_marker(marker, test_path, regression_path, tardis_path, env_name, conda_manager)
             results.append(result)
             
             if result.returncode != 0:
@@ -354,6 +347,10 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
 
         # Even if tests failed, if regression data was generated, commit it
         regression_repo.git.add(A=True)
+        # Check if anything was actually staged
+        if not regression_repo.git.diff('--cached', '--name-only').strip():
+            raise Exception("No data to add - git add was empty for commit {commit.hexsha}")
+
         regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
         regression_commits.append(regression_commit.hexsha)
         processed_commits.append(commit.hexsha)
