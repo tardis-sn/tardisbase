@@ -31,8 +31,13 @@ class MultiCommitCompare:
         File extensions to filter by (e.g., ('.h5', '.hdf5')).
         If None, analyzes all files.
     compare_function : str, optional
-        Comparison method to use. Options: 'git_diff', 'cmd_diff'.
-        Default is 'git_diff'.
+        Comparison method to use. Default is 'git_diff'.
+
+        Options:
+        - 'git_diff': Uses git's built-in diff functionality to compare files
+          directly within the repository. Fast and efficient for text files.
+        - 'cmd_diff': Extracts files to temporary locations and uses the
+          system's diff command.
     """
 
     def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None, compare_function="git_diff"):
@@ -42,11 +47,11 @@ class MultiCommitCompare:
         self.tardis_repo_path = Path(tardis_repo_path) if tardis_repo_path else None
         self.file_extensions = file_extensions
         self.compare_function = compare_function
+        self.available_functions = ["git_diff", "cmd_diff"]
 
         # Validate compare_function
-        available_functions = ["git_diff", "cmd_diff"]
-        if self.compare_function not in available_functions:
-            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {available_functions}")
+        if self.compare_function not in self.available_functions:
+            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {self.available_functions}")
 
         self.repo = Repo(self.regression_repo_path)
         self.tardis_repo = None
@@ -186,8 +191,7 @@ class MultiCommitCompare:
             return self.cmd_diff_compare(file_path, older_commit, newer_commit)
         else:
             # This should not happen due to validation in __init__, but just in case
-            available_functions = ["git_diff", "cmd_diff"]
-            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {available_functions}")
+            raise ValueError(f"Invalid compare_function '{self.compare_function}'. Available options: {self.available_functions}")
 
 
     def get_changes_with_git(self, older_commit, newer_commit):
@@ -303,8 +307,8 @@ class MultiCommitCompare:
 
             commit_data.append({
                 'Commit #': i + 1,
-                'Regression Hash': commit_hash[:8],
-                'Description': description,
+                'Regression Hash (first 6 chars)': commit_hash[:6],
+                'Description (first 60 chars)': description,
                 'Date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M')
             })
 
