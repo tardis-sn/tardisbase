@@ -341,15 +341,15 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
             
             if result.returncode != 0:
                 logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
-                logger.info("Stdout:", result.stdout)
-                logger.error("Stderr:", result.stderr)
+                logger.info(f"Stdout: {result.stdout}")
+                logger.error(f"Stderr: {result.stderr}")
 
 
         # Even if tests failed, if regression data was generated, commit it
         regression_repo.git.add(A=True)
         # Check if anything was actually staged
         if not regression_repo.git.diff('--cached', '--name-only').strip():
-            raise Exception("No data to add - git add was empty for commit {commit.hexsha}")
+            raise Exception(f"No data to add - git add was empty for commit {commit.hexsha}")
 
         regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
         regression_commits.append(regression_commit.hexsha)
