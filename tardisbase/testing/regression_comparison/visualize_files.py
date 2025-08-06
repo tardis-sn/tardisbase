@@ -35,7 +35,7 @@ class MultiCommitCompare:
 
         Options:
         - 'git_diff': Uses git's built-in diff functionality to compare files
-          directly within the repository. Fast and efficient for text files.
+          directly within the repository.
         - 'cmd_diff': Extracts files to temporary locations and uses the
           system's diff command.
     """
