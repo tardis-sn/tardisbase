@@ -5153,7 +5153,7 @@
     "### Cleanup: Reset False Commits\n",
     "**Warning**: This resets history, proceed with caution.\n",
     "\n",
-    "If you want to clean up false commits generated after running pytest, use `git reset --hard upstream/master`.Here N is the number of false commits generated.\n"
+    "If you want to clean up false commits generated after running pytest, use `git reset --hard upstream/master`"
    ]
   }
  ],
