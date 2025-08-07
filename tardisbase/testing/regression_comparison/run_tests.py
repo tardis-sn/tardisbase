@@ -44,17 +44,16 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
                 env_exists = True
                 break
 
-    if env_exists:
-        if force_recreate:
-            logger.info(f"Environment {env_name} exists, removing it for recreation...")
-            remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
-            remove_result = subprocess.run(remove_cmd, capture_output=True, text=True)
-            if remove_result.returncode != 0:
-                logger.error(f"Error removing environment: {remove_result.stderr}")
-                return False
-        else:
-            logger.info(f"Environment {env_name} already exists, skipping creation.")
-            return True
+    if env_exists and force_recreate:
+        logger.info(f"Environment {env_name} exists, removing it for recreation...")
+        remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
+        remove_result = subprocess.run(remove_cmd, capture_output=True, text=True)
+        if remove_result.returncode != 0:
+            logger.error(f"Error removing environment: {remove_result.stderr}")
+            return False
+    elif env_exists:
+        logger.info(f"Environment {env_name} already exists, skipping creation.")
+        return True
 
     # Environment doesn't exist (or was removed), create it
     cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
