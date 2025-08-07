@@ -35,6 +35,7 @@ extensions = [
     "sphinx_automodapi.automodapi",
     "sphinx_automodapi.smart_resolver",
     "sphinxcontrib.apidoc",
+    "nbsphinx",
 ]
 
 # Add any paths that contain templates here, relative to this directory.
