@@ -300,14 +300,15 @@ class MultiCommitCompare:
             # Use TARDIS commit message if available, otherwise use regression commit message
             if self.tardis_commits and i < len(self.tardis_commits) and self.tardis_repo:
                 tardis_commit = self.tardis_repo.commit(self.tardis_commits[i])
+                # Print only the first 60 characters of the commit message for description
                 description = f"Regression data for --{tardis_commit.message.strip().split('\n')[0][:60]}"
             else:
                 description = f"{commit.message.strip().split('\n')[0][:60]}"
 
             commit_data.append({
                 'Commit #': i + 1,
-                'Regression Hash (first 6 chars)': commit_hash[:6],
-                'Description (first 60 chars)': description,
+                'Regression Hash (first 6 chars)': commit_hash[:6], # Store only the first 6 characters of the commit hash
+                'Description (first 60 chars)': description, # Store only the first 60 characters of the commit message
                 'Date': commit.committed_datetime.strftime('%Y-%m-%d %H:%M')
             })
 
@@ -330,6 +331,7 @@ class MultiCommitCompare:
 
         print(f"Analyzing {len(self.commits)} commits ({len(self.commits)-1} transitions)...")
 
+        # Create transition column names by pairing consecutive commits, shortening each hash to first 6 characters (e.g., "abc123-def456")
         self.transition_columns = [f"{self.commits[i][:6]}-{self.commits[i-1][:6]}"
                                   for i in range(1, len(self.commits))]
 
