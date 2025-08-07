@@ -85,9 +85,8 @@ class MultiCommitCompare:
         tree_output = self.repo.git.execute(['git', 'ls-tree', '-r', '--name-only', commit_hash])
         for filepath in tree_output.split('\n'):
             filepath = filepath.strip()
-            if filepath:
-                if file_extensions is None or filepath.endswith(file_extensions):
-                    files.add(filepath)
+            if filepath and (file_extensions is None or filepath.endswith(file_extensions)):
+                files.add(filepath)
 
         return files
 
