@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tardisbase.testing.regression_comparison.util module &#8212; tardisbase 0.1.dev1+ga639b0e.d20250811 documentation</title>
+    <title>tardisbase.testing.regression_comparison.util module &#8212; tardisbase 0.1.dev1+g526ac3f.d20250811 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
-    <script src="../_static/documentation_options.js?v=fc2e8cad"></script>
+    <script src="../_static/documentation_options.js?v=610e4d1a"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -44,8 +44,90 @@
 
           <div class="body" role="main">
             
-  <section id="tardisbase-testing-regression-comparison-util-module">
-<h1>tardisbase.testing.regression_comparison.util module<a class="headerlink" href="#tardisbase-testing-regression-comparison-util-module" title="Link to this heading">¶</a></h1>
+  <section id="module-tardisbase.testing.regression_comparison.util">
+<span id="tardisbase-testing-regression-comparison-util-module"></span><h1>tardisbase.testing.regression_comparison.util module<a class="headerlink" href="#module-tardisbase.testing.regression_comparison.util" title="Link to this heading">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.util.color_print">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.util.</span></span><span class="sig-name descname"><span class="pre">color_print</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">color</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/util.html#color_print"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.util.color_print" title="Link to this definition">¶</a></dt>
+<dd><p>Print text to the console with ANSI color formatting.</p>
+<p>This function provides colored console output using ANSI escape codes,
+making it easier to distinguish different types of messages in terminal output.
+The text is automatically reset to default color after printing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>text</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The text string to be printed with color formatting.</p></li>
+<li><p><strong>color</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a>) – The color name for the text. Supported colors are:
+‘red’, ‘green’, ‘yellow’, ‘blue’. If an unsupported color
+is provided, the text will be printed without color formatting.</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The function uses ANSI escape codes for coloring:
+- Red: 033[91m
+- Green: 033[92m
+- Yellow: 033[93m
+- Blue: 033[94m
+- Reset: 033[0m</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.util.get_last_n_commits">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.util.</span></span><span class="sig-name descname"><span class="pre">get_last_n_commits</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">repo_path</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/util.html#get_last_n_commits"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.util.get_last_n_commits" title="Link to this definition">¶</a></dt>
+<dd><p>Get the last n commits from a git repository using GitPython.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>n</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.13)"><em>int</em></a><em>, </em><em>optional</em>) – Number of commits to retrieve, by default 2</p></li>
+<li><p><strong>repo_path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> or </em><em>Path</em><em>, </em><em>optional</em>) – Path to the repository. If None, uses CONFIG[“regression_data_repo”]</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>List of commit hashes (strings)</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.13)">list</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If repository not found or git operations fail</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="tardisbase.testing.regression_comparison.util.get_relative_path">
+<span class="sig-prename descclassname"><span class="pre">tardisbase.testing.regression_comparison.util.</span></span><span class="sig-name descname"><span class="pre">get_relative_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">path</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">base</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_comparison/util.html#get_relative_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_comparison.util.get_relative_path" title="Link to this definition">¶</a></dt>
+<dd><p>Calculate the relative path from a base directory to a target path.</p>
+<p>This function computes the relative path representation of a target path
+with respect to a base directory, returning the result as a string.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>path</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> or </em><em>Path</em>) – The target path for which to calculate the relative path.
+Can be either an absolute or relative path.</p></li>
+<li><p><strong>base</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)"><em>str</em></a><em> or </em><em>Path</em>) – The base directory from which to calculate the relative path.
+Should typically be an absolute path for consistent results.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The relative path from base to path as a string.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.13)">str</a></p>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#ValueError" title="(in Python v3.13)"><strong>ValueError</strong></a> – If the path is not relative to the base directory (i.e., they don’t
+    share a common root or the path is outside the base directory tree).</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>This function uses pathlib.Path.relative_to() internally, which requires
+that the target path be within the base directory hierarchy. If the paths
+are on different drives (Windows) or don’t share a common ancestor,
+a ValueError will be raised.</p>
+</dd></dl>
+
 </section>
 
 
