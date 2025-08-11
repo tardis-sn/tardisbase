@@ -1,6 +1,5 @@
 import pandas as pd
 from pathlib import Path
-from git import Repo
 import subprocess
 import tempfile
 import shutil
@@ -41,6 +40,11 @@ class MultiCommitCompare:
     """
 
     def __init__(self, regression_repo_path, commits, tardis_commits=None, tardis_repo_path=None, file_extensions=None, compare_function="git_diff"):
+        try:
+            from git import Repo
+        except ImportError:
+            raise ImportError("GitPython is required. Install with: pip install gitpython")
+        
         self.regression_repo_path = Path(regression_repo_path)
         self.commits = commits
         self.tardis_commits = tardis_commits

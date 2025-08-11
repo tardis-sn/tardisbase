@@ -1,10 +1,8 @@
 from pathlib import Path
 import logging
-from git import Repo
 from tardisbase.testing.regression_comparison import CONFIG
 
 logger = logging.getLogger(__name__)
-
 
 def color_print(text, color):
     """
@@ -100,6 +98,11 @@ def get_last_n_commits(n=2, repo_path=None):
     ValueError
         If repository not found or git operations fail
     """
+    try:
+        from git import Repo
+    except ImportError:
+        raise ImportError("GitPython is required. Install with: pip install gitpython")
+    
     if repo_path is None:
         repo_path = CONFIG["regression_data_repo"]
 

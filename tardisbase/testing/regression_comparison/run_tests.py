@@ -3,8 +3,6 @@ import tempfile
 import os
 import logging
 from pathlib import Path
-from git import Repo
-from git.exc import GitCommandError
 import tomllib
 
 logger = logging.getLogger(__name__)
@@ -116,6 +114,11 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
     str or None
         Path to temporary lockfile, or None if lockfile not found.
     """
+    try:
+        from git.exc import GitCommandError
+    except ImportError:
+        raise ImportError("GitPython is required. Install with: pip install gitpython")
+    
     try:
         # Use git show to get the lockfile content without checking out
         result = tardis_repo.git.show(f"{commit_hash}:conda-linux-64.lock")
@@ -323,6 +326,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
         (processed_commits, regression_commits, original_head)
         Lists of commit hashes and original head commit.
     """
+    try:
+        from git import Repo
+    except ImportError:
+        raise ImportError("GitPython is required. Install with: pip install gitpython")
+    
     tardis_path = Path(tardis_repo_path)
     regression_path = Path(regression_data_repo_path)
 
