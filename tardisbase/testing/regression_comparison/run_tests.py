@@ -69,8 +69,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         error_message="Error checking environments"
     )
     
-    if not success:
-        return False
+    return success
 
     env_exists = False
     env_lines = result.stdout.split('\n')
