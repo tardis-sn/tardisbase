@@ -12,6 +12,7 @@ Submodules
    tardisbase.testing.regression_comparison.file_manager
    tardisbase.testing.regression_comparison.util
    tardisbase.testing.regression_comparison.visualization
+   tardisbase.testing.regression_comparison.visualize_files
 
 Module contents
 ---------------

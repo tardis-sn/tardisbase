@@ -7,14 +7,15 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tardisbase Documentation &#8212; tardisbase 0.1.dev1+g7094f4bbc.d20250812 documentation</title>
+    <title>tardisbase Documentation &#8212; tardisbase 0.1.dev1+gfd5cd812b.d20250812 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="_static/graphviz.css?v=4ae1632d" />
-    <script src="_static/documentation_options.js?v=1b6d67be"></script>
+    <script src="_static/documentation_options.js?v=724072d2"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Installation" href="installation.html" />
@@ -54,6 +55,22 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#environment-update">Environment update</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="compare_commits.html">Visualizing File Changes Across Commits</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Method-1:-Run-pytest-on-tardis-commits-and-generate-regression-commits-(False-commits)">Method 1: Run pytest on tardis commits and generate regression commits (False commits)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Method-2:-Directly-use-tardis-regression-data-repo-commits">Method 2: Directly use tardis-regression-data repo commits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Note:">Note:</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Case-1:-Test-latest-N-TARDIS-commits">Case 1: Test latest N TARDIS commits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Case-2:-Test-specific-TARDIS-commits">Case 2: Test specific TARDIS commits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#A.-Manual-Commit-Selection">A. Manual Commit Selection</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#B.-Automatically-fetch-the-most-recent-N-commits-from-regression-data-repository">B. Automatically fetch the most recent N commits from regression data repository</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Analyze-the-commits">Analyze the commits</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Display-the-file-change-matrix">Display the file change matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#This-displays-the-description-of-commits-which-are-used-to-analyze-differences.">This displays the description of commits which are used to analyze differences.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Display-legend">Display legend</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#The-matrix-below-shows-file-changes-across-commit-transitions.">The matrix below shows file changes across commit transitions.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="compare_commits.html#Cleanup:-Reset-False-Commits">Cleanup: Reset False Commits</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API</a><ul>
@@ -101,6 +118,7 @@
 <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="compare_commits.html">Visualizing File Changes Across Commits</a></li>
 <li class="toctree-l1"><a class="reference internal" href="api/modules.html">API</a></li>
 </ul>
 
