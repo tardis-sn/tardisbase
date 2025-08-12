@@ -25,7 +25,8 @@ open_astronomy_package_template_example = "tardisbase.example_mod:main"
 test = [
     "pytest",
     "pytest-doctestplus",
-    "pytest-cov"
+    "pytest-cov",
+    "gitpython"
 ]
 docs = [
     "sphinx",
