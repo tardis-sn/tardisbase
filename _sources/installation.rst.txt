@@ -20,7 +20,11 @@ We strongly recommend installing `tardisbase` using this method by following the
 
        wget -q https://github.com/tardis-sn/tardisbase/master/conda-{platform}-64.lock
 
-   Replace ``{platform}`` with ``linux-64`` or ``osx-arm64`` based on your operating system.
+   Replace ``{platform}`` with ``linux-64``, ``osx-arm64``, or ``osx-64`` (Mac Intel CPU) based on your operating system and CPU architecture.
+
+   .. warning::
+            Use the ``conda-osx-64.lock`` at your own risk. This lockfile is not tested, so we recommend :ref:`running the tests <running-tests>` before using any of the TARDIS ecosystem packages with this environment. 
+
 
 2. Create the environment:
 
