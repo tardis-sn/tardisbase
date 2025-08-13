@@ -1,0 +1,193 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>tardisbase.testing package &#8212; tardisbase 0.1.dev1+g00966bf.d20250813 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
+    <script src="../_static/documentation_options.js?v=7ba3c951"></script>
+    <script src="../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="tardisbase.testing.regression_comparison package" href="tardisbase.testing.regression_comparison.html" />
+    <link rel="prev" title="tardisbase package" href="tardisbase.html" />
+    <link href="../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="tardisbase-testing-package">
+<h1>tardisbase.testing package<a class="headerlink" href="#tardisbase-testing-package" title="Link to this heading">¶</a></h1>
+<section id="subpackages">
+<h2>Subpackages<a class="headerlink" href="#subpackages" title="Link to this heading">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="tardisbase.testing.regression_comparison.html">tardisbase.testing.regression_comparison package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tardisbase.testing.regression_comparison.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.analyzers.html">tardisbase.testing.regression_comparison.analyzers module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.analyzers.html#tardisbase.testing.regression_comparison.analyzers.DiffAnalyzer"><code class="docutils literal notranslate"><span class="pre">DiffAnalyzer</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.analyzers.html#tardisbase.testing.regression_comparison.analyzers.HDFComparator"><code class="docutils literal notranslate"><span class="pre">HDFComparator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.compare.html">tardisbase.testing.regression_comparison.compare module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.compare.html#tardisbase.testing.regression_comparison.compare.ReferenceComparer"><code class="docutils literal notranslate"><span class="pre">ReferenceComparer</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.file_manager.html">tardisbase.testing.regression_comparison.file_manager module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.file_manager.html#tardisbase.testing.regression_comparison.file_manager.FileManager"><code class="docutils literal notranslate"><span class="pre">FileManager</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.file_manager.html#tardisbase.testing.regression_comparison.file_manager.FileSetup"><code class="docutils literal notranslate"><span class="pre">FileSetup</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.util.html">tardisbase.testing.regression_comparison.util module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.color_print"><code class="docutils literal notranslate"><span class="pre">color_print()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.get_last_n_commits"><code class="docutils literal notranslate"><span class="pre">get_last_n_commits()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.util.html#tardisbase.testing.regression_comparison.util.get_relative_path"><code class="docutils literal notranslate"><span class="pre">get_relative_path()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.visualization.html">tardisbase.testing.regression_comparison.visualization module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.visualization.html#tardisbase.testing.regression_comparison.visualization.SpectrumSolverComparator"><code class="docutils literal notranslate"><span class="pre">SpectrumSolverComparator</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_comparison.visualize_files.html">tardisbase.testing.regression_comparison.visualize_files module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_comparison.visualize_files.html#tardisbase.testing.regression_comparison.visualize_files.MultiCommitCompare"><code class="docutils literal notranslate"><span class="pre">MultiCommitCompare</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tardisbase.testing.regression_comparison.html#module-tardisbase.testing.regression_comparison">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tardisbase.testing.regression_data.html">tardisbase.testing.regression_data package</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tardisbase.testing.regression_data.html#submodules">Submodules</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_data.hdfwriter.html">tardisbase.testing.regression_data.hdfwriter module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.hdfwriter.html#tardisbase.testing.regression_data.hdfwriter.HDFWriterMixin"><code class="docutils literal notranslate"><span class="pre">HDFWriterMixin</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html">tardisbase.testing.regression_data.regression_data module</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.PlotDataHDF"><code class="docutils literal notranslate"><span class="pre">PlotDataHDF</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.PytestWritingPlugin"><code class="docutils literal notranslate"><span class="pre">PytestWritingPlugin</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.RegressionData"><code class="docutils literal notranslate"><span class="pre">RegressionData</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.TestWrite"><code class="docutils literal notranslate"><span class="pre">TestWrite</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.regression_data"><code class="docutils literal notranslate"><span class="pre">regression_data()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="tardisbase.testing.regression_data.regression_data.html#tardisbase.testing.regression_data.regression_data.write_status"><code class="docutils literal notranslate"><span class="pre">write_status()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="tardisbase.testing.regression_data.html#module-tardisbase.testing.regression_data">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</div>
+</section>
+<section id="module-tardisbase.testing">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-tardisbase.testing" title="Link to this heading">¶</a></h2>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../compare_commits.html">Visualizing File Changes Across Commits</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="modules.html">API</a><ul class="current">
+<li class="toctree-l2 current"><a class="reference internal" href="tardisbase.html">tardisbase package</a></li>
+</ul>
+</li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="modules.html">tardisbase</a><ul>
+  <li><a href="tardisbase.html">tardisbase package</a><ul>
+      <li>Previous: <a href="tardisbase.html" title="previous chapter">tardisbase package</a></li>
+      <li>Next: <a href="tardisbase.testing.regression_comparison.html" title="next chapter">tardisbase.testing.regression_comparison package</a></li>
+  </ul></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2025, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../_sources/api/tardisbase.testing.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
