@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tardisbase.testing.regression_data.regression_data module &#8212; tardisbase 0.1.dev1+ga9b7614.d20250813 documentation</title>
+    <title>tardisbase.testing.regression_data.regression_data module &#8212; tardisbase 0.1.dev1+g4f7962d.d20250813 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
-    <script src="../_static/documentation_options.js?v=90d33265"></script>
+    <script src="../_static/documentation_options.js?v=8f2878ba"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -111,9 +111,8 @@ than failed.</p>
 </ul>
 </dd>
 <dt class="field-even">Returns<span class="colon">:</span></dt>
-<dd class="field-even"><p>Returns a custom TestReport with outcome “passed” if a TestWrite
-exception was raised or if any failure occurs while generating reference
-data, otherwise returns None to allow default report generation.</p>
+<dd class="field-even"><p>Returns a custom TestReport with outcome “written” if a TestWrite
+exception was raised, otherwise returns None to allow default report generation.</p>
 </dd>
 <dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>TestReport or None</p>
@@ -140,8 +139,7 @@ than a test failure.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="tardisbase.testing.regression_data.regression_data.RegressionData.finalize_write_status">
 <span class="sig-name descname"><span class="pre">finalize_write_status</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_data/regression_data.html#RegressionData.finalize_write_status"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_data.regression_data.RegressionData.finalize_write_status" title="Link to this definition">¶</a></dt>
-<dd><p>Finalize the write status by raising TestWrite if any data was written.
-This should be called at the end of the test to trigger the pytest plugin.</p>
+<dd><p>If called, the test will report a W in addition to its normal result if any data was written.</p>
 </dd></dl>
 
 <dl class="py property">
