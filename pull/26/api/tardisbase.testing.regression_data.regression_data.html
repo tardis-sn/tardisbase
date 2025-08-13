@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tardisbase.testing.regression_data.regression_data module &#8212; tardisbase 0.1.dev1+g05b095a.d20250813 documentation</title>
+    <title>tardisbase.testing.regression_data.regression_data module &#8212; tardisbase 0.1.dev1+ga9b7614.d20250813 documentation</title>
     <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../_static/graphviz.css?v=4ae1632d" />
-    <script src="../_static/documentation_options.js?v=a98f66bd"></script>
+    <script src="../_static/documentation_options.js?v=90d33265"></script>
     <script src="../_static/doctools.js?v=9bcbadda"></script>
     <script src="../_static/sphinx_highlight.js?v=dc90522c"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -101,8 +101,8 @@ written reference data rather than just passing or failing.</p>
 <span class="sig-name descname"><span class="pre">pytest_runtest_makereport</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">item</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">call</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/tardisbase/testing/regression_data/regression_data.html#PytestWritingPlugin.pytest_runtest_makereport"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#tardisbase.testing.regression_data.regression_data.PytestWritingPlugin.pytest_runtest_makereport" title="Link to this definition">¶</a></dt>
 <dd><p>Custom pytest hook to handle test report generation for regression data writing.</p>
 <p>This hook intercepts test execution and creates a custom test report when
-a TestWrite exception is encountered or when any test failure occurs during
-reference data generation, marking the test as “written” rather than failed.</p>
+a TestWrite exception is encountered, marking the test as “written” rather
+than failed.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
@@ -122,8 +122,8 @@ data, otherwise returns None to allow default report generation.</p>
 <p class="rubric">Notes</p>
 <p>This hook is specifically designed for regression testing workflows where
 tests may write reference data instead of comparing against it. When a
-TestWrite exception is raised or when generating reference data, it indicates
-successful data writing rather than a test failure.</p>
+TestWrite exception is raised, it indicates successful data writing rather
+than a test failure.</p>
 </dd></dl>
 
 </dd></dl>
