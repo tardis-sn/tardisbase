@@ -98,8 +98,7 @@ class RegressionData:
             except TestWrite as e:
                 # Print the message but continue execution
                 print(str(e))
-        else:
-            return pd.read_hdf(self.fpath, key=key)
+        return pd.read_hdf(self.fpath, key=key)
 
     def sync_ndarray(self, data):
         """
@@ -125,8 +124,7 @@ class RegressionData:
             except TestWrite as e:
                 # Print the message but continue execution
                 print(str(e))
-        else:
-            return np.load(self.fpath)
+        return np.load(self.fpath)
 
     def sync_str(self, data):
         """
@@ -153,9 +151,8 @@ class RegressionData:
             except TestWrite as e:
                 # Print the message but continue execution
                 print(str(e))
-        else:
-            with self.fpath.open("r") as fh:
-                return fh.read()
+        with self.fpath.open("r") as fh:
+            return fh.read()
 
     def sync_hdf_store(self, tardis_module, update_fname=True):
         """
@@ -185,11 +182,11 @@ class RegressionData:
             except TestWrite as e:
                 # Print the message but continue execution
                 print(str(e))
-        else:
-            # since each test function has its own regression data instance
-            # each test function will only have one HDFStore object
-            self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
-            return self.hdf_store_object
+
+        # since each test function has its own regression data instance
+        # each test function will only have one HDFStore object
+        self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
+        return self.hdf_store_object
 
 
 @pytest.fixture(scope="function")
@@ -239,8 +236,8 @@ class PytestWritingPlugin:
         Custom pytest hook to handle test report generation for regression data writing.
 
         This hook intercepts test execution and creates a custom test report when
-        a TestWrite exception is encountered or when any test failure occurs during
-        reference data generation, marking the test as "written" rather than failed.
+        a TestWrite exception is encountered, marking the test as "written" rather
+        than failed.
 
         Parameters
         ----------
@@ -260,8 +257,8 @@ class PytestWritingPlugin:
         -----
         This hook is specifically designed for regression testing workflows where
         tests may write reference data instead of comparing against it. When a
-        TestWrite exception is raised or when generating reference data, it indicates
-        successful data writing rather than a test failure.
+        TestWrite exception is raised, it indicates successful data writing rather
+        than a test failure.
         """
         # Check if we're generating reference data
         generate_reference = item.config.getoption(
@@ -275,30 +272,12 @@ class PytestWritingPlugin:
                 nodeid=item.nodeid,
                 location=item.location,
                 keywords=item.keywords,
-                outcome="passed",
+                outcome="written",
                 longrepr=None,
                 when=call.when,
                 sections=[],
             )
-            # Use setattr to add custom attribute
-            setattr(rep, "written", True)
-            return rep
-
-        # If we're generating reference data and there's any failure, treat it as "written"
-        elif generate_reference and call.excinfo and call.when == "call":
-            from _pytest.reports import TestReport
-
-            rep = TestReport(
-                nodeid=item.nodeid,
-                location=item.location,
-                keywords=item.keywords,
-                outcome="passed",
-                longrepr=None,
-                when=call.when,
-                sections=[],
-            )
-            # Use setattr to add custom attribute
-            setattr(rep, "written", True)
+            rep.written = True
             return rep
 
     def pytest_report_teststatus(self, report, config):
