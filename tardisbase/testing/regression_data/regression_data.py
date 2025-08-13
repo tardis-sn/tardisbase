@@ -249,8 +249,7 @@ class PytestWritingPlugin:
         -------
         TestReport or None
             Returns a custom TestReport with outcome "passed" if a TestWrite
-            exception was raised or if any failure occurs while generating reference
-            data, otherwise returns None to allow default report generation.
+            exception was raised, otherwise returns None to allow default report generation.
 
         Notes
         -----
