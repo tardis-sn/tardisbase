@@ -248,7 +248,7 @@ class PytestWritingPlugin:
         Returns
         -------
         TestReport or None
-            Returns a custom TestReport with outcome "passed" if a TestWrite
+            Returns a custom TestReport with outcome "written" if a TestWrite
             exception was raised, otherwise returns None to allow default report generation.
 
         Notes
