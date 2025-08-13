@@ -63,8 +63,7 @@ class RegressionData:
 
     def finalize_write_status(self):
         """
-        Finalize the write status by raising TestWrite if any data was written.
-        This should be called at the end of the test to trigger the pytest plugin.
+        If called, the test will report a W in addition to its normal result if any data was written.
         """
         if self._has_written_data:
             write_status()
@@ -260,10 +259,6 @@ class PytestWritingPlugin:
         TestWrite exception is raised, it indicates successful data writing rather
         than a test failure.
         """
-        # Check if we're generating reference data
-        generate_reference = item.config.getoption(
-            "--generate-reference", default=False
-        )
 
         if call.excinfo and isinstance(call.excinfo.value, TestWrite):
             from _pytest.reports import TestReport
