@@ -5,7 +5,6 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
-from _pytest.outcomes import OutcomeException
 
 from tardisbase.testing.regression_data.hdfwriter import HDFWriterMixin
 
@@ -26,6 +25,7 @@ class RegressionData:
         )
         self.fname = f"{self.fname_prefix}.UNKNOWN_FORMAT"
         self.hdf_store_object = None
+        self._has_written_data = False
 
     @property
     def module_name(self):
@@ -61,6 +61,13 @@ class RegressionData:
     def fpath(self):
         return self.absolute_regression_data_dir / self.fname
 
+    def finalize_write_status(self):
+        """
+        If called, the test will report a W in addition to its normal result if any data was written.
+        """
+        if self._has_written_data:
+            write_status()
+
     def sync_dataframe(self, data, key="data"):
         """
         Synchronizes the dataframe with the regression data.
@@ -84,9 +91,13 @@ class RegressionData:
                 self.fpath,
                 key=key,
             )
-            write_status()
-        else:
-            return pd.read_hdf(self.fpath, key=key)
+            self._has_written_data = True
+            try:
+                write_status()
+            except TestWrite as e:
+                # Print the message but continue execution
+                print(str(e))
+        return pd.read_hdf(self.fpath, key=key)
 
     def sync_ndarray(self, data):
         """
@@ -106,9 +117,13 @@ class RegressionData:
         if self.enable_generate_reference:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             np.save(self.fpath, data)
-            write_status()
-        else:
-            return np.load(self.fpath)
+            self._has_written_data = True
+            try:
+                write_status()
+            except TestWrite as e:
+                # Print the message but continue execution
+                print(str(e))
+        return np.load(self.fpath)
 
     def sync_str(self, data):
         """
@@ -129,10 +144,14 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with self.fpath.open("w") as fh:
                 fh.write(data)
-            write_status()
-        else:
-            with self.fpath.open("r") as fh:
-                return fh.read()
+            self._has_written_data = True
+            try:
+                write_status()
+            except TestWrite as e:
+                # Print the message but continue execution
+                print(str(e))
+        with self.fpath.open("r") as fh:
+            return fh.read()
 
     def sync_hdf_store(self, tardis_module, update_fname=True):
         """
@@ -156,18 +175,25 @@ class RegressionData:
             self.fpath.parent.mkdir(parents=True, exist_ok=True)
             with pd.HDFStore(self.fpath, mode="w") as store:
                 tardis_module.to_hdf(store, overwrite=True)
-            write_status()
-        else:
-            # since each test function has its own regression data instance
-            # each test function will only have one HDFStore object
-            self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
-            return self.hdf_store_object
+            self._has_written_data = True
+            try:
+                write_status()
+            except TestWrite as e:
+                # Print the message but continue execution
+                print(str(e))
+
+        # since each test function has its own regression data instance
+        # each test function will only have one HDFStore object
+        self.hdf_store_object = pd.HDFStore(self.fpath, mode="r")
+        return self.hdf_store_object
 
 
 @pytest.fixture(scope="function")
 def regression_data(request):
     regression_data_instance = RegressionData(request)
     yield regression_data_instance
+    # Trigger TestWrite exception if any data was written to get "W" status
+    regression_data_instance.finalize_write_status()
     if (
         regression_data_instance.hdf_store_object is not None
         and regression_data_instance.hdf_store_object.is_open
@@ -195,12 +221,12 @@ class PlotDataHDF(HDFWriterMixin):
             self.hdf_properties.append(key)
 
 
-class TestWrite(OutcomeException):
+class TestWrite(Exception):
     pass
 
 
 def write_status():
-    raise TestWrite(msg="Writing regression data for test.")
+    raise TestWrite("Writing regression data for test.")
 
 
 class PytestWritingPlugin:
@@ -223,8 +249,7 @@ class PytestWritingPlugin:
         -------
         TestReport or None
             Returns a custom TestReport with outcome "written" if a TestWrite
-            exception was raised, otherwise returns None to allow default
-            report generation.
+            exception was raised, otherwise returns None to allow default report generation.
 
         Notes
         -----
@@ -233,6 +258,7 @@ class PytestWritingPlugin:
         TestWrite exception is raised, it indicates successful data writing rather
         than a test failure.
         """
+
         if call.excinfo and isinstance(call.excinfo.value, TestWrite):
             from _pytest.reports import TestReport
 
