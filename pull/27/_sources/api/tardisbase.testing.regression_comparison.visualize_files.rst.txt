@@ -1,0 +1,7 @@
+tardisbase.testing.regression\_comparison.visualize\_files module
+=================================================================
+
+.. automodule:: tardisbase.testing.regression_comparison.visualize_files
+   :members:
+   :show-inheritance:
+   :undoc-members:
