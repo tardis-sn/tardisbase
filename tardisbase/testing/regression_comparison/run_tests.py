@@ -1,4 +1,3 @@
-from enum import Enum
 import subprocess
 import tempfile
 import os
@@ -8,10 +7,6 @@ import tomllib
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
-
-class CommandResult(Enum):
-    SUCCESS = "success"
-    FAILED = "failed"
 
 def run_command_with_logging(cmd, success_message="", error_message="Command failed", **kwargs):
     """
@@ -31,7 +26,7 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
     Returns
     -------
     tuple
-        (result_status: CommandResult, process_result: subprocess.CompletedProcess)
+        (result_status: bool, process_result: subprocess.CompletedProcess)
     """
     if success_message:
         logger.info(success_message)
@@ -40,9 +35,9 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
     
     if result.returncode != 0:
         logger.error(f"{error_message}: {result.stderr}")
-        return CommandResult.FAILED, result
+        return False, result
     
-    return CommandResult.SUCCESS, result
+    return True, result
 
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     """
@@ -72,7 +67,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         error_message="Error checking environments"
     )
     
-    if status == CommandResult.FAILED:
+    if not status:
         return False
 
     env_exists = False
@@ -89,7 +84,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
             success_message=f"Environment {env_name} exists, removing it for recreation...",
             error_message="Error removing environment"
         )
-        if status == CommandResult.FAILED:
+        if not status:
             return False
     elif env_exists:
         logger.info(f"Environment {env_name} already exists, skipping creation.")
@@ -102,7 +97,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         success_message=f"Creating conda environment: {' '.join(cmd)}",
         error_message="Error creating environment"
     )
-    return status == CommandResult.SUCCESS
+    return status
 
 def get_lockfile_for_commit(tardis_repo, commit_hash):
     """
@@ -245,7 +240,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
             error_message="Error installing TARDIS with extras"
         )
         
-        if status == CommandResult.SUCCESS:
+        if status:
             return True
 
     # Fall back to installing just TARDIS
@@ -255,7 +250,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
         success_message=f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}",
         error_message="Error installing TARDIS (fallback)"
     )
-    return status == CommandResult.SUCCESS
+    return status
 
 def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate):
     """
