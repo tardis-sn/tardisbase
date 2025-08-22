@@ -33,11 +33,12 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
     
     result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
     
+    result_status = True
     if result.returncode != 0:
         logger.error(f"{error_message}: {result.stderr}")
-        return False, result
+        result_status = False
     
-    return True, result
+    return result_status, result
 
 def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recreate=False):
     """
@@ -59,45 +60,59 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
     bool
         True if environment creation succeeded, False otherwise.
     """
+    success = False
+    env_exists = False
+    create_env  = False
+
     # Check if environment already exists
     check_cmd = [conda_manager, "env", "list"]
-    status, result = run_command_with_logging(
+    environ_found, result = run_command_with_logging(
         check_cmd, 
         success_message=f"Checking if environment {env_name} exists...",
         error_message="Error checking environments"
     )
     
-    if not status:
-        return False
+    if environ_found:
+        # get environment name from conda env list
+        env_lines = result.stdout.split('\n')
+        for line in env_lines:
+            if line.strip().startswith(env_name + ' '):
+                env_exists = True
+                break
 
-    env_exists = False
-    env_lines = result.stdout.split('\n')
-    for line in env_lines:
-        if line.strip().startswith(env_name + ' '):
-            env_exists = True
-            break
-
-    if env_exists and force_recreate:
-        remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
-        status, _ = run_command_with_logging(
-            remove_cmd,
-            success_message=f"Environment {env_name} exists, removing it for recreation...",
-            error_message="Error removing environment"
+        # recreate environments if required
+        if env_exists and force_recreate:
+            remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
+            del_environ, _ = run_command_with_logging(
+                remove_cmd,
+                success_message=f"Environment {env_name} exists, removing it for recreation...",
+                error_message="Error removing environment"
+            )
+            if del_environ:
+                create_env = True
+                # Environment doesn't exist (or was removed), create it
+                # cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
+                # status, _ = run_command_with_logging(
+                #     cmd,
+                #     success_message=f"Creating conda environment: {' '.join(cmd)}",
+                #     error_message="Error creating environment"
+                # )
+                # success = status
+        elif env_exists: # force recreate not asked
+            logger.info(f"Environment {env_name} already exists, skipping creation.")
+            success = True
+    
+    if create_env and not environ_found:
+        # Environment doesn't exist, create it
+        cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
+        create_env_proc, _ = run_command_with_logging(
+            cmd,
+            success_message=f"Creating conda environment: {' '.join(cmd)}",
+            error_message="Error creating environment"
         )
-        if not status:
-            return False
-    elif env_exists:
-        logger.info(f"Environment {env_name} already exists, skipping creation.")
-        return True
-
-    # Environment doesn't exist (or was removed), create it
-    cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
-    status, _ = run_command_with_logging(
-        cmd,
-        success_message=f"Creating conda environment: {' '.join(cmd)}",
-        error_message="Error creating environment"
-    )
-    return status
+        success = create_env_proc
+    
+    return success
 
 def get_lockfile_for_commit(tardis_repo, commit_hash):
     """
@@ -115,6 +130,8 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
     str or None
         Path to temporary lockfile, or None if lockfile not found.
     """
+    temp_lockfile_path = None
+    
     try:
         from git.exc import GitCommandError
     except ImportError:
@@ -129,10 +146,11 @@ def get_lockfile_for_commit(tardis_repo, commit_hash):
         temp_lockfile.write(result)
         temp_lockfile.close()
 
-        return temp_lockfile.name
+        temp_lockfile_path = temp_lockfile.name
     except GitCommandError as e:
         logger.warning(f"Could not get lockfile for commit {commit_hash}: {e}")
-        return
+
+    return temp_lockfile_path
 
 def run_pytest_with_marker(marker_expr, test_path, regression_path, tardis_path, env_name, conda_manager):
     """
@@ -196,14 +214,16 @@ def get_all_optional_dependencies(tardis_path):
     list of str
         List of optional dependency group names.
     """
+    optional_dependencies = []
+    
     pyproject_path = Path(tardis_path) / "pyproject.toml"
-    if not pyproject_path.exists():
-        return []
+    if pyproject_path.exists():
+        with open(pyproject_path, "rb") as f:
+            data = tomllib.load(f)
 
-    with open(pyproject_path, "rb") as f:
-        data = tomllib.load(f)
-
-    return list(data.get("project", {}).get("optional-dependencies", {}).keys())
+        optional_dependencies = list(data.get("project", {}).get("optional-dependencies", {}).keys())
+    
+    return optional_dependencies
 
 def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     """
@@ -223,6 +243,8 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
     bool
         True if installation succeeded, False otherwise.
     """
+    success = False
+    
     # Determine if env_name is a path or name
     env_flag = "-p" if "/" in env_name else "-n"
 
@@ -234,23 +256,26 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
         extras_str = f"[{','.join(all_extras)}]"
         cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", f"{tardis_path}{extras_str}"]
         
-        status, _ = run_command_with_logging(
+        install_tardis_extra, _ = run_command_with_logging(
             cmd,
             success_message=f"Installing TARDIS with all extras {all_extras}: {' '.join(cmd)}",
             error_message="Error installing TARDIS with extras"
         )
         
-        if status:
-            return True
+        if install_tardis_extra:
+            success = True
 
-    # Fall back to installing just TARDIS
-    cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
-    status, _ = run_command_with_logging(
-        cmd,
-        success_message=f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}",
-        error_message="Error installing TARDIS (fallback)"
-    )
-    return status
+    if not success:
+        # Fall back to installing just TARDIS
+        cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
+        install_tardis_no_extra, _ = run_command_with_logging(
+            cmd,
+            success_message=f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}",
+            error_message="Error installing TARDIS (fallback)"
+        )
+        success = install_tardis_no_extra
+    
+    return success
 
 def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate):
     """
@@ -261,6 +286,7 @@ def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager
     tuple
         (success: bool, env_name: str or None)
     """
+    success = False
     env_name = None
 
     # Create unique environment for this commit
@@ -270,36 +296,42 @@ def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager
     # Get the lockfile for this specific commit
     temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
     
-    if temp_lockfile_path is None:
-        logger.error(f"Could not get lockfile for commit {commit.hexsha}")
-        return handle_fallback(default_curr_env)
-    
-    # Try to create the environment
-    env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
-    
-    # Clean up temporary lockfile (regardless of success/failure)
-    if temp_lockfile_path:
+    if temp_lockfile_path is not None:
+        # Try to create the environment
+        env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
+        
+        # Clean up temporary lockfile (regardless of success/failure)
         os.unlink(temp_lockfile_path)
+        
+        if env_creation_success:
+            # Install TARDIS in the newly created environment
+            if install_tardis_in_env(env_name, tardis_path, conda_manager):
+                success = True
+            else:
+                logger.error(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
+                success, env_name = handle_fallback(default_curr_env)
+        else:
+            logger.error(f"Failed to create conda environment for commit {commit.hexsha}")
+            success, env_name = handle_fallback(default_curr_env)
+    else:
+        logger.error(f"Could not get lockfile for commit {commit.hexsha}")
+        success, env_name = handle_fallback(default_curr_env)
     
-    if not env_creation_success:
-        logger.error(f"Failed to create conda environment for commit {commit.hexsha}")
-        return handle_fallback(default_curr_env)
-    
-    # Install TARDIS in the newly created environment
-    if not install_tardis_in_env(env_name, tardis_path, conda_manager):
-        logger.error(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-        return handle_fallback(default_curr_env)
-    
-    return True, env_name
+    return success, env_name
 
 def handle_fallback(default_curr_env):
     """Handle fallback to default environment."""
+    success = False
+    env_name = None
+    
     if default_curr_env:
         logger.info(f"Falling back to provided default environment: {default_curr_env}")
-        return True, default_curr_env
+        success = True
+        env_name = default_curr_env
     else:
         logger.error("No default environment provided, skipping commit")
-        return False, None
+    
+    return success, env_name
 
 def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input=None, n=10, test_path="tardis/spectrum/tests/test_spectrum_solver.py", conda_manager="conda", default_curr_env=None, force_recreate=False, use_new_envs=True):
     """
@@ -370,52 +402,47 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
 
         if use_new_envs:
             success, env_name = setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager, default_curr_env, force_recreate)
-            
-            if not success:
-                continue
         else:
             success, env_name = handle_fallback(default_curr_env)
             
-            if not success:
-                continue
+        if success:
+            # Now checkout the commit for running tests (after environment creation)
+            tardis_repo.git.checkout(commit.hexsha)
+            tardis_repo.git.reset('--hard')
+            tardis_repo.git.clean('-fd')
 
-        # Now checkout the commit for running tests (after environment creation)
-        tardis_repo.git.checkout(commit.hexsha)
-        tardis_repo.git.reset('--hard')
-        tardis_repo.git.clean('-fd')
+            # Define test phases
+            test_phases = [
+                ("not continuum", "Phase 1"),
+                ("continuum", "Phase 2")
+            ]
 
-        # Define test phases
-        test_phases = [
-            ("not continuum", "Phase 1"),
-            ("continuum", "Phase 2")
-        ]
+            results = []
+            for marker, phase_name in test_phases:
+                logger.info(f"\n=== {phase_name}: Running '{marker}' tests for commit {commit.hexsha} ===")
+                result = run_pytest_with_marker(marker, test_path, regression_path, tardis_path, env_name, conda_manager)
+                results.append(result)
+                
+                if result.returncode != 0:
+                    logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
+                    logger.info(f"Stdout: {result.stdout}")
+                    logger.error(f"Stderr: {result.stderr}")
 
-        results = []
-        for marker, phase_name in test_phases:
-            logger.info(f"\n=== {phase_name}: Running '{marker}' tests for commit {commit.hexsha} ===")
-            result = run_pytest_with_marker(marker, test_path, regression_path, tardis_path, env_name, conda_manager)
-            results.append(result)
-            
-            if result.returncode != 0:
-                logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
-                logger.info(f"Stdout: {result.stdout}")
-                logger.error(f"Stderr: {result.stderr}")
+            # Even if tests failed, if regression data was generated, commit it
+            regression_repo.git.add(A=True)
+            # Check if anything was actually staged
+            if not regression_repo.git.diff('--cached', '--name-only').strip():
+                raise Exception(f"No data to add - git add was empty for commit {commit.hexsha}")
 
-        # Even if tests failed, if regression data was generated, commit it
-        regression_repo.git.add(A=True)
-        # Check if anything was actually staged
-        if not regression_repo.git.diff('--cached', '--name-only').strip():
-            raise Exception(f"No data to add - git add was empty for commit {commit.hexsha}")
+            regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
+            regression_commits.append(regression_commit.hexsha)
+            processed_commits.append(commit.hexsha)
 
-        regression_commit = regression_repo.index.commit(f"Regression data for tardis commit {i}")
-        regression_commits.append(regression_commit.hexsha)
-        processed_commits.append(commit.hexsha)
-
-        # Check overall success
-        if all(result.returncode == 0 for result in results):
-            logger.info(f"All tests passed for commit {commit.hexsha}")
-        else:
-            logger.warning(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
+            # Check overall success
+            if all(result.returncode == 0 for result in results):
+                logger.info(f"All tests passed for commit {commit.hexsha}")
+            else:
+                logger.warning(f"Tests completed with some failures for commit {commit.hexsha}, but regression data was generated")
 
     logger.info("\nProcessed Tardis Commits:")
     for hash in processed_commits:
