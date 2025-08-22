@@ -28,16 +28,16 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
     tuple
         (result_status: bool, process_result: subprocess.CompletedProcess)
     """
+    cmd_str = ' '.join(cmd)
     if success_message:
         logger.info(success_message)
     
+    logger.info(f"Executing command: {cmd_str}")
     result = subprocess.run(cmd, capture_output=True, text=True, **kwargs)
     
     result_status = True
     if result.returncode != 0:
-        cmd_str = ' '.join(cmd)
         logger.error(f"{error_message}")
-        logger.error(f"Command: {cmd_str}")
         logger.error(f"Return code: {result.returncode}")
         
         # Log last 10 lines of stdout if available
@@ -65,6 +65,8 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
             logger.info(f"Command completed successfully. Last {len(last_success_stdout)} lines of output:")
             for line in last_success_stdout:
                 logger.info(f"  {line}")
+    
+    logger.info("")  # Add blank line for clarity
     
     return result_status, result
 
@@ -128,7 +130,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
         create_env_proc, _ = run_command_with_logging(
             cmd,
-            success_message=f"Creating conda environment: {' '.join(cmd)}",
+            success_message="Creating conda environment",
             error_message="Error creating environment"
         )
         success = create_env_proc
@@ -272,7 +274,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
         
         install_tardis_extra, _ = run_command_with_logging(
             cmd,
-            success_message=f"Installing TARDIS with all extras {all_extras}: {' '.join(cmd)}",
+            success_message=f"Installing TARDIS with all extras {all_extras}",
             error_message="Error installing TARDIS with extras"
         )
         
@@ -284,7 +286,7 @@ def install_tardis_in_env(env_name, tardis_path=None, conda_manager="conda"):
         cmd = [conda_manager, "run", env_flag, env_name, "pip", "install", "-e", str(tardis_path)]
         install_tardis_no_extra, _ = run_command_with_logging(
             cmd,
-            success_message=f"Fallback - Installing TARDIS in environment: {' '.join(cmd)}",
+            success_message="Fallback - Installing TARDIS in environment",
             error_message="Error installing TARDIS (fallback)"
         )
         success = install_tardis_no_extra
