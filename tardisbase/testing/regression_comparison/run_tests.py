@@ -35,7 +35,27 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
     
     result_status = True
     if result.returncode != 0:
-        logger.error(f"{error_message}: {result.stderr}")
+        cmd_str = ' '.join(cmd)
+        logger.error(f"{error_message}")
+        logger.error(f"Command: {cmd_str}")
+        logger.error(f"Return code: {result.returncode}")
+        
+        # Log last 10 lines of stdout if available
+        if result.stdout.strip():
+            stdout_lines = result.stdout.strip().split('\n')
+            last_stdout = stdout_lines[-10:] if len(stdout_lines) > 10 else stdout_lines
+            logger.error(f"Last {len(last_stdout)} lines of stdout:")
+            for line in last_stdout:
+                logger.error(f"  {line}")
+        
+        # Log last 10 lines of stderr if available  
+        if result.stderr.strip():
+            stderr_lines = result.stderr.strip().split('\n')
+            last_stderr = stderr_lines[-10:] if len(stderr_lines) > 10 else stderr_lines
+            logger.error(f"Last {len(last_stderr)} lines of stderr:")
+            for line in last_stderr:
+                logger.error(f"  {line}")
+        
         result_status = False
     
     return result_status, result
@@ -62,7 +82,7 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
     """
     success = False
     env_exists = False
-    create_env  = False
+    create_env = False
 
     # Check if environment already exists
     check_cmd = [conda_manager, "env", "list"]
@@ -73,37 +93,30 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
     )
     
     if environ_found:
-        # get environment name from conda env list
-        env_lines = result.stdout.split('\n')
-        for line in env_lines:
-            if line.strip().startswith(env_name + ' '):
-                env_exists = True
-                break
+        # Parse environment list to check if env exists
+        env_exists = any(
+            line.strip().startswith(env_name + ' ') 
+            for line in result.stdout.split('\n')
+        )
 
-        # recreate environments if required
-        if env_exists and force_recreate:
-            remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
-            del_environ, _ = run_command_with_logging(
-                remove_cmd,
-                success_message=f"Environment {env_name} exists, removing it for recreation...",
-                error_message="Error removing environment"
-            )
-            if del_environ:
-                create_env = True
-                # Environment doesn't exist (or was removed), create it
-                # cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
-                # status, _ = run_command_with_logging(
-                #     cmd,
-                #     success_message=f"Creating conda environment: {' '.join(cmd)}",
-                #     error_message="Error creating environment"
-                # )
-                # success = status
-        elif env_exists: # force recreate not asked
-            logger.info(f"Environment {env_name} already exists, skipping creation.")
-            success = True
-    
-    if create_env and not environ_found:
-        # Environment doesn't exist, create it
+    if env_exists and force_recreate:
+        # Remove existing environment for recreation
+        remove_cmd = [conda_manager, "env", "remove", "--name", env_name, "-y"]
+        del_environ, _ = run_command_with_logging(
+            remove_cmd,
+            success_message=f"Environment {env_name} exists, removing it for recreation...",
+            error_message="Error removing environment"
+        )
+        if del_environ:
+            create_env = True
+    elif env_exists:
+        logger.info(f"Environment {env_name} already exists, skipping creation.")
+        success = True
+    else:
+        create_env = True
+
+    if create_env:
+        # Create new environment
         cmd = [conda_manager, "create", "--name", env_name, "--file", str(lockfile_path), "-y"]
         create_env_proc, _ = run_command_with_logging(
             cmd,
@@ -176,29 +189,22 @@ def run_pytest_with_marker(marker_expr, test_path, regression_path, tardis_path,
     subprocess.CompletedProcess
         Result of the pytest command execution.
     """
-    # Build base pytest command
+    # Build pytest command
     pytest_args = [
-        "python", "-m", "pytest",
-        test_path,
+        "python", "-m", "pytest", test_path,
         f"--tardis-regression-data={regression_path}",
-        "--generate-reference",
-        "--disable-warnings",
+        "--generate-reference", "--disable-warnings",
         "-m", marker_expr
     ]
 
-    # Prepend conda command
+    # Prepend conda command with appropriate env flag
     env_flag = "-p" if "/" in env_name else "-n"
     cmd = [conda_manager, "run", env_flag, env_name] + pytest_args
 
     logger.info(f"Running {marker_expr} tests: {' '.join(cmd)}")
-    result = subprocess.run(
-        cmd,
-        check=False,  # Don't raise exception on non-zero exit code
-        capture_output=True,
-        text=True,
-        cwd=tardis_path
+    return subprocess.run(
+        cmd, check=False, capture_output=True, text=True, cwd=tardis_path
     )
-    return result
 
 def get_all_optional_dependencies(tardis_path):
     """
@@ -286,38 +292,42 @@ def setup_environment_for_commit(commit, tardis_repo, tardis_path, conda_manager
     tuple
         (success: bool, env_name: str or None)
     """
-    success = False
-    env_name = None
-
-    # Create unique environment for this commit
+    setup_success = False
+    final_env_name = None
+    temp_lockfile_path = None
+    
     env_name = f"tardis-test-{commit.hexsha[:8]}"
     logger.info(f"Creating conda environment: {env_name}")
     
     # Get the lockfile for this specific commit
     temp_lockfile_path = get_lockfile_for_commit(tardis_repo, commit.hexsha)
     
-    if temp_lockfile_path is not None:
-        # Try to create the environment
-        env_creation_success = create_conda_env(env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate)
-        
-        # Clean up temporary lockfile (regardless of success/failure)
-        os.unlink(temp_lockfile_path)
-        
-        if env_creation_success:
-            # Install TARDIS in the newly created environment
-            if install_tardis_in_env(env_name, tardis_path, conda_manager):
-                success = True
-            else:
-                logger.error(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
-                success, env_name = handle_fallback(default_curr_env)
-        else:
-            logger.error(f"Failed to create conda environment for commit {commit.hexsha}")
-            success, env_name = handle_fallback(default_curr_env)
-    else:
+    if temp_lockfile_path is None:
         logger.error(f"Could not get lockfile for commit {commit.hexsha}")
-        success, env_name = handle_fallback(default_curr_env)
+        setup_success, final_env_name = handle_fallback(default_curr_env)
+    else:
+        # Try to create the environment
+        env_creation_success = create_conda_env(
+            env_name, temp_lockfile_path, conda_manager, force_recreate=force_recreate
+        )
+        
+        if not env_creation_success:
+            logger.error(f"Failed to create conda environment for commit {commit.hexsha}")
+            setup_success, final_env_name = handle_fallback(default_curr_env)
+        else:
+            # Install TARDIS in the newly created environment
+            tardis_install_success = install_tardis_in_env(env_name, tardis_path, conda_manager)
+            if not tardis_install_success:
+                logger.error(f"Failed to install TARDIS in environment for commit {commit.hexsha}")
+                setup_success, final_env_name = handle_fallback(default_curr_env)
+            else:
+                setup_success = True
+                final_env_name = env_name
+        
+        # Clean up temporary lockfile
+        os.unlink(temp_lockfile_path)
     
-    return success, env_name
+    return setup_success, final_env_name
 
 def handle_fallback(default_curr_env):
     """Handle fallback to default environment."""
@@ -425,8 +435,11 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                 
                 if result.returncode != 0:
                     logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
-                    logger.info(f"Stdout: {result.stdout}")
-                    logger.error(f"Stderr: {result.stderr}")
+                    logger.warning(f"Return code: {result.returncode}")
+                    if result.stdout.strip():
+                        logger.info(f"Stdout: {result.stdout.strip()}")
+                    if result.stderr.strip():
+                        logger.error(f"Stderr: {result.stderr.strip()}")
 
             # Even if tests failed, if regression data was generated, commit it
             regression_repo.git.add(A=True)
