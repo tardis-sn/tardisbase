@@ -57,6 +57,14 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
                 logger.error(f"  {line}")
         
         result_status = False
+    else:
+        # Command succeeded - log last 3 lines of stdout to show what happened
+        if result.stdout.strip():
+            stdout_lines = result.stdout.strip().split('\n')
+            last_success_stdout = stdout_lines[-3:] if len(stdout_lines) > 3 else stdout_lines
+            logger.info(f"Command completed successfully. Last {len(last_success_stdout)} lines of output:")
+            for line in last_success_stdout:
+                logger.info(f"  {line}")
     
     return result_status, result
 
