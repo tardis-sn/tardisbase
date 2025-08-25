@@ -119,6 +119,8 @@ def create_conda_env(env_name, lockfile_path, conda_manager="conda", force_recre
         )
         if del_environ:
             create_env = True
+        else:
+            logger.warning(f"Failed to remove environment {env_name}")
     elif env_exists:
         logger.info(f"Environment {env_name} already exists, skipping creation.")
         success = True
