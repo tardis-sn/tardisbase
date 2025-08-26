@@ -40,31 +40,15 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
         logger.error(f"{error_message}")
         logger.error(f"Return code: {result.returncode}")
         
-        # Log last 10 lines of stdout if available
-        if result.stdout.strip():
-            stdout_lines = result.stdout.strip().split('\n')
-            last_stdout = stdout_lines[-10:] if len(stdout_lines) > 10 else stdout_lines
-            logger.error(f"Last {len(last_stdout)} lines of stdout:")
-            for line in last_stdout:
-                logger.error(f"  {line}")
-        
-        # Log last 10 lines of stderr if available  
-        if result.stderr.strip():
-            stderr_lines = result.stderr.strip().split('\n')
-            last_stderr = stderr_lines[-10:] if len(stderr_lines) > 10 else stderr_lines
-            logger.error(f"Last {len(last_stderr)} lines of stderr:")
-            for line in last_stderr:
-                logger.error(f"  {line}")
+        # Log last 5 lines of stdout and stderr
+        for output in [result.stdout, result.stderr]:
+            logger.error('\n'.join(f"  {line}" for line in output.strip().split('\n')[-5:]))
         
         result_status = False
     else:
         # Command succeeded - log last 3 lines of stdout to show what happened
-        if result.stdout.strip():
-            stdout_lines = result.stdout.strip().split('\n')
-            last_success_stdout = stdout_lines[-3:] if len(stdout_lines) > 3 else stdout_lines
-            logger.info(f"Command completed successfully. Last {len(last_success_stdout)} lines of output:")
-            for line in last_success_stdout:
-                logger.info(f"  {line}")
+        logger.info('\n'.join(f"  {line}" for line in result.stdout.strip().split('\n')[-3:]))
+        logger.info("Command completed successfully.")
     
     logger.info("")  # Add blank line for clarity
     
