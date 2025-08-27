@@ -40,17 +40,18 @@ def run_command_with_logging(cmd, success_message="", error_message="Command fai
         logger.error(f"{error_message}")
         logger.error(f"Return code: {result.returncode}")
         
-        # Log last 5 lines of stdout and stderr
-        for output in [result.stdout, result.stderr]:
-            logger.error('\n'.join(f"  {line}" for line in output.strip().split('\n')[-5:]))
+        # Log complete stdout and stderr
+        if result.stdout.strip():
+            logger.error(f"Stdout:\n{result.stdout.strip()}")
+        if result.stderr.strip():
+            logger.error(f"Stderr:\n{result.stderr.strip()}")
         
         result_status = False
     else:
         # Command succeeded - log last 3 lines of stdout to show what happened
-        logger.info('\n'.join(f"  {line}" for line in result.stdout.strip().split('\n')[-3:]))
-        logger.info("Command completed successfully.")
+        logger.debug('\n'.join(f"  {line}" for line in result.stdout.strip().split('\n')[-3:]))
+        logger.info("Command completed successfully.\n")
     
-    logger.info("")  # Add blank line for clarity
     
     return result_status, result
 
@@ -433,7 +434,7 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                     logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
                     logger.warning(f"Return code: {result.returncode}")
                     if result.stdout.strip():
-                        logger.info(f"Stdout: {result.stdout.strip()}")
+                        logger.debug(f"Stdout: {result.stdout.strip()}")
                     if result.stderr.strip():
                         logger.error(f"Stderr: {result.stderr.strip()}")
 
