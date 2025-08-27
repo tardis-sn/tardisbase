@@ -434,9 +434,9 @@ def run_tests(tardis_repo_path, regression_data_repo_path, branch, commits_input
                     logger.warning(f"'{marker}' tests had failures for commit {commit.hexsha}")
                     logger.warning(f"Return code: {result.returncode}")
                     if result.stdout.strip():
-                        logger.debug(f"Stdout: {result.stdout.strip()}")
+                        logger.error(f"Stdout:\n{result.stdout.strip()}")
                     if result.stderr.strip():
-                        logger.error(f"Stderr: {result.stderr.strip()}")
+                        logger.error(f"Stderr:\n{result.stderr.strip()}")
 
             # Even if tests failed, if regression data was generated, commit it
             regression_repo.git.add(A=True)
