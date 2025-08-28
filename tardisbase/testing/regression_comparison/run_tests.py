@@ -6,7 +6,6 @@ from pathlib import Path
 import tomllib
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(level=logging.INFO)
 
 def run_command_with_logging(cmd, success_message="", error_message="Command failed", **kwargs):
     """
