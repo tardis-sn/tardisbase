@@ -366,7 +366,7 @@ dependencies:
   - pytest-doctestplus=1.7.1=pyhd8ed1ab_0
   - pytest-html=4.2.0=pyhd8ed1ab_0
   - pytest-metadata=3.1.1=pyhd8ed1ab_1
-  - python=3.14.3=h32b2ec7_101_cp314
+  - python=3.13.5
   - python-dateutil=2.9.0.post0=pyhe01879c_2
   - python-fastjsonschema=2.21.2=pyhe01879c_0
   - python-gil=3.14.3=h4df99d1_101
