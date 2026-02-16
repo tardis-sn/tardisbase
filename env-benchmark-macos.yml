@@ -1,7 +1,6 @@
 name: tardis-bench
 channels:
   - conda-forge
-  - pyviz
 dependencies:
   - _openmp_mutex=4.5=7_kmp_llvm
   - _python_abi3_support=1.0=hd8ed1ab_2
@@ -267,7 +266,7 @@ dependencies:
   - nbconvert-core=7.17.0=pyhcf101f3_0
   - nbconvert-pandoc=7.17.0=hc3985f0_0
   - nbformat=5.10.4=pyhd8ed1ab_1
-  - nbsite=0.8.7=py_0
+  - pyviz::nbsite=0.8.7=py_0
   - nbsphinx=0.9.8=pyhd8ed1ab_0
   - ncurses=6.5=h5e97a16_3
   - nest-asyncio=1.6.0=pyhd8ed1ab_1
@@ -441,8 +440,5 @@ dependencies:
   - zlib=1.3.1=h8359307_2
   - zlib-ng=2.3.3=hed4e4f5_1
   - zstd=1.5.7=hbf9d68e_6
-  - pip:
-    - tardis==2025.8.4.dev103+gb97fb81f4.d20260216
-    - tardisbase==0.1.dev54+ga87e40df7.d20260216
 
 prefix: "/Users/atharva/miniforge3/envs/tardis-bench"
