@@ -37,8 +37,8 @@ dependencies:
   - aws-c-s3=0.11.5
   - aws-c-sdkutils=0.2.4
   - aws-checksums=0.2.10
-  - aws-crt-cpp=0.37.2
-  - aws-sdk-cpp=1.11.606
+  - aws-crt-cpp=0.37.3
+  - aws-sdk-cpp=1.11.747
   - azure-core-cpp=1.16.2
   - azure-identity-cpp=1.13.3
   - azure-storage-blobs-cpp=12.16.0
@@ -182,7 +182,7 @@ dependencies:
   - libbrotlienc=1.2.0
   - libcblas=3.11.0
   - libclang-cpp18.1=18.1.8
-  - libclang13=21.1.8
+  - libclang13=22.1.0
   - libcrc32c=1.1.2
   - libcurl=8.18.0
   - libcxx=22.1.0
@@ -208,7 +208,7 @@ dependencies:
   - libjpeg-turbo=3.1.2
   - liblapack=3.11.0
   - libllvm18=18.1.8
-  - libllvm21=21.1.8
+  - libllvm22=22.1.0
   - liblzma=5.8.2
   - libmpdec=4.0.0
   - libnghttp2=1.67.0
@@ -331,7 +331,7 @@ dependencies:
   - pyqt5-sip=12.17.0
   - pysocks=1.7.1
   - pytables=3.11.0
-  - pytest=9.0.2
+  - pytest=8.4.2
   - pytest-cov=7.0.0
   - pytest-doctestplus=1.7.1
   - pytest-html=4.2.0
@@ -438,5 +438,3 @@ dependencies:
   - zlib=1.3.1
   - zlib-ng=2.3.3
   - zstd=1.5.7
-
-prefix: "/Users/atharva/miniforge3/envs/tardis"
