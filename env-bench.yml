@@ -16,7 +16,8 @@ dependencies:
   
   # Scientific computing
   - scipy
-  - numba
+  - numba<0.62
+  - llvmlite<0.45
   - numexpr
   - radioactivedecay
   - uncertainties
