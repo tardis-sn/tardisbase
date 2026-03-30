@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Unpinning Environment Lockfiles &#8212; tardisbase 0.1.dev1+g08dbc77ee.d20260326 documentation</title>
+    <title>Unpinning Environment Lockfiles &#8212; tardisbase 0.1.dev1+g8c1564ae9.d20260330 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../_static/documentation_options.js?v=6e67930a"></script>
+    <script src="../../_static/documentation_options.js?v=8bb32acb"></script>
     <script src="../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -86,7 +86,7 @@ conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"
 <section id="testing-locally">
 <h3>Testing Locally<a class="headerlink" href="#testing-locally" title="Link to this heading">¶</a></h3>
 <p>Start by creating an environment from the <code class="docutils literal notranslate"><span class="pre">env.yml</span></code>:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env.yml<span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env.yml<span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;
 </pre></div>
 </div>
 <p>Once this is done, check the installation since you will also need to install <code class="docutils literal notranslate"><span class="pre">tardisbase</span></code> and other pip-based packages. See the <a class="reference external" href="https://tardis-sn.github.io/tardis/getting_started/installation.html">TARDIS installation guide</a> for details.</p>
@@ -167,12 +167,12 @@ conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"
 <section id="updating-the-benchmarks-environment-yaml">
 <h2>Updating the Benchmarks Environment YAML<a class="headerlink" href="#updating-the-benchmarks-environment-yaml" title="Link to this heading">¶</a></h2>
 <p>The benchmarks use the <a class="reference external" href="https://asv.readthedocs.io/">airspeed velocity</a> package for benchmarking TARDIS. Unfortunately, airspeed velocity does not support lockfiles, so we use exported environment YAMLs to mitigate this issue.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>&gt;<span class="w"> </span>env.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>&gt;<span class="w"> </span>env.yml
 </pre></div>
 </div>
 <p>We recommend having different exported environments for different platforms — for instance, export the Linux environment on Linux and the macOS environment on macOS.</p>
 <p>If benchmarks continue to fail, you can apply the <code class="docutils literal notranslate"><span class="pre">--no-builds</span></code> flag, which strips the build strings from dependencies to make the file more portable across platforms. However, try making it work without this flag first.</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>mamba<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>--no-builds<span class="w"> </span>&gt;<span class="w"> </span>env.yml
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>--no-builds<span class="w"> </span>&gt;<span class="w"> </span>env.yml
 </pre></div>
 </div>
 <p>The exported environment then needs to be corrected:</p>
