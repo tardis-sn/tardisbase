@@ -56,7 +56,7 @@ Start by creating an environment from the ``env.yml``:
 
 .. code-block:: bash
 
-   mamba env create -f env.yml -n <env-name>
+   conda env create -f env.yml -n <env-name>
 
 Once this is done, check the installation since you will also need to install ``tardisbase`` and other pip-based packages. See the `TARDIS installation guide <https://tardis-sn.github.io/tardis/getting_started/installation.html>`_ for details.
 
@@ -158,7 +158,7 @@ The benchmarks use the `airspeed velocity <https://asv.readthedocs.io/>`_ packag
 
 .. code-block:: bash
 
-   mamba env export -n <env-name> > env.yml
+   conda env export -n <env-name> > env.yml
 
 We recommend having different exported environments for different platforms — for instance, export the Linux environment on Linux and the macOS environment on macOS.
 
@@ -166,7 +166,7 @@ If benchmarks continue to fail, you can apply the ``--no-builds`` flag, which st
 
 .. code-block:: bash
 
-   mamba env export -n <env-name> --no-builds > env.yml
+   conda env export -n <env-name> --no-builds > env.yml
 
 The exported environment then needs to be corrected:
 
