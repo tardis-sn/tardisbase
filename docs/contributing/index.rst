@@ -8,4 +8,4 @@ Development
     :maxdepth: 2
 
     development/index
-    development/unpinning_2026_bugs
+    development/unpinning_2026
