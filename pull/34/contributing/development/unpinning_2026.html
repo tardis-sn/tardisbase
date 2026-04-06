@@ -1,0 +1,226 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Unpinning 2026 &#8212; tardisbase 0.1.dev1+ga309c8e17.d20260406 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=65f3543b"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="tardisbase" href="../../api/modules.html" />
+    <link rel="prev" title="Unpinning Environment Lockfiles" href="index.html" />
+    <link href="../../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="unpinning-2026">
+<span id="unpinning-2026-bugs"></span><h1>Unpinning 2026<a class="headerlink" href="#unpinning-2026" title="Link to this heading">¶</a></h1>
+<p>This documentation provides details of the bugs that were discovered during lockfile unpinning in 2026.
+For ways to understand how to unpin lockfiles, look at the <a class="reference internal" href="index.html#unpinning-lockfiles"><span class="std std-ref">Unpinning Environment Lockfiles</span></a> documentation.</p>
+<p>Dependencies which resulted in issues are <code class="docutils literal notranslate"><span class="pre">Pandas</span></code>, <code class="docutils literal notranslate"><span class="pre">pytest</span></code> and <code class="docutils literal notranslate"><span class="pre">Numba</span></code>.
+<code class="docutils literal notranslate"><span class="pre">NumPy</span></code> is dependent on <code class="docutils literal notranslate"><span class="pre">Numba</span></code> and varies according to the <code class="docutils literal notranslate"><span class="pre">Numba</span></code> version.</p>
+<section id="pandas">
+<h2>Pandas<a class="headerlink" href="#pandas" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Pandas</span></code> upgrade is the cause of the majority of failures since <code class="docutils literal notranslate"><span class="pre">Pandas</span></code> is used in regression data, which is used in almost all of the tests.
+This script below replicates the root causes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">test_cow_to_numpy_copy</span></code> passes and all others fail in <code class="docutils literal notranslate"><span class="pre">Pandas</span></code> 3. All tests pass in <code class="docutils literal notranslate"><span class="pre">Pandas</span></code> 2.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">tempfile</span>
+
+<span class="kn">import</span><span class="w"> </span><span class="nn">pandas</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pd</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_cow_series_values</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]})</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">99.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_cow_dataframe_values</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">],</span> <span class="s2">&quot;b&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">3.0</span><span class="p">,</span> <span class="mf">4.0</span><span class="p">]})</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">df</span><span class="o">.</span><span class="n">values</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">99.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_cow_to_numpy</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]})</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">()</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">99.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_cow_to_numpy_copy</span><span class="p">():</span>
+    <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;a&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]})</span>
+    <span class="n">arr</span> <span class="o">=</span> <span class="n">df</span><span class="p">[</span><span class="s2">&quot;a&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">to_numpy</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">arr</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="mf">99.0</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_hdf5_bytes_attr</span><span class="p">():</span>
+    <span class="kn">import</span><span class="w"> </span><span class="nn">tables</span>
+
+    <span class="k">with</span> <span class="n">tempfile</span><span class="o">.</span><span class="n">TemporaryDirectory</span><span class="p">()</span> <span class="k">as</span> <span class="n">tmpdir</span><span class="p">:</span>
+        <span class="n">path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tmpdir</span><span class="p">,</span> <span class="s2">&quot;test.h5&quot;</span><span class="p">)</span>
+        <span class="n">df</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">DataFrame</span><span class="p">({</span><span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">2.0</span><span class="p">,</span> <span class="mf">3.0</span><span class="p">]})</span>
+        <span class="n">df</span><span class="o">.</span><span class="n">to_hdf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;mydata&quot;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tables</span><span class="o">.</span><span class="n">open_file</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="s2">&quot;a&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">node</span> <span class="o">=</span> <span class="n">f</span><span class="o">.</span><span class="n">root</span><span class="o">.</span><span class="n">mydata</span>
+            <span class="n">node</span><span class="o">.</span><span class="n">_v_attrs</span><span class="o">.</span><span class="n">pandas_type</span> <span class="o">=</span> <span class="sa">b</span><span class="s2">&quot;frame&quot;</span>
+
+        <span class="n">df2</span> <span class="o">=</span> <span class="n">pd</span><span class="o">.</span><span class="n">read_hdf</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="s2">&quot;mydata&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</section>
+<section id="pytest">
+<h2>pytest<a class="headerlink" href="#pytest" title="Link to this heading">¶</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">pytest</span></code> reordered fixtures which also cause similar issues. <a class="reference external" href="https://github.com/pytest-dev/pytest/pull/13774">pytest-dev/pytest#13774</a> is a related PR.
+Below is a simple reproducer script which fails in <code class="docutils literal notranslate"><span class="pre">pytest</span></code> 9 but passes in <code class="docutils literal notranslate"><span class="pre">pytest</span></code> 8.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pytest</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;a0&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fix_a</span><span class="p">(</span><span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">param</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fix_b</span><span class="p">(</span><span class="n">fix_a</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">fix_a</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span><span class="p">(</span><span class="n">params</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;c0&quot;</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fix_c</span><span class="p">(</span><span class="n">fix_a</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">request</span><span class="o">.</span><span class="n">param</span>
+
+
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">fix_group</span><span class="p">(</span><span class="n">fix_b</span><span class="p">,</span> <span class="n">fix_c</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">[</span><span class="n">fix_b</span><span class="p">,</span> <span class="n">fix_c</span><span class="p">]</span>
+
+
+<span class="k">def</span><span class="w"> </span><span class="nf">test_solve</span><span class="p">(</span><span class="n">fix_group</span><span class="p">,</span> <span class="n">request</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Got &#39;</span><span class="si">{</span><span class="n">request</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">name</span><span class="si">}</span><span class="s2">&#39;&quot;</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">request</span><span class="o">.</span><span class="n">node</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s2">&quot;test_solve[c0-a0]&quot;</span>
+</pre></div>
+</div>
+</section>
+<section id="numba">
+<h2>Numba<a class="headerlink" href="#numba" title="Link to this heading">¶</a></h2>
+<p>Running TARDIS with tracking enabled produces different tracker dataframes in <code class="docutils literal notranslate"><span class="pre">Numba</span></code> <code class="docutils literal notranslate"><span class="pre">0.61.2</span></code> and <code class="docutils literal notranslate"><span class="pre">Numba</span></code> <code class="docutils literal notranslate"><span class="pre">0.63.1</span></code>. This is seen in line interactions, originating from <code class="docutils literal notranslate"><span class="pre">line_scatter_event</span></code> in <code class="docutils literal notranslate"><span class="pre">interaction_event_callers.py</span></code>.</p>
+<p>The root cause is order of operations which changes between LLVM 15 and LLVM 20. <code class="docutils literal notranslate"><span class="pre">Numba</span></code> <code class="docutils literal notranslate"><span class="pre">0.61.2</span></code> uses <code class="docutils literal notranslate"><span class="pre">llvmlite</span></code> <code class="docutils literal notranslate"><span class="pre">0.44.0</span></code> (LLVM 15), while <code class="docutils literal notranslate"><span class="pre">Numba</span></code> <code class="docutils literal notranslate"><span class="pre">0.63.1</span></code> uses <code class="docutils literal notranslate"><span class="pre">llvmlite</span></code> <code class="docutils literal notranslate"><span class="pre">0.46.0</span></code> (LLVM 20).</p>
+<p>This is also a <code class="docutils literal notranslate"><span class="pre">fastmath</span></code> issue, disabling <code class="docutils literal notranslate"><span class="pre">fastmath</span></code> makes it go away.</p>
+<p>Tracing the tracker dataframe leads to <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/tardis/transport/montecarlo/interaction_event_callers.py#L179">line_scatter_event</a> as the root cause. <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/tardis/transport/montecarlo/interaction_event_callers.py#L179">line_scatter_event</a> calls <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/tardis/transport/frame_transformations.py#L12">get_doppler_factor</a>, and the combination of equations produced do not match between LLVM 15 and LLVM 20. The bug only appears in <code class="docutils literal notranslate"><span class="pre">line_scatter_event</span></code> and not in <code class="docutils literal notranslate"><span class="pre">get_doppler_factor</span></code>, since <code class="docutils literal notranslate"><span class="pre">get_doppler_factor</span></code> standalone is a smaller equation and does not require LLVM reorganisation.</p>
+<p>For more information, please see <a class="reference internal" href="numba_0.61.2_llvm15.html"><span class="doc">LLVM 15 Debugging</span></a> and <a class="reference internal" href="numba_0.63.1_llvm20.html"><span class="doc">LLVM 20 Debugging</span></a>.</p>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../compare_commits.html">Visualizing File Changes Across Commits</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Development</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="index.html">Unpinning Environment Lockfiles</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Unpinning 2026</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Development</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Unpinning Environment Lockfiles</a></li>
+      <li>Next: <a href="../../api/modules.html" title="next chapter">tardisbase</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/contributing/development/unpinning_2026.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
