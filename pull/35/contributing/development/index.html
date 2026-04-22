@@ -1,0 +1,271 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Unpinning Environment Lockfiles &#8212; tardisbase 0.1.dev1+gdf93e3bd3.d20260422 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../_static/documentation_options.js?v=5a1df173"></script>
+    <script src="../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Unpinning 2026" href="unpinning_2026.html" />
+    <link rel="prev" title="Development" href="../index.html" />
+    <link href="../../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="unpinning-environment-lockfiles">
+<span id="unpinning-lockfiles"></span><h1>Unpinning Environment Lockfiles<a class="headerlink" href="#unpinning-environment-lockfiles" title="Link to this heading">¶</a></h1>
+<p>TARDIS packages use lockfiles for dependency management, which are unpinned annually. This document provides a methodology to follow or take inspiration from when unpinning them.</p>
+<section id="generating-lockfiles">
+<h2>Generating Lockfiles<a class="headerlink" href="#generating-lockfiles" title="Link to this heading">¶</a></h2>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This is a general step to create new lockfiles from environment YAMLs. We recommend experimenting with changes to <code class="docutils literal notranslate"><span class="pre">env.yml</span></code> first rather than editing the lockfiles directly, since lockfiles are more comprehensive and include internal dependencies as well.</p>
+</div>
+<p>To generate conda lockfiles, you need the <code class="docutils literal notranslate"><span class="pre">conda-lock</span></code> package: <a class="reference external" href="https://github.com/conda/conda-lock">conda-lock on GitHub</a>. Instructions for installing <code class="docutils literal notranslate"><span class="pre">conda-lock</span></code> are available in the README of the repository.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Step 1: Generate conda-lock.yml from an environment file</span>
+conda-lock<span class="w"> </span>-f<span class="w"> </span>&lt;env-file&gt;.yml<span class="w"> </span>-p<span class="w"> </span>&lt;platform&gt;
+
+<span class="c1"># Step 2: Render a platform-specific explicit lockfile</span>
+conda-lock<span class="w"> </span>render<span class="w"> </span>-p<span class="w"> </span>&lt;platform&gt;
+
+<span class="c1"># Step 3: Create an environment from the lockfile</span>
+conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>--file<span class="w"> </span>conda-&lt;platform&gt;.lock
+</pre></div>
+</div>
+<p><strong>Example:</strong></p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda-lock<span class="w"> </span>-f<span class="w"> </span>env.yml<span class="w"> </span>-p<span class="w"> </span>linux-64
+conda-lock<span class="w"> </span>render<span class="w"> </span>-p<span class="w"> </span>linux-64
+conda<span class="w"> </span>create<span class="w"> </span>--name<span class="w"> </span>my-env<span class="w"> </span>--file<span class="w"> </span>conda-linux-64.lock
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Supported platforms are <code class="docutils literal notranslate"><span class="pre">linux-64</span></code> and <code class="docutils literal notranslate"><span class="pre">osx-arm64</span></code>. We do not maintain lockfiles for <code class="docutils literal notranslate"><span class="pre">osx-64</span></code> since it is not tested in CI.</p>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Benchmarks maintain a separate set of pinned <code class="docutils literal notranslate"><span class="pre">env.yml</span></code> files, which are exported dependencies from the lockfile environment. Instructions for updating them can be found in the <a class="reference internal" href="#updating-the-benchmarks-environment-yaml">Updating the Benchmarks Environment YAML</a> section below.</p>
+</div>
+</section>
+<section id="collecting-all-dependency-failures">
+<h2>Collecting All Dependency Failures<a class="headerlink" href="#collecting-all-dependency-failures" title="Link to this heading">¶</a></h2>
+<p>Some dependencies in the default <code class="docutils literal notranslate"><span class="pre">env.yml</span></code> are pinned because they caused issues in the past. We recommend unpinning all dependencies at the start, since dependencies are interrelated and those that caused issues previously will most likely not cause the same issues again.</p>
+<p>The new unpinned dependencies will most certainly cause CI failures. The CI workflows to test are: <strong>build docs</strong>, <strong>tests</strong>, and <strong>benchmarks</strong>.</p>
+<section id="testing-locally">
+<h3>Testing Locally<a class="headerlink" href="#testing-locally" title="Link to this heading">¶</a></h3>
+<p>Start by creating an environment from the <code class="docutils literal notranslate"><span class="pre">env.yml</span></code>:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span>create<span class="w"> </span>-f<span class="w"> </span>env.yml<span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;
+</pre></div>
+</div>
+<p>Once this is done, check the installation since you will also need to install <code class="docutils literal notranslate"><span class="pre">tardisbase</span></code> and other pip-based packages. See the <a class="reference external" href="https://tardis-sn.github.io/tardis/getting_started/installation.html">TARDIS installation guide</a> for details.</p>
+<p>Then run the test suite.</p>
+</section>
+<section id="testing-in-ci">
+<h3>Testing in CI<a class="headerlink" href="#testing-in-ci" title="Link to this heading">¶</a></h3>
+<p>The test workflow uses the <code class="docutils literal notranslate"><span class="pre">setup-env</span></code> action from the <a class="reference external" href="https://github.com/tardis-sn/tardis-actions/blob/main/setup-env/action.yml">tardis-actions repository</a>, which is responsible for setting up the environment and caching dependencies for faster installations.</p>
+<p>To test new lockfiles, push them in a new branch and provide the URL to the <code class="docutils literal notranslate"><span class="pre">setup-env</span></code> action:</p>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using a custom URL (lockfile or env.yml hosted somewhere)</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tardis-sn/tardis-actions/setup-env@main</span>
+<span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">lock-file-url-prefix</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;https://raw.githubusercontent.com/your-org/your-repo/branch&quot;</span>
+<span class="w">    </span><span class="nt">os-label</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;linux-64&quot;</span><span class="w">  </span><span class="c1"># or &quot;osx-arm64&quot;</span>
+<span class="w">    </span><span class="nt">cache-environment</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">    </span><span class="nt">cache-downloads</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+</pre></div>
+</div>
+<div class="highlight-yaml notranslate"><div class="highlight"><pre><span></span><span class="c1"># Using a local file path (lockfile or env.yml checked into the repo)</span>
+<span class="p p-Indicator">-</span><span class="w"> </span><span class="nt">uses</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">tardis-sn/tardis-actions/setup-env@main</span>
+<span class="w">  </span><span class="nt">with</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">lockfile-path</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;path/to/env.yml&quot;</span>
+<span class="w">    </span><span class="nt">cache-environment</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+<span class="w">    </span><span class="nt">cache-downloads</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;false&quot;</span>
+</pre></div>
+</div>
+</section>
+</section>
+<section id="narrowing-down-buggy-dependencies">
+<h2>Narrowing Down Buggy Dependencies<a class="headerlink" href="#narrowing-down-buggy-dependencies" title="Link to this heading">¶</a></h2>
+<p>Once you have a test failure log (it is recommended to run the test suite on both Linux and macOS using the same <code class="docutils literal notranslate"><span class="pre">env.yml</span></code>, and compare against the default regression data on both platforms, since occasionally there are platform-dependent issues), you can begin narrowing down the cause.</p>
+<section id="common-culprits">
+<h3>Common Culprits<a class="headerlink" href="#common-culprits" title="Link to this heading">¶</a></h3>
+<p>The most common culprits that have caused issues in the past are <strong>NumPy</strong>, <strong>pandas</strong>, <strong>Numba</strong>, and sometimes plotting libraries, since TARDIS relies on these heavily. However, errors can stem from any dependency.</p>
+<p>Once you have a test log, group all the errors. Based on the type of errors, you may get a hint about which dependencies are causing the issues.</p>
+</section>
+<section id="common-dependency-issues">
+<h3>Common Dependency Issues<a class="headerlink" href="#common-dependency-issues" title="Link to this heading">¶</a></h3>
+<ol class="arabic simple">
+<li><p><strong>HDF issues</strong>: If the underlying errors originate from PyTables or pandas, try pinning pandas to a previous version.</p></li>
+<li><p><strong>Assertion errors during regression data comparison</strong>: Depending on where they originate, these could be caused by Numba, NumPy, or pandas. Numba depends on NumPy (same with pandas), so these are often intertwined and hard to isolate. Downgrading either NumPy or Numba may result in an automatic downgrade of the other.</p></li>
+</ol>
+</section>
+<section id="local-debugging">
+<h3>Local Debugging<a class="headerlink" href="#local-debugging" title="Link to this heading">¶</a></h3>
+<p>Once you have a list of all issues, pick a buggy test file to start with. We suggest starting with tests that are mostly standalone, since they are easier to track down.</p>
+<p>To make it easier, run the test of your choice in two different environments with the <code class="docutils literal notranslate"><span class="pre">--pdb</span></code> flag enabled:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pytest<span class="w"> </span>path/to/test_module<span class="w"> </span>--tardis-regression-data<span class="o">=</span>path/to/regression-data<span class="w"> </span>-vvv<span class="w"> </span>--pdb
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">-x</span></code> flag can be useful for ending the test suite early to focus on one error at a time. The <code class="docutils literal notranslate"><span class="pre">-vvv</span></code> flag provides extra verbosity and more detail during the run.</p>
+<p>Once the test suite fails, use the debugger to navigate to the location in TARDIS where the failure occurs. You can then set breakpoints and observe how the code performs in both environments to narrow down the dependency.</p>
+<p>Once you suspect a dependency is causing the issue, try pinning it to a previous version, install TARDIS in development mode (see <a class="reference internal" href="#testing-locally">Testing Locally</a>), and run the test suite again. Check the list of failures to validate your hypothesis.</p>
+<p>Since dependencies are interrelated, pinning one may cause another to be pinned as well. Review the changelogs of both dependencies, associated issues, and pull requests to further investigate which dependency is the root cause.</p>
+</section>
+</section>
+<section id="resolving-discovered-issues">
+<h2>Resolving Discovered Issues<a class="headerlink" href="#resolving-discovered-issues" title="Link to this heading">¶</a></h2>
+<p>Once buggy dependencies have been identified, there are three directions to take:</p>
+<ol class="arabic simple">
+<li><p><strong>Keep the dependency pinned</strong> to a known working version.</p></li>
+<li><p><strong>Update the regression data</strong> if the old regression data no longer works with the new dependency versions.</p></li>
+<li><p><strong>Modify the code</strong> to handle the changes if the old regression data still works.</p></li>
+</ol>
+<section id="updating-regression-data">
+<h3>Updating Regression Data<a class="headerlink" href="#updating-regression-data" title="Link to this heading">¶</a></h3>
+<p>If the regression data needs to be updated, the regression data comparison workflow can be useful:
+<a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/compare-regdata.yml">compare-regdata.yml</a>.</p>
+<p>This workflow also uses the same <code class="docutils literal notranslate"><span class="pre">setup-env</span></code> action, so you can provide the lockfile path to configure it.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>If you open a pull request with changes, the workflow will give incorrect results by default because it uses the <code class="docutils literal notranslate"><span class="pre">pull_request_target</span></code> event, which means changes in the PR will not be picked up. To work around this, either run the workflow from a fork or push the branch to the upstream remote. In either case, modify the trigger from <code class="docutils literal notranslate"><span class="pre">pull_request_target</span></code> to <code class="docutils literal notranslate"><span class="pre">pull_request</span></code> on the upstream branch. Once this is done, the workflow will run correctly and post a comment with graphs displaying the spectrum change and differences in regression data.</p>
+</div>
+<p>An example of such a comment can be found at: <a class="reference external" href="https://github.com/tardis-sn/tardis/pull/3391#issuecomment-3784883251">tardis-sn/tardis#3391 (comment)</a>.</p>
+<p>For more instructions on updating the regression data, see the <a class="reference external" href="https://tardis-sn.github.io/tardis/contributing/development/update_regression_data.html">TARDIS regression data update guide</a>.</p>
+</section>
+</section>
+<section id="updating-the-benchmarks-environment-yaml">
+<h2>Updating the Benchmarks Environment YAML<a class="headerlink" href="#updating-the-benchmarks-environment-yaml" title="Link to this heading">¶</a></h2>
+<p>The benchmarks use the <a class="reference external" href="https://asv.readthedocs.io/">airspeed velocity</a> package for benchmarking TARDIS. Unfortunately, airspeed velocity does not support lockfiles, so we use exported environment YAMLs to mitigate this issue.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>&gt;<span class="w"> </span>env.yml
+</pre></div>
+</div>
+<p>We recommend having different exported environments for different platforms — for instance, export the Linux environment on Linux and the macOS environment on macOS.</p>
+<p>If benchmarks continue to fail, you can apply the <code class="docutils literal notranslate"><span class="pre">--no-builds</span></code> flag, which strips the build strings from dependencies to make the file more portable across platforms. However, try making it work without this flag first.</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>conda<span class="w"> </span>env<span class="w"> </span><span class="nb">export</span><span class="w"> </span>-n<span class="w"> </span>&lt;env-name&gt;<span class="w"> </span>--no-builds<span class="w"> </span>&gt;<span class="w"> </span>env.yml
+</pre></div>
+</div>
+<p>The exported environment then needs to be corrected:</p>
+<ol class="arabic">
+<li><p>The exported environment will have <code class="docutils literal notranslate"><span class="pre">pyviz</span></code> as a conda channel. Remove it from the channels list and instead specify it next to <code class="docutils literal notranslate"><span class="pre">nbsite</span></code> like so: <code class="docutils literal notranslate"><span class="pre">pyviz::nbsite=0.8.7</span></code>. This ensures only <code class="docutils literal notranslate"><span class="pre">nbsite</span></code> is downloaded from the <code class="docutils literal notranslate"><span class="pre">pyviz</span></code> channel.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>At the time of reading, please cross-check the conda-forge <code class="docutils literal notranslate"><span class="pre">nbsite</span></code> documentation to verify whether <code class="docutils literal notranslate"><span class="pre">pyviz</span></code> is still the default channel for installing <code class="docutils literal notranslate"><span class="pre">nbsite</span></code>.</p>
+</div>
+</li>
+<li><p>The exported environment may contain pip-installed dependencies (such as <code class="docutils literal notranslate"><span class="pre">tardisbase</span></code>). We recommend removing these before committing the file.</p></li>
+</ol>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../compare_commits.html">Visualizing File Changes Across Commits</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../index.html">Development</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Unpinning Environment Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="unpinning_2026.html">Unpinning 2026</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sporadic_linux_test_failure.html">Sporadic Linux Test Failure</a></li>
+<li class="toctree-l2"><a class="reference internal" href="workflows/index.html">TARDIS GitHub Actions Workflows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../index.html">Documentation overview</a><ul>
+  <li><a href="../index.html">Development</a><ul>
+      <li>Previous: <a href="../index.html" title="previous chapter">Development</a></li>
+      <li>Next: <a href="unpinning_2026.html" title="next chapter">Unpinning 2026</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../_sources/contributing/development/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>

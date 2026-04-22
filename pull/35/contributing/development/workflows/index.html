@@ -1,0 +1,214 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="../../../">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>TARDIS GitHub Actions Workflows &#8212; tardisbase 0.1.dev1+gdf93e3bd3.d20260422 documentation</title>
+    <link rel="stylesheet" type="text/css" href="../../../_static/pygments.css?v=5ecbeea2" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/basic.css?v=b08954a9" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/alabaster.css?v=27fed22d" />
+    <link rel="stylesheet" type="text/css" href="../../../_static/graphviz.css?v=4ae1632d" />
+    <script src="../../../_static/documentation_options.js?v=5a1df173"></script>
+    <script src="../../../_static/doctools.js?v=9bcbadda"></script>
+    <script src="../../../_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <link rel="next" title="setup-env.yml" href="actions/setup-env.html" />
+    <link rel="prev" title="Sporadic Linux Test Failure" href="../sporadic_linux_test_failure.html" />
+    <link href="../../../_static/tardis.css" rel="stylesheet" type="text/css">
+
+  </head><body>
+  
+  <!-- Google tag (gtag.js) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-53HJHD1BWS"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag() { dataLayer.push(arguments); }
+    gtag('js', new Date());
+
+    gtag('config', 'G-53HJHD1BWS');
+  </script>
+  <a href="http://github.com/tardis-sn/tardis"><img style="position: fixed; top: 0px; right: 0; border: 0; z-index: 100000;image-orientation: 90deg;" src="https://s3.amazonaws.com/github/ribbons/forkme_left_darkblue_121621.png" alt="Fork me on GitHub"/></a>
+
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          
+
+          <div class="body" role="main">
+            
+  <section id="tardis-github-actions-workflows">
+<span id="tardis-workflows"></span><h1>TARDIS GitHub Actions Workflows<a class="headerlink" href="#tardis-github-actions-workflows" title="Link to this heading">¶</a></h1>
+<p>This section documents the GitHub Actions <strong>actions</strong>, <strong>reusable workflows</strong>,
+and <strong>core workflows</strong> maintained in the
+<a class="reference external" href="https://github.com/tardis-sn/tardis">TARDIS repository</a> under
+<code class="docutils literal notranslate"><span class="pre">.github/workflows/</span></code>. It also references related actions that live in the
+<a class="reference external" href="https://github.com/tardis-sn/tardis-actions">tardis-actions repository</a>.</p>
+<section id="actions">
+<h2>Actions<a class="headerlink" href="#actions" title="Link to this heading">¶</a></h2>
+<p>Small, reusable building blocks used across the core workflows.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="actions/setup-env.html"><span class="doc">setup-env.yml</span></a> — creates the conda environment from the lockfile and caches it for faster subsequent runs.</p></li>
+<li><p><a class="reference internal" href="actions/setup-lfs.html"><span class="doc">setup-lfs.yml</span></a> — restores the cached regression data / atom data LFS objects for use in a job.</p></li>
+</ul>
+</section>
+<section id="reusable-workflows">
+<h2>Reusable Workflows<a class="headerlink" href="#reusable-workflows" title="Link to this heading">¶</a></h2>
+<p>Workflows that are not triggered directly but are called by other workflows.</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="reusable/lfs-cache.html"><span class="doc">lfs-cache.yml</span></a> — checks whether regression data LFS objects are cached, and pulls + saves them if not.</p></li>
+</ul>
+</section>
+<section id="core-workflows">
+<h2>Core Workflows<a class="headerlink" href="#core-workflows" title="Link to this heading">¶</a></h2>
+<p>End-to-end workflows triggered by pushes, pull requests, schedules, or manual
+dispatch.</p>
+<section id="testing">
+<h3>Testing<a class="headerlink" href="#testing" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/tests.html"><span class="doc">tests.yml</span></a> — runs the TARDIS test suite on Linux and macOS for every push / PR to <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p></li>
+<li><p><a class="reference internal" href="core/full-tests.html"><span class="doc">full-tests.yml</span></a> — runs the full test suite on a self-hosted runner (PR label-gated).</p></li>
+<li><p><a class="reference internal" href="core/compare-regdata.html"><span class="doc">compare-regdata.yml</span></a> — regenerates regression data on a PR and posts a comparison report.</p></li>
+<li><p><a class="reference internal" href="core/stardis-tests.html"><span class="doc">stardis-tests.yml</span></a> — pulls STARDIS and runs its tests against the current TARDIS commit.</p></li>
+</ul>
+</section>
+<section id="documentation">
+<h3>Documentation<a class="headerlink" href="#documentation" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/build-docs.html"><span class="doc">build-docs.yml</span></a> — builds the Sphinx docs and deploys them to GitHub Pages.</p></li>
+<li><p><a class="reference internal" href="core/clean-docs.html"><span class="doc">clean-docs.yml</span></a> — removes preview doc folders when PRs/branches are closed or deleted.</p></li>
+<li><p><a class="reference internal" href="core/docstr-cov.html"><span class="doc">docstr-cov.yml</span></a> — tracks docstring coverage and updates a shields.io badge.</p></li>
+</ul>
+</section>
+<section id="release">
+<h3>Release<a class="headerlink" href="#release" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/pre-release.html"><span class="doc">pre-release.yml</span></a> — weekly cron that prepares a release PR with updated Zenodo metadata.</p></li>
+<li><p><a class="reference internal" href="core/release.html"><span class="doc">release.yml</span></a> — creates the GitHub Release, attaches lockfiles, and injects the DOI and changelog.</p></li>
+<li><p><a class="reference internal" href="core/post-release.html"><span class="doc">post-release.yml</span></a> — updates <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code>, <code class="docutils literal notranslate"><span class="pre">CITATION.cff</span></code>, and credits after a release.</p></li>
+</ul>
+</section>
+<section id="benchmarks">
+<h3>Benchmarks<a class="headerlink" href="#benchmarks" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/benchmarks.html"><span class="doc">benchmarks.yml</span></a> — runs airspeed velocity benchmarks and publishes results to <code class="docutils literal notranslate"><span class="pre">tardis-benchmarks</span></code>.</p></li>
+</ul>
+</section>
+<section id="code-quality">
+<h3>Code Quality<a class="headerlink" href="#code-quality" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/codestyle.html"><span class="doc">codestyle.yml</span></a> — runs <code class="docutils literal notranslate"><span class="pre">ruff</span></code> and posts a summary comment on PRs.</p></li>
+<li><p><a class="reference internal" href="core/codespell.html"><span class="doc">codespell.yml</span></a> — runs <code class="docutils literal notranslate"><span class="pre">codespell</span></code> on the <code class="docutils literal notranslate"><span class="pre">docs/</span></code> tree.</p></li>
+<li><p><a class="reference internal" href="core/mailmap.html"><span class="doc">mailmap.yml</span></a> — ensures PR authors have an entry in <code class="docutils literal notranslate"><span class="pre">.mailmap</span></code>.</p></li>
+</ul>
+</section>
+<section id="utility">
+<h3>Utility<a class="headerlink" href="#utility" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/util.html"><span class="doc">util.yml</span></a> — PR housekeeping: LFS label warnings, GSoC label, first-time contributor welcome, ORCID check.</p></li>
+<li><p><a class="reference internal" href="core/tardis-research-papers.html"><span class="doc">tardis-research-papers.yml</span></a> — monthly cron that refreshes the list of papers using TARDIS.</p></li>
+</ul>
+</section>
+<section id="archived">
+<h3>Archived<a class="headerlink" href="#archived" title="Link to this heading">¶</a></h3>
+<ul class="simple">
+<li><p><a class="reference internal" href="core/archived.html"><span class="doc">Archived</span></a> — legacy workflows kept under <code class="docutils literal notranslate"><span class="pre">.github/workflows/archive/</span></code> for reference.</p></li>
+</ul>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+<div class="toctree-wrapper compound">
+</div>
+</section>
+</section>
+</section>
+
+
+          </div>
+          
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="Main">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../../../index.html">tardisbase</a></h1>
+
+
+
+
+
+
+
+
+
+<search id="searchbox" style="display: none" role="search">
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" placeholder="Search"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</search>
+<script>document.getElementById('searchbox').style.display = "block"</script><h3>Navigation</h3>
+<p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../compare_commits.html">Visualizing File Changes Across Commits</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../../index.html">Development</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../index.html">Unpinning Environment Lockfiles</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../unpinning_2026.html">Unpinning 2026</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../sporadic_linux_test_failure.html">Sporadic Linux Test Failure</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">TARDIS GitHub Actions Workflows</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/modules.html">API</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../../../index.html">Documentation overview</a><ul>
+  <li><a href="../../index.html">Development</a><ul>
+      <li>Previous: <a href="../sporadic_linux_test_failure.html" title="previous chapter">Sporadic Linux Test Failure</a></li>
+      <li>Next: <a href="actions/setup-env.html" title="next chapter">setup-env.yml</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+
+
+
+
+
+
+
+
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &#169;2026, TARDIS Collaboration.
+      
+      |
+      Powered by <a href="https://www.sphinx-doc.org/">Sphinx 8.2.3</a>
+      &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
+      
+      |
+      <a href="../../../_sources/contributing/development/workflows/index.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
