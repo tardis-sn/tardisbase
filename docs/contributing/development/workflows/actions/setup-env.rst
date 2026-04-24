@@ -4,6 +4,8 @@
 setup-env.yml
 **************
 
+Source: https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_env/action.yml
+
 To configure your environment effectively, utilize the `setup_env` action. This will help establish the necessary variables and settings for your pipeline.
 
 Cache Keys
