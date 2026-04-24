@@ -4,6 +4,8 @@
 codestyle.yml
 *************
 
+Source: https://github.com/tardis-sn/tardis/blob/master/.github/workflows/codestyle.yml
+
 .. note::
 
    Content to be filled in. (The TARDIS developer docs have a dedicated

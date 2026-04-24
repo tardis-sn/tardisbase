@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>lfs-cache.yml &#8212; tardisbase 0.1.dev1+gdf93e3bd3.d20260422 documentation</title>
+    <title>lfs-cache.yml &#8212; tardisbase 0.1.dev1+gf59eb4375.d20260424 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=5a1df173"></script>
+    <script src="../../../../_static/documentation_options.js?v=b4a54ed0"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,6 +47,7 @@
             
   <section id="lfs-cache-yml">
 <span id="workflow-lfs-cache"></span><h1>lfs-cache.yml<a class="headerlink" href="#lfs-cache-yml" title="Link to this heading">¶</a></h1>
+<p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml</a></p>
 <p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">LFS-cache</span></code> workflow caches the regression data and atomic data and can be triggered either manually or when there is a push to the main branch of the regression data repository. This is mainly responsible for doing LFS pulls when necessary and caching objects while the <code class="xref py py-obj docutils literal notranslate"><span class="pre">setup-lfs</span></code> action is used to restore the cached objects. Both fail if the cache is not available.</p>
 <p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">lfs-cache</span></code> workflow is used to cache the regression data and atomic data and to check if the cache is available.</p>
 <div class="admonition warning">

@@ -15,15 +15,15 @@ Actions
 
 Small, reusable building blocks used across the core workflows.
 
-* :doc:`actions/setup-env` — creates the conda environment from the lockfile and caches it for faster subsequent runs.
-* :doc:`actions/setup-lfs` — restores the cached regression data / atom data LFS objects for use in a job.
+* :doc:`setup-env.yml <actions/setup-env>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_env/action.yml>`__) — creates the conda environment from the lockfile and caches it for faster subsequent runs.
+* :doc:`setup-lfs.yml <actions/setup-lfs>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_lfs/action.yml>`__) — restores the cached regression data / atom data LFS objects for use in a job.
 
 Reusable Workflows
 ==================
 
 Workflows that are not triggered directly but are called by other workflows.
 
-* :doc:`reusable/lfs-cache` — checks whether regression data LFS objects are cached, and pulls + saves them if not.
+* :doc:`lfs-cache.yml <reusable/lfs-cache>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml>`__) — checks whether regression data LFS objects are cached, and pulls + saves them if not.
 
 Core Workflows
 ==============
@@ -34,47 +34,42 @@ dispatch.
 Testing
 -------
 
-* :doc:`core/tests` — runs the TARDIS test suite on Linux and macOS for every push / PR to ``master``.
-* :doc:`core/full-tests` — runs the full test suite on a self-hosted runner (PR label-gated).
-* :doc:`core/compare-regdata` — regenerates regression data on a PR and posts a comparison report.
-* :doc:`core/stardis-tests` — pulls STARDIS and runs its tests against the current TARDIS commit.
+* :doc:`tests.yml <core/tests>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml>`__) — runs the TARDIS test suite on Linux and macOS for every push / PR to ``master``.
+* :doc:`full-tests.yml <core/full-tests>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/full-tests.yml>`__) — runs the full test suite on a self-hosted runner (PR label-gated).
+* :doc:`compare-regdata.yml <core/compare-regdata>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/compare-regdata.yml>`__) — regenerates regression data on a PR and posts a comparison report.
+* :doc:`stardis-tests.yml <core/stardis-tests>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/stardis-tests.yml>`__) — pulls STARDIS and runs its tests against the current TARDIS commit.
 
 Documentation
 -------------
 
-* :doc:`core/build-docs` — builds the Sphinx docs and deploys them to GitHub Pages.
-* :doc:`core/clean-docs` — removes preview doc folders when PRs/branches are closed or deleted.
-* :doc:`core/docstr-cov` — tracks docstring coverage and updates a shields.io badge.
+* :doc:`build-docs.yml <core/build-docs>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/build-docs.yml>`__) — builds the Sphinx docs and deploys them to GitHub Pages.
+* :doc:`clean-docs.yml <core/clean-docs>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/clean-docs.yml>`__) — removes preview doc folders when PRs/branches are closed or deleted.
+* :doc:`docstr-cov.yml <core/docstr-cov>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/docstr-cov.yml>`__) — tracks docstring coverage and updates a shields.io badge.
 
 Release
 -------
 
-* :doc:`core/pre-release` — weekly cron that prepares a release PR with updated Zenodo metadata.
-* :doc:`core/release` — creates the GitHub Release, attaches lockfiles, and injects the DOI and changelog.
-* :doc:`core/post-release` — updates ``CHANGELOG.md``, ``CITATION.cff``, and credits after a release.
+* :doc:`pre-release.yml <core/pre-release>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/pre-release.yml>`__) — weekly cron that prepares a release PR with updated Zenodo metadata.
+* :doc:`release.yml <core/release>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/release.yml>`__) — creates the GitHub Release, attaches lockfiles, and injects the DOI and changelog.
+* :doc:`post-release.yml <core/post-release>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/post-release.yml>`__) — updates ``CHANGELOG.md``, ``CITATION.cff``, and credits after a release.
 
 Benchmarks
 ----------
 
-* :doc:`core/benchmarks` — runs airspeed velocity benchmarks and publishes results to ``tardis-benchmarks``.
+* :doc:`benchmarks.yml <core/benchmarks>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/benchmarks.yml>`__) — runs airspeed velocity benchmarks and publishes results to ``tardis-benchmarks``.
 
 Code Quality
 ------------
 
-* :doc:`core/codestyle` — runs ``ruff`` and posts a summary comment on PRs.
-* :doc:`core/codespell` — runs ``codespell`` on the ``docs/`` tree.
-* :doc:`core/mailmap` — ensures PR authors have an entry in ``.mailmap``.
+* :doc:`codestyle.yml <core/codestyle>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/codestyle.yml>`__) — runs ``ruff`` and posts a summary comment on PRs.
+* :doc:`codespell.yml <core/codespell>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/codespell.yml>`__) — runs ``codespell`` on the ``docs/`` tree.
+* :doc:`mailmap.yml <core/mailmap>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/mailmap.yml>`__) — ensures PR authors have an entry in ``.mailmap``.
 
 Utility
 -------
 
-* :doc:`core/util` — PR housekeeping: LFS label warnings, GSoC label, first-time contributor welcome, ORCID check.
-* :doc:`core/tardis-research-papers` — monthly cron that refreshes the list of papers using TARDIS.
-
-Archived
---------
-
-* :doc:`core/archived` — legacy workflows kept under ``.github/workflows/archive/`` for reference.
+* :doc:`util.yml <core/util>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/util.yml>`__) — PR housekeeping: LFS label warnings, GSoC label, first-time contributor welcome, ORCID check.
+* :doc:`tardis-research-papers.yml <core/tardis-research-papers>` (`source <https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tardis-research-papers.yml>`__) — monthly cron that refreshes the list of papers using TARDIS.
 
 
 .. toctree::
@@ -113,4 +108,3 @@ Archived
    core/mailmap
    core/util
    core/tardis-research-papers
-   core/archived
