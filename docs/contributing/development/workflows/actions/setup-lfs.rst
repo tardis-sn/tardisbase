@@ -6,9 +6,19 @@ setup-lfs.yml
 
 Source: https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_lfs/action.yml
 
-If you need access to regression or atomic data, incorporate the `setup_lfs` action to ensure proper handling of large file storage.
+Composite action to **restore** atomic and TARDIS regression data. This action is only used for retrieval, not for storing — for storing, see the :doc:`lfs-cache <../reusable/lfs-cache>` reusable workflow.
 
-The `setup-lfs` action is used to restore the cached objects. It fails if the cache is not available.
+Inputs:
+
+- ``regression-data-repo`` — regression data repository name (default `tardis-sn/tardis-regression-data <https://github.com/tardis-sn/tardis-regression-data>`_).
+- ``atom-data-sparse`` — if true, retrieve only the atom data instead of the full regression data suite.
+
+What it does
+============
+
+1. Clone the `regression data repository <https://github.com/tardis-sn/tardis-regression-data>`_ (without LFS).
+2. Build an `LFS <https://git-lfs.com/>`_ file list, used to derive the cache key. If the LFS regression data is updated the cache key is automatically invalidated, and `GitHub automatically removes stale caches <https://docs.github.com/en/actions/using-workflows/caching-dependencies-to-speed-up-workflows#usage-limits-and-eviction-policy>`_.
+3. Restore the cache, then run ``git lfs checkout``.
 
 Cache Keys
 ==========
@@ -18,9 +28,15 @@ Cache Keys
 - Format: ``tardis-regression-<data-type>-<hash>-v1``
 - Examples:
 
-  - ``tardis-regression-atom-data-sparse-<hash>-v1`` - For atomic data cache
-  - ``tardis-regression-full-data-<hash>-v1`` - For full TARDIS regression data cache
-- Used in: ``setup_lfs`` action
+  - ``tardis-regression-atom-data-sparse-<hash>-v1`` — atomic data cache
+  - ``tardis-regression-full-data-<hash>-v1`` — full TARDIS regression data cache
 
 .. warning::
-   The version suffix (-v1) allows for future cache invalidation if needed.
+   The version suffix (``-v1``) allows for future cache invalidation if needed.
+
+See also
+========
+
+- :doc:`lfs-cache <../reusable/lfs-cache>`
+- :doc:`tests <../core/tests>`
+- :doc:`compare-regdata <../core/compare-regdata>`
