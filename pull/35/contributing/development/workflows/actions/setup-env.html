@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>setup-env.yml &#8212; tardisbase 0.1.dev1+gf59eb4375.d20260424 documentation</title>
+    <title>setup-env.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=b4a54ed0"></script>
+    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,24 +47,31 @@
             
   <section id="setup-env-yml">
 <span id="workflow-setup-env"></span><h1>setup-env.yml<a class="headerlink" href="#setup-env-yml" title="Link to this heading">¶</a></h1>
-<p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_env/action.yml">https://github.com/tardis-sn/tardis/blob/master/.github/actions/setup_env/action.yml</a></p>
-<p>To configure your environment effectively, utilize the <code class="xref py py-obj docutils literal notranslate"><span class="pre">setup_env</span></code> action. This will help establish the necessary variables and settings for your pipeline.</p>
-<section id="cache-keys">
-<h2>Cache Keys<a class="headerlink" href="#cache-keys" title="Link to this heading">¶</a></h2>
-<p><strong>Environment Cache Keys</strong></p>
+<p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis-actions/blob/main/setup-env/action.yml">https://github.com/tardis-sn/tardis-actions/blob/main/setup-env/action.yml</a></p>
+<p>Composite action to create and cache the conda environment using <a class="reference external" href="https://github.com/mamba-org/setup-micromamba">mamba-org/setup-micromamba</a>. Used by the <a class="reference external" href="https://github.com/tardis-sn/tardis">tardis</a>, <a class="reference external" href="https://github.com/tardis-sn/carsus">carsus</a> and <a class="reference external" href="https://github.com/tardis-sn/stardis">stardis</a> repos to set up environments.</p>
+<p>Inputs:</p>
 <ul class="simple">
-<li><p>Format: <code class="docutils literal notranslate"><span class="pre">tardis-conda-env-&lt;os-label&gt;-&lt;hash&gt;-v1</span></code></p></li>
-<li><p>Examples:</p>
-<ul>
-<li><p><code class="docutils literal notranslate"><span class="pre">tardis-conda-env-linux-&lt;hash&gt;-v1</span></code> - For Linux conda environment</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">tardis-conda-env-macos-&lt;hash&gt;-v1</span></code> - For macOS conda environment</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">os-label</span></code> — lock file suffix, e.g. <code class="docutils literal notranslate"><span class="pre">linux-64</span></code>, <code class="docutils literal notranslate"><span class="pre">osx-64</span></code> (default <code class="docutils literal notranslate"><span class="pre">linux-64</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lockfile-path</span></code> — use a local lock file instead of downloading one.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">lock-file-url-prefix</span></code> — override the lock file source (default <a class="reference external" href="https://github.com/tardis-sn/tardis-base/tree/master">tardis-base/master</a>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">environment-name</span></code> — conda env name (default <code class="docutils literal notranslate"><span class="pre">tardis</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">cache-environment</span></code> / <code class="docutils literal notranslate"><span class="pre">cache-downloads</span></code> — toggle caching.</p></li>
+</ul>
+<section id="what-it-does">
+<h2>What it does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Get the lock file from <code class="docutils literal notranslate"><span class="pre">lockfile-path</span></code> or download it from <code class="docutils literal notranslate"><span class="pre">lock-file-url-prefix</span></code>.</p></li>
+<li><p>Generate a cache key of the form <code class="docutils literal notranslate"><span class="pre">tardis-conda-env-&lt;os-label&gt;-&lt;hash&gt;-v1</span></code>, e.g.:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">tardis-conda-env-linux-&lt;hash&gt;-v1</span></code> — Linux conda environment</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">tardis-conda-env-macos-&lt;hash&gt;-v1</span></code> — macOS conda environment</p></li>
 </ul>
 </li>
-<li><p>Used in: <code class="docutils literal notranslate"><span class="pre">setup_env</span></code> action</p></li>
-</ul>
+<li><p>Call <a class="reference external" href="https://github.com/mamba-org/setup-micromamba">mamba-org/setup-micromamba</a> to create (or restore) the environment, passing the remaining inputs through.</p></li>
+</ol>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
-<p>The version suffix (-v1) allows for future cache invalidation if needed.</p>
+<p>The version suffix (<code class="docutils literal notranslate"><span class="pre">-v1</span></code>) allows for future cache invalidation if needed.</p>
 </div>
 </section>
 </section>

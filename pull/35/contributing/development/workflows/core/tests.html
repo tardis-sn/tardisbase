@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tests.yml &#8212; tardisbase 0.1.dev1+gf59eb4375.d20260424 documentation</title>
+    <title>tests.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=b4a54ed0"></script>
+    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,32 +48,33 @@
   <section id="tests-yml">
 <span id="workflow-tests"></span><h1>tests.yml<a class="headerlink" href="#tests-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml</a></p>
-<p>The <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml">testing pipeline</a> (CI) comprises 4 concurrent jobs that execute tests both with and without the continuum marker across Ubuntu and macOS platforms (2 platforms × 2 test types).
-The pipeline includes both preparatory setup (environment installation and regression data configuration) and subsequent uploading of coverage reports upon test completion.</p>
+<p>The TARDIS testing pipeline. Comprises concurrent jobs that execute tests both with and without the continuum marker (currently set to non-continuum tests only) across Ubuntu and macOS platforms (2 platforms × 2 test types). The pipeline includes preparatory setup (environment installation and regression data configuration) and subsequent uploading of coverage reports upon test completion.</p>
 <section id="jobs">
 <h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
-<p><strong>test-cache</strong> — calls the <a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache.yml</span></a> reusable workflow to ensure the regression data LFS cache exists.</p>
+<p><strong>tests-cache</strong> — calls the <a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a> reusable workflow to verify the regression data cache exists and is up to date; fails the workflow otherwise.</p>
 <p><strong>tests</strong> — matrix job over <code class="docutils literal notranslate"><span class="pre">linux-64</span></code> / <code class="docutils literal notranslate"><span class="pre">osx-arm64</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Checkout <a class="reference external" href="https://github.com/tardis-sn/tardis">TARDIS</a>.</p></li>
+<li><p>Free up disk space — <a class="reference external" href="https://github.com/jlumbroso/free-disk-space">jlumbroso/free-disk-space</a> on Ubuntu, manual cleanup on macOS.</p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a> to restore regression data.</p></li>
+<li><p>Install TARDIS — either from git via <a class="reference external" href="https://pip.pypa.io/">pip</a>, or in editable mode. The pip-from-git path is used to test that <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> lists all data files and that no modules are missing <code class="docutils literal notranslate"><span class="pre">__init__</span></code> files.</p></li>
+<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a> to create the conda environment from the TARDIS lock file (via <code class="docutils literal notranslate"><span class="pre">lockfile-path</span></code>).</p></li>
+<li><p>Install <a class="reference external" href="https://github.com/tardis-sn/tardisbase">tardisbase</a>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> <a class="reference external" href="https://github.com/phn/lineid_plot">lineid_plot</a> — only dependency installed via pip.</p></li>
+<li><p>Run tests.</p></li>
+<li><p>Run regression-generation tests when the corresponding label is present.</p></li>
+<li><p>Upload coverage files.</p></li>
+</ol>
+<p><strong>coverage-combine</strong> — combines <a class="reference external" href="https://coverage.readthedocs.io/">coverage</a> reports from the matrix jobs. Originally written to combine continuum and non-continuum reports.</p>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p>free up disk space on the runner</p></li>
-<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a> to restore the cached regression data</p></li>
-<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a> to create the conda environment from the lockfile</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[tardisbase]&quot;</span></code> (or install <code class="docutils literal notranslate"><span class="pre">tardis</span></code> from git if <code class="docutils literal notranslate"><span class="pre">pip_git</span></code> is true)</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tardis</span></code> against the regression data</p></li>
-<li><p>optionally regenerate regression data when triggered from <code class="docutils literal notranslate"><span class="pre">master</span></code> or a PR with the <code class="docutils literal notranslate"><span class="pre">run-generation-tests</span></code> label</p></li>
-<li><p>upload coverage artifact</p></li>
-</ul>
-<p><strong>combine_coverage_reports</strong> — runs after <code class="docutils literal notranslate"><span class="pre">tests</span></code>:</p>
-<ul class="simple">
+<li><p><a class="reference internal" href="pre-release.html"><span class="doc">pre-release</span></a></p></li>
+<li><p><a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a></p></li>
 <li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a></p></li>
-<li><p>download all coverage artifacts</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">coverage</span> <span class="pre">combine</span></code> and <code class="docutils literal notranslate"><span class="pre">coverage</span> <span class="pre">xml</span></code> / <code class="docutils literal notranslate"><span class="pre">coverage</span> <span class="pre">html</span></code></p></li>
-<li><p>upload to Codecov</p></li>
 </ul>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p><a class="reference internal" href="pre-release.html"><span class="doc">pre-release.yml</span></a> also runs this workflow via <code class="docutils literal notranslate"><span class="pre">workflow_call</span></code> with <code class="docutils literal notranslate"><span class="pre">pip_git:</span> <span class="pre">true</span></code>.</p>
-</div>
 </section>
 </section>
 

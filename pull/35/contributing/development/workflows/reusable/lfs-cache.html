@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>lfs-cache.yml &#8212; tardisbase 0.1.dev1+gf59eb4375.d20260424 documentation</title>
+    <title>lfs-cache.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=b4a54ed0"></script>
+    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,15 +48,38 @@
   <section id="lfs-cache-yml">
 <span id="workflow-lfs-cache"></span><h1>lfs-cache.yml<a class="headerlink" href="#lfs-cache-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml</a></p>
-<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">LFS-cache</span></code> workflow caches the regression data and atomic data and can be triggered either manually or when there is a push to the main branch of the regression data repository. This is mainly responsible for doing LFS pulls when necessary and caching objects while the <code class="xref py py-obj docutils literal notranslate"><span class="pre">setup-lfs</span></code> action is used to restore the cached objects. Both fail if the cache is not available.</p>
-<p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">lfs-cache</span></code> workflow is used to cache the regression data and atomic data and to check if the cache is available.</p>
-<div class="admonition warning">
-<p class="admonition-title">Warning</p>
-<ul class="simple">
-<li><p>The <code class="xref py py-obj docutils literal notranslate"><span class="pre">lfs-cache</span></code> workflow will fail if the cache is not available and will not pull LFS data by default.</p></li>
-<li><p>However, if the <code class="xref py py-obj docutils literal notranslate"><span class="pre">allow_lfs_pull</span></code> label is added to the PR, the workflow will pull LFS data. Please note that this is to be used sparingly and only with caution.</p></li>
-</ul>
+<p>Reusable workflow responsible for <strong>caching</strong> the regression data. For the action that retrieves regression data see <a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a>.</p>
+<p>Works with both atom data and the complete regression data suite.</p>
+<section id="inputs">
+<h2>Inputs<a class="headerlink" href="#inputs" title="Link to this heading">¶</a></h2>
+<p>This workflow can be called both via <a class="reference external" href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_call">workflow_call</a> and <a class="reference external" href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch">workflow_dispatch</a>. See the <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/lfs-cache.yml">source file</a> for the full list of inputs.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">allow-lfs-pull</span></code> input controls whether the workflow performs a <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">lfs</span> <span class="pre">pull</span></code> and caches the regression data. When <code class="docutils literal notranslate"><span class="pre">allow-lfs-pull</span></code> is <code class="docutils literal notranslate"><span class="pre">false</span></code> the workflow only checks whether the cache is present and up to date — this mode is used by <a class="reference internal" href="../core/tests.html"><span class="doc">tests</span></a> to fail fast before tests actually run.</p>
 </div>
+</section>
+<section id="what-it-does">
+<h2>What it does<a class="headerlink" href="#what-it-does" title="Link to this heading">¶</a></h2>
+<ol class="arabic simple">
+<li><p>Checkout the <a class="reference external" href="https://github.com/tardis-sn/tardis-regression-data">regression data repo</a> without <a class="reference external" href="https://git-lfs.com/">LFS</a>.</p></li>
+<li><p>Build an LFS file list, used to derive the cache key.</p></li>
+<li><p>Validate the cache key with <a class="reference external" href="https://github.com/actions/cache/tree/main/restore">actions/cache/restore</a> in lookup-only mode.</p></li>
+<li><p>Branch on <code class="docutils literal notranslate"><span class="pre">allow-lfs-pull</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">false</span></code> — fail if the cache is missing.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">true</span></code> — run <code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">lfs</span> <span class="pre">pull</span></code> and save the LFS cache.</p></li>
+</ul>
+</li>
+</ol>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="../core/tests.html"><span class="doc">tests</span></a></p></li>
+<li><p><a class="reference internal" href="../core/compare-regdata.html"><span class="doc">compare-regdata</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a></p></li>
+</ul>
+</section>
 </section>
 
 

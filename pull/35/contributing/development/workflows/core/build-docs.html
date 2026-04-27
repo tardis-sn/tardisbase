@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>build-docs.yml &#8212; tardisbase 0.1.dev1+gf59eb4375.d20260424 documentation</title>
+    <title>build-docs.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=b4a54ed0"></script>
+    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,11 +48,39 @@
   <section id="build-docs-yml">
 <span id="workflow-build-docs"></span><h1>build-docs.yml<a class="headerlink" href="#build-docs-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/build-docs.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/build-docs.yml</a></p>
-<p>A GitHub Actions workflow that builds and deploys the TARDIS documentation website.</p>
-<section id="documentation-preview-pipeline">
-<h2>Documentation preview pipeline<a class="headerlink" href="#documentation-preview-pipeline" title="Link to this heading">¶</a></h2>
-<p>This workflow does not run on the main repository, just on forks.
-See the <a class="reference external" href="https://tardis-sn.github.io/tardis/contributing/development/documentation_guidelines.html#doc-preview">Documentation Preview</a> section for more information.</p>
+<p>Generates TARDIS documentation on <code class="docutils literal notranslate"><span class="pre">master</span></code> and pull requests, and deploys it to <a class="reference external" href="https://pages.github.com/">GitHub Pages</a> via the <a class="reference external" href="https://github.com/tardis-sn/tardis/tree/gh-pages">gh-pages branch</a>.</p>
+<section id="jobs">
+<h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
+<p><strong>tests-cache</strong> — uses <a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a> to verify the regression data cache exists.</p>
+<p><strong>check-for-changes</strong> — the <code class="docutils literal notranslate"><span class="pre">build-docs</span></code> job only runs on pull requests if:</p>
+<ol class="arabic simple">
+<li><p>there are changes inside <a class="reference external" href="https://github.com/tardis-sn/tardis/tree/master/docs">/docs</a>, or</p></li>
+<li><p>the <code class="docutils literal notranslate"><span class="pre">build-docs</span></code> label is applied.</p></li>
+</ol>
+<p>It always runs on <code class="docutils literal notranslate"><span class="pre">master</span></code> and on <a class="reference external" href="https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#workflow_dispatch">workflow_dispatch</a>.</p>
+<p><strong>build-docs</strong></p>
+<ol class="arabic simple">
+<li><p>Checkout code (PR or <code class="docutils literal notranslate"><span class="pre">master</span></code>).</p></li>
+<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a>.</p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a> — atom data only.</p></li>
+<li><p>Install <a class="reference external" href="https://github.com/tardis-sn/tardisbase">tardisbase</a> and pip packages.</p></li>
+<li><p>Install <a class="reference external" href="https://github.com/tardis-sn/tardis">tardis</a> in editable mode.</p></li>
+<li><p>Build the documentation with <a class="reference external" href="https://www.sphinx-doc.org/">Sphinx</a>.</p></li>
+<li><p>Set destination directory for <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code>: pushes to the <code class="docutils literal notranslate"><span class="pre">/pull</span></code> folder for pull requests, or updates the root for <code class="docutils literal notranslate"><span class="pre">master</span></code>.</p></li>
+<li><p>Clean branch on <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code> — this is a nuclear option that wipes the entire <code class="docutils literal notranslate"><span class="pre">gh-pages</span></code> branch and starts fresh. See <a class="reference internal" href="clean-docs.html"><span class="doc">clean-docs</span></a>.</p></li>
+<li><p>Deploy to <a class="reference external" href="https://pages.github.com/">GitHub Pages</a>.</p></li>
+<li><p>Post a comment with success/failure of the job.</p></li>
+</ol>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="clean-docs.html"><span class="doc">clean-docs</span></a></p></li>
+<li><p><a class="reference internal" href="docstr-cov.html"><span class="doc">docstr-cov</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a></p></li>
+<li><p><a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a></p></li>
+</ul>
 </section>
 </section>
 
