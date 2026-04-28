@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>stardis-tests.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
+    <title>stardis-tests.yml &#8212; tardisbase 0.1.dev1+gfe981d535.d20260428 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
+    <script src="../../../../_static/documentation_options.js?v=aa1788f1"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,11 +48,27 @@
   <section id="stardis-tests-yml">
 <span id="workflow-stardis-tests"></span><h1>stardis-tests.yml<a class="headerlink" href="#stardis-tests-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/stardis-tests.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/stardis-tests.yml</a></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Content to be filled in. (No existing prose for this workflow in the TARDIS
-developer docs.)</p>
-</div>
+<p>Runs the <a class="reference external" href="https://github.com/tardis-sn/stardis">STARDIS</a> test suite against the current TARDIS commit, so TARDIS changes that break STARDIS are caught early. Triggered on pushes and PRs to <code class="docutils literal notranslate"><span class="pre">master</span></code> and on <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>. Skipped on draft PRs.</p>
+<section id="jobs">
+<h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
+<p><strong>build</strong> — matrix over <code class="docutils literal notranslate"><span class="pre">linux-64</span></code>:</p>
+<ol class="arabic simple">
+<li><p>Checkout the <code class="docutils literal notranslate"><span class="pre">tardis-sn/stardis</span></code> repo (not TARDIS).</p></li>
+<li><p>Download the STARDIS conda lockfile from <code class="docutils literal notranslate"><span class="pre">raw.githubusercontent.com/tardis-sn/stardis/main/conda-&lt;label&gt;.lock</span></code>.</p></li>
+<li><p>Compute a cache key from the SHA-256 of the lockfile.</p></li>
+<li><p>Set up the <code class="docutils literal notranslate"><span class="pre">stardis</span></code> conda environment with <a class="reference external" href="https://github.com/mamba-org/setup-micromamba">mamba-org/setup-micromamba</a>, using the lockfile and the cache key for both env and downloads.</p></li>
+<li><p>Install TARDIS at the triggering commit: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">git+https://github.com/tardis-sn/tardis.git&#64;${{</span> <span class="pre">github.sha</span> <span class="pre">}}</span></code>.</p></li>
+<li><p>Install STARDIS in editable mode with its <code class="docutils literal notranslate"><span class="pre">test</span></code> extra: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[test]</span></code>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pytest</span></code>.</p></li>
+</ol>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tests.html"><span class="doc">tests</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a></p></li>
+</ul>
+</section>
 </section>
 
 

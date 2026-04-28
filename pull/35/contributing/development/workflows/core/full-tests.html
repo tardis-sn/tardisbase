@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>full-tests.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
+    <title>full-tests.yml &#8212; tardisbase 0.1.dev1+gfe981d535.d20260428 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
+    <script src="../../../../_static/documentation_options.js?v=aa1788f1"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,10 +48,32 @@
   <section id="full-tests-yml">
 <span id="workflow-full-tests"></span><h1>full-tests.yml<a class="headerlink" href="#full-tests-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/full-tests.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/full-tests.yml</a></p>
+<p>Runs the TARDIS test suite on a self-hosted runner. Label-gated: both jobs require the <code class="docutils literal notranslate"><span class="pre">full-tests</span></code> label on the PR. The trigger list also includes pushes to <code class="docutils literal notranslate"><span class="pre">master</span></code>, but a push event has no PR labels attached, so the label check is false and neither job runs on push.</p>
+<section id="jobs">
+<h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
+<p><strong>test-cache</strong> — calls the <a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a> reusable workflow against <code class="docutils literal notranslate"><span class="pre">tardis-sn/tardis-regression-data</span></code>. <code class="docutils literal notranslate"><span class="pre">allow_lfs_pull</span></code> is true on <code class="docutils literal notranslate"><span class="pre">master</span></code> or when the PR also carries the <code class="docutils literal notranslate"><span class="pre">git-lfs-pull</span></code> label.</p>
+<p><strong>run-tests</strong> — runs on <code class="docutils literal notranslate"><span class="pre">self-hosted</span></code> with a 60-minute timeout:</p>
+<ol class="arabic simple">
+<li><p>Checkout the PR head SHA (or the push SHA on <code class="docutils literal notranslate"><span class="pre">master</span></code>).</p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a> to restore regression data.</p></li>
+<li><p>Set up the conda environment directly with <a class="reference external" href="https://github.com/mamba-org/setup-micromamba">mamba-org/setup-micromamba</a> from <code class="docutils literal notranslate"><span class="pre">conda-linux-64.lock</span></code> (no caching — this runs on a self-hosted runner).</p></li>
+<li><p>Install <a class="reference external" href="https://github.com/tardis-sn/tardis">tardis</a> in editable mode with the <code class="docutils literal notranslate"><span class="pre">[tardisbase]</span></code> extra: <code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">&quot;.[tardisbase]&quot;</span></code>.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span> <span class="pre">--no-deps</span></code> <a class="reference external" href="https://github.com/phn/lineid_plot">lineid_plot</a>.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">pytest</span> <span class="pre">tardis</span></code> with regression-data, coverage, and <code class="docutils literal notranslate"><span class="pre">--cov-append</span></code> flags.</p></li>
+</ol>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>GPU Tests can be triggered by applying the <code class="xref py py-obj docutils literal notranslate"><span class="pre">full-tests</span></code> label to the pull request.</p>
+<p>Triggered by applying the <code class="docutils literal notranslate"><span class="pre">full-tests</span></code> label to a pull request.</p>
 </div>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="tests.html"><span class="doc">tests</span></a></p></li>
+<li><p><a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a></p></li>
+<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a></p></li>
+</ul>
+</section>
 </section>
 
 

@@ -7,12 +7,12 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>mailmap.yml &#8212; tardisbase 0.1.dev1+g5e1703b92.d20260427 documentation</title>
+    <title>mailmap.yml &#8212; tardisbase 0.1.dev1+gfe981d535.d20260428 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/graphviz.css?v=4ae1632d" />
-    <script src="../../../../_static/documentation_options.js?v=7526d7e3"></script>
+    <script src="../../../../_static/documentation_options.js?v=aa1788f1"></script>
     <script src="../../../../_static/doctools.js?v=9bcbadda"></script>
     <script src="../../../../_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,11 +48,22 @@
   <section id="mailmap-yml">
 <span id="workflow-mailmap"></span><h1>mailmap.yml<a class="headerlink" href="#mailmap-yml" title="Link to this heading">¶</a></h1>
 <p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/mailmap.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/mailmap.yml</a></p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>Content to be filled in. (No dedicated prose for this workflow in the TARDIS
-developer docs; <code class="docutils literal notranslate"><span class="pre">.mailmap</span></code> is referenced from the Authors pipeline.)</p>
-</div>
+<p>Verifies that every PR commit author has an entry in <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.mailmap">.mailmap</a>. If an author is missing, the bot fails the check and posts a comment asking the contributor to add their name and email.</p>
+<section id="jobs">
+<h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
+<p><strong>check</strong></p>
+<ol class="arabic simple">
+<li><p>Checkout the PR head SHA with full history.</p></li>
+<li><p>Run <code class="docutils literal notranslate"><span class="pre">cat</span> <span class="pre">.mailmap</span> <span class="pre">|</span> <span class="pre">grep</span> <span class="pre">&quot;$(git</span> <span class="pre">log</span> <span class="pre">$PR_BASE_SHA..HEAD</span> <span class="pre">--pretty='%aN</span> <span class="pre">&lt;%aE&gt;')&quot;</span></code> to confirm every PR-commit author appears in <code class="docutils literal notranslate"><span class="pre">.mailmap</span></code>.</p></li>
+<li><p>On failure, log the missing names/emails (<code class="docutils literal notranslate"><span class="pre">git</span> <span class="pre">log</span> <span class="pre">$PR_BASE_SHA..HEAD</span> <span class="pre">--pretty='%aN</span> <span class="pre">&lt;%aE&gt;'</span></code>) and post a bot comment instructing the contributor to add themselves to <code class="docutils literal notranslate"><span class="pre">.mailmap</span></code>.</p></li>
+</ol>
+</section>
+<section id="see-also">
+<h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference internal" href="util.html"><span class="doc">util</span></a></p></li>
+</ul>
+</section>
 </section>
 
 
