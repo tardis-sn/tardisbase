@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>tests.yml &#8212; tardisbase 0.1.dev1+geeca04e43.d20260501 documentation</title>
+    <title>save_atomic_files.yml &#8212; tardisbase 0.1.dev1+geeca04e43.d20260501 documentation</title>
     <link rel="stylesheet" type="text/css" href="../../../../_static/pygments.css?v=5ecbeea2" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/basic.css?v=b08954a9" />
     <link rel="stylesheet" type="text/css" href="../../../../_static/alabaster.css?v=27fed22d" />
@@ -19,8 +19,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@jupyter-widgets/html-manager@^1.0.1/dist/embed-amd.js"></script>
     <link rel="index" title="Index" href="../../../../genindex.html" />
     <link rel="search" title="Search" href="../../../../search.html" />
-    <link rel="next" title="full-tests.yml" href="full-tests.html" />
-    <link rel="prev" title="lfs-cache.yml" href="../reusable/lfs-cache.html" />
+    <link rel="next" title="tardisbase" href="../../../../api/modules.html" />
+    <link rel="prev" title="bridge.yml" href="bridge.html" />
     <link href="../../../../_static/tardis.css" rel="stylesheet" type="text/css">
 
   </head><body>
@@ -45,35 +45,20 @@
 
           <div class="body" role="main">
             
-  <section id="tests-yml">
-<span id="workflow-tests"></span><h1>tests.yml<a class="headerlink" href="#tests-yml" title="Link to this heading">¶</a></h1>
-<p>Source: <a class="reference external" href="https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml">https://github.com/tardis-sn/tardis/blob/master/.github/workflows/tests.yml</a></p>
-<p>The TARDIS testing pipeline. Comprises concurrent jobs that execute tests both with and without the continuum marker (currently set to non-continuum tests only) across Ubuntu and macOS platforms (2 platforms × 2 test types). The pipeline includes preparatory setup (environment installation and regression data configuration) and subsequent uploading of coverage reports upon test completion.</p>
+  <section id="save-atomic-files-yml">
+<span id="carsus-workflow-save-atomic-files"></span><h1>save_atomic_files.yml<a class="headerlink" href="#save-atomic-files-yml" title="Link to this heading">¶</a></h1>
+<p>Source: <a class="reference external" href="https://github.com/tardis-sn/carsus/blob/master/.github/workflows/save_atomic_files.yml">https://github.com/tardis-sn/carsus/blob/master/.github/workflows/save_atomic_files.yml</a></p>
+<p>The <code class="docutils literal notranslate"><span class="pre">save_atomic_files</span></code> workflow generates the atom data file if the <a class="reference internal" href="bridge.html"><span class="doc">bridge</span></a> comparison passes, zips it together with the comparison notebook (if produced), and uploads the archive to Moria. Manually triggered via <code class="docutils literal notranslate"><span class="pre">workflow_dispatch</span></code>.</p>
 <section id="jobs">
 <h2>Jobs<a class="headerlink" href="#jobs" title="Link to this heading">¶</a></h2>
-<p><strong>tests-cache</strong> — calls the <a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a> reusable workflow to verify the regression data cache exists and is up to date; fails the workflow otherwise.</p>
-<p><strong>tests</strong> — matrix job over <code class="docutils literal notranslate"><span class="pre">linux-64</span></code> / <code class="docutils literal notranslate"><span class="pre">osx-arm64</span></code>:</p>
-<ol class="arabic simple">
-<li><p>Checkout <a class="reference external" href="https://github.com/tardis-sn/tardis">TARDIS</a>.</p></li>
-<li><p>Free up disk space — <a class="reference external" href="https://github.com/jlumbroso/free-disk-space">jlumbroso/free-disk-space</a> on Ubuntu, manual cleanup on macOS.</p></li>
-<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a> to restore regression data.</p></li>
-<li><p>Install TARDIS — either from git via <a class="reference external" href="https://pip.pypa.io/">pip</a>, or in editable mode. The pip-from-git path is used to test that <code class="docutils literal notranslate"><span class="pre">pyproject.toml</span></code> lists all data files and that no modules are missing <code class="docutils literal notranslate"><span class="pre">__init__</span></code> files.</p></li>
-<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a> to create the conda environment from the TARDIS lock file (via <code class="docutils literal notranslate"><span class="pre">lockfile-path</span></code>).</p></li>
-<li><p>Install <a class="reference external" href="https://github.com/tardis-sn/tardisbase">tardisbase</a>.</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">pip</span> <span class="pre">install</span></code> <a class="reference external" href="https://github.com/phn/lineid_plot">lineid_plot</a> — only dependency installed via pip.</p></li>
-<li><p>Run tests.</p></li>
-<li><p>Run regression-generation tests when the corresponding label is present.</p></li>
-<li><p>Upload coverage files.</p></li>
-</ol>
-<p><strong>coverage-combine</strong> — combines <a class="reference external" href="https://coverage.readthedocs.io/">coverage</a> reports from the matrix jobs. Originally written to combine continuum and non-continuum reports.</p>
+<p><strong>create-artifacts</strong> — calls the <a class="reference internal" href="bridge.html"><span class="doc">bridge</span></a> workflow.</p>
+<p><strong>zip_artifacts</strong> — zips <code class="docutils literal notranslate"><span class="pre">kurucz_cd23_cmfgen_H_Si.h5</span></code> (and the comparison notebook, if present) and SCPs the archive to Moria via <a class="reference external" href="https://github.com/appleboy/scp-action">appleboy/scp-action&#64;v1</a>.</p>
+<p><strong>bridge-ref-check</strong> — fails the workflow if the bridge’s regression data comparison reported a diff.</p>
 </section>
 <section id="see-also">
 <h2>See also<a class="headerlink" href="#see-also" title="Link to this heading">¶</a></h2>
 <ul class="simple">
-<li><p><a class="reference internal" href="pre-release.html"><span class="doc">pre-release</span></a></p></li>
-<li><p><a class="reference internal" href="../reusable/lfs-cache.html"><span class="doc">lfs-cache</span></a></p></li>
-<li><p><a class="reference internal" href="../actions/setup-lfs.html"><span class="doc">setup-lfs</span></a></p></li>
-<li><p><a class="reference internal" href="../actions/setup-env.html"><span class="doc">setup-env</span></a></p></li>
+<li><p><a class="reference internal" href="bridge.html"><span class="doc">bridge</span></a></p></li>
 </ul>
 </section>
 </section>
@@ -112,8 +97,8 @@
 <li class="toctree-l2"><a class="reference internal" href="../../index.html">Unpinning Environment Lockfiles</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../unpinning_2026.html">Unpinning 2026</a></li>
 <li class="toctree-l2"><a class="reference internal" href="../../sporadic_linux_test_failure.html">Sporadic Linux Test Failure</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../index.html">TARDIS GitHub Actions Workflows</a></li>
-<li class="toctree-l2"><a class="reference internal" href="../carsus.html">Carsus GitHub Actions Workflows</a></li>
+<li class="toctree-l2"><a class="reference internal" href="../index.html">TARDIS GitHub Actions Workflows</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../carsus.html">Carsus GitHub Actions Workflows</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../../../../api/modules.html">API</a></li>
@@ -124,9 +109,9 @@
 <ul>
   <li><a href="../../../../index.html">Documentation overview</a><ul>
   <li><a href="../../../index.html">Development</a><ul>
-  <li><a href="../index.html">TARDIS GitHub Actions Workflows</a><ul>
-      <li>Previous: <a href="../reusable/lfs-cache.html" title="previous chapter">lfs-cache.yml</a></li>
-      <li>Next: <a href="full-tests.html" title="next chapter">full-tests.yml</a></li>
+  <li><a href="../carsus.html">Carsus GitHub Actions Workflows</a><ul>
+      <li>Previous: <a href="bridge.html" title="previous chapter">bridge.yml</a></li>
+      <li>Next: <a href="../../../../api/modules.html" title="next chapter">tardisbase</a></li>
   </ul></li>
   </ul></li>
   </ul></li>
@@ -152,7 +137,7 @@
       &amp; <a href="https://alabaster.readthedocs.io">Alabaster 1.0.0</a>
       
       |
-      <a href="../../../../_sources/contributing/development/workflows/core/tests.rst.txt"
+      <a href="../../../../_sources/contributing/development/workflows/carsus/save-atomic-files.rst.txt"
           rel="nofollow">Page source</a>
     </div>
 
