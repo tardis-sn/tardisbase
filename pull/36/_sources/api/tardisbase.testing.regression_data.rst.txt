@@ -1,0 +1,19 @@
+tardisbase.testing.regression\_data package
+===========================================
+
+Submodules
+----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tardisbase.testing.regression_data.hdfwriter
+   tardisbase.testing.regression_data.regression_data
+
+Module contents
+---------------
+
+.. automodule:: tardisbase.testing.regression_data
+   :members:
+   :show-inheritance:
+   :undoc-members:

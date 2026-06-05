@@ -1,0 +1,19 @@
+tardisbase.testing package
+==========================
+
+Subpackages
+-----------
+
+.. toctree::
+   :maxdepth: 4
+
+   tardisbase.testing.regression_comparison
+   tardisbase.testing.regression_data
+
+Module contents
+---------------
+
+.. automodule:: tardisbase.testing
+   :members:
+   :show-inheritance:
+   :undoc-members:
