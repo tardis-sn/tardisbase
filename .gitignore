@@ -69,6 +69,7 @@ distribute-*.tar.gz
 .pydevproject
 .settings
 pip-wheel-metadata/
+tardisbase/_version.py
 
 # Mac OSX
 .DS_Store
